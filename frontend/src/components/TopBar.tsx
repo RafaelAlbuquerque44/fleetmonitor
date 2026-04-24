@@ -4,12 +4,14 @@ import { Sun, Moon, PlusCircle, Settings, LogOut, ChevronDown, Sparkles } from '
 import { useTheme } from '../contexts/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useAccount } from '../lib/AccountContext';
 import AIChat from './AIChat';
 
 export default function TopBar() {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const { contas, activeAccount, setActiveAccountId } = useAccount();
   const [isChatOpen, setIsChatOpen] = useState(false);
 
   useEffect(() => {
@@ -24,8 +26,7 @@ export default function TopBar() {
   };
 
   const handleCreateAccount = () => {
-    // In a real app, this would open a modal or navigate to a creation form
-    alert("Redirecionando para criação de nova conta...");
+    window.open('/nova-conta', '_blank');
   };
 
   return (
@@ -55,11 +56,13 @@ export default function TopBar() {
         <Menu as="div" className="relative">
           <Menu.Button className="flex items-center gap-3 p-1.5 pr-3 rounded-xl bg-[#f1f5f9]  dark:bg-white/5 border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 transition-all shadow-sm group">
             <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-fleet-600 to-fleet-400 dark:from-fleet-400 dark:to-fleet-300 flex items-center justify-center text-white dark:text-fleet-900 font-bold shadow-sm">
-              A
+              {activeAccount ? activeAccount.nome_cliente.charAt(0).toUpperCase() : 'A'}
             </div>
             <div className="hidden md:block text-left">
-              <p className="text-sm font-bold text-gray-900 dark:text-white leading-tight">Admin Global</p>
-              <p className="text-xs font-semibold text-gray-500 dark:text-white/50">Diretoria</p>
+              <p className="text-sm font-bold text-gray-900 dark:text-white leading-tight">
+                {activeAccount ? activeAccount.nome_cliente : 'Carregando...'}
+              </p>
+              <p className="text-xs font-semibold text-gray-500 dark:text-white/50">Sessão Atual</p>
             </div>
             <ChevronDown className="w-4 h-4 text-gray-400 dark:text-white/40 group-hover:text-gray-600 dark:group-hover:text-white/60 transition-colors ml-1" />
           </Menu.Button>
@@ -76,26 +79,33 @@ export default function TopBar() {
             <Menu.Items className="absolute right-0 mt-2 w-64 origin-top-right rounded-2xl bg-[#f1f5f9]  dark:bg-fleet-800 border border-gray-200/60 dark:border-white/10 shadow-2xl ring-1 ring-black/5 focus:outline-none divide-y divide-gray-100 dark:divide-white/5">
               
               {/* Account List */}
-              <div className="p-2">
+              <div className="p-2 max-h-60 overflow-y-auto custom-scrollbar">
                 <p className="px-3 py-2 text-xs font-bold text-gray-400 dark:text-white/40 uppercase tracking-wider">
                   Suas Contas
                 </p>
-                <Menu.Item>
-                  {({ active }) => (
-                    <button className={`${active ? 'bg-gray-50 dark:bg-white/5' : ''} flex items-center w-full px-3 py-2.5 text-sm font-semibold text-gray-900 dark:text-white rounded-xl transition-colors`}>
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-fleet-600 to-fleet-400 dark:from-fleet-400 dark:to-fleet-300 flex items-center justify-center text-white dark:text-fleet-900 font-bold mr-3 shadow-sm text-xs">A</div>
-                      <div className="text-left flex-1"><p>Admin Global</p><p className="text-xs font-medium text-gray-500 dark:text-white/50">Sessão Atual</p></div>
-                    </button>
-                  )}
-                </Menu.Item>
-                <Menu.Item>
-                  {({ active }) => (
-                    <button className={`${active ? 'bg-gray-50 dark:bg-white/5' : ''} flex items-center w-full px-3 py-2.5 text-sm font-semibold text-gray-600 dark:text-white/70 rounded-xl transition-colors`}>
-                      <div className="w-8 h-8 rounded-lg bg-gray-200 dark:bg-white/10 flex items-center justify-center text-gray-500 dark:text-white/40 font-bold mr-3 text-xs">O</div>
-                      <div className="text-left flex-1"><p>Operacional SP</p><p className="text-xs font-medium text-gray-400 dark:text-white/40">Alternar</p></div>
-                    </button>
-                  )}
-                </Menu.Item>
+                {contas.map(conta => (
+                  <Menu.Item key={conta.id}>
+                    {({ active }) => (
+                      <button 
+                        onClick={() => setActiveAccountId(conta.id)}
+                        className={`${active ? 'bg-gray-50 dark:bg-white/5' : ''} flex items-center w-full px-3 py-2.5 text-sm font-semibold ${activeAccount?.id === conta.id ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-white/70'} rounded-xl transition-colors`}
+                      >
+                        <div className={`w-8 h-8 rounded-lg ${activeAccount?.id === conta.id ? 'bg-gradient-to-tr from-fleet-600 to-fleet-400 dark:from-fleet-400 dark:to-fleet-300 text-white dark:text-fleet-900 shadow-sm' : 'bg-gray-200 dark:bg-white/10 text-gray-500 dark:text-white/40'} flex items-center justify-center font-bold mr-3 text-xs`}>
+                          {conta.nome_cliente.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="text-left flex-1">
+                          <p className="truncate w-36">{conta.nome_cliente}</p>
+                          <p className={`text-xs font-medium ${activeAccount?.id === conta.id ? 'text-gray-500 dark:text-white/50' : 'text-gray-400 dark:text-white/40'}`}>
+                            {activeAccount?.id === conta.id ? 'Sessão Atual' : 'Alternar'}
+                          </p>
+                        </div>
+                      </button>
+                    )}
+                  </Menu.Item>
+                ))}
+                {contas.length === 0 && (
+                  <p className="px-3 py-2 text-xs font-medium text-gray-500 dark:text-white/50">Nenhuma conta encontrada.</p>
+                )}
               </div>
 
               {/* Actions */}

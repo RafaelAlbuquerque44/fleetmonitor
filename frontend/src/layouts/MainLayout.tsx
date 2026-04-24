@@ -9,14 +9,17 @@ import {
   Wrench,
   ChevronRight,
   Sparkles,
-  Zap,
   Activity,
-  Wallet
+  Wallet,
+  ShoppingBag,
+  Zap
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import TopBar from '../components/TopBar';
 import AnimatedBackground from '../components/AnimatedBackground';
 import { useVehicles } from '../lib/VehicleContext';
+import { useAccount } from '../lib/AccountContext';
+
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Veículos', href: '/vehicles', icon: CarFront },
@@ -25,15 +28,29 @@ const navigation = [
   { name: 'IA & Oficina', href: '/maintenance', icon: Wrench },
   { name: 'ESG & Relatórios', href: '/reports', icon: Leaf },
   { name: 'Controle Financeiro', href: '/finance', icon: Wallet },
+  { name: 'Marketplace', href: '/marketplace', icon: ShoppingBag },
 ];
 
 export default function MainLayout() {
   const location = useLocation();
   const { vehicles } = useVehicles();
+  const { activeAccount } = useAccount();
   
   const activeVehicles = vehicles.filter(v => v.status === 'active').length;
   const maintenanceVehicles = vehicles.filter(v => v.status === 'maintenance').length;
   const totalVehicles = Math.max(vehicles.length, 1); // Prevents division by zero
+
+  const filteredNavigation = navigation.filter(item => {
+    // Se não há conta ativa (carregando) ou se for a conta de ID 999999 (mock Admin Global) que pode ter todos os módulos mockados
+    if (!activeAccount || activeAccount.id === 999999) return true;
+    
+    if (item.name === 'Dashboard' || item.name === 'Veículos' || item.name === 'Motoristas' || item.name === 'Marketplace') return true;
+    if (item.name === 'Rastreamento') return activeAccount.produto_telemetria;
+    if (item.name === 'IA & Oficina') return activeAccount.produto_manutencao;
+    if (item.name === 'ESG & Relatórios') return activeAccount.produto_roteirizacao;
+    if (item.name === 'Controle Financeiro') return activeAccount.produto_financeiro;
+    return false;
+  });
 
   return (
     <div className="min-h-screen bg-[#e2e8f0] dark:bg-fleet-900 flex overflow-hidden transition-colors duration-500">
@@ -65,7 +82,7 @@ export default function MainLayout() {
           <div className="flex-1 flex flex-col overflow-y-auto px-4 py-8 space-y-1 scrollbar-hide">
             <p className="px-4 text-xs font-bold text-slate-400 dark:text-white/40 uppercase tracking-widest mb-4 transition-colors duration-500">Menu Principal</p>
             <nav className="flex-1 space-y-2">
-              {navigation.map((item, index) => {
+              {filteredNavigation.map((item, index) => {
                 const isActive = location.pathname.startsWith(item.href);
                 return (
                   <motion.div
@@ -151,40 +168,42 @@ export default function MainLayout() {
 
           </div>
 
-          {/* Premium Bottom Widget */}
-          <div className="p-4 shrink-0 transition-colors duration-500 pb-6">
-            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-5 text-white shadow-lg shadow-indigo-500/20 relative overflow-hidden group cursor-pointer hover:shadow-indigo-500/40 transition-shadow">
-              {/* Decorative elements */}
-              <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-white/20 rounded-full blur-2xl group-hover:bg-white/30 transition-colors duration-500"></div>
-              <div className="absolute bottom-0 right-0 w-16 h-16 bg-gradient-to-tl from-white/10 to-transparent rounded-tl-full"></div>
-              
-              <div className="relative z-10 flex flex-col gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-white/20  flex items-center justify-center border border-white/20 shadow-inner group-hover:scale-110 transition-transform duration-300">
-                    <Sparkles className="w-5 h-5 text-white drop-shadow-md" />
+          {/* Premium Bottom Widget - Hidden if inactive */}
+          {(activeAccount?.produto_ia_assistente || activeAccount?.id === 999999) && (
+            <div className="p-4 shrink-0 transition-colors duration-500 pb-6">
+              <div className="bg-gradient-to-br from-indigo-500 to-purple-600 shadow-indigo-500/20 cursor-pointer hover:shadow-indigo-500/40 group rounded-2xl p-5 text-white shadow-lg relative overflow-hidden transition-shadow">
+                {/* Decorative elements */}
+                <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-white/20 rounded-full blur-2xl group-hover:bg-white/30 transition-colors duration-500"></div>
+                <div className="absolute bottom-0 right-0 w-16 h-16 bg-gradient-to-tl from-white/10 to-transparent rounded-tl-full"></div>
+                
+                <div className="relative z-10 flex flex-col gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center border border-white/20 shadow-inner group-hover:scale-110 transition-transform duration-300">
+                      <Sparkles className="w-5 h-5 text-white drop-shadow-md" />
+                    </div>
+                    <div>
+                      <h4 className="font-black text-white text-base leading-tight drop-shadow-sm">FleetAI</h4>
+                      <span className="text-[10px] font-bold text-indigo-100 uppercase tracking-widest flex items-center gap-1">
+                        <Zap className="w-3 h-3 text-yellow-300 fill-yellow-300" />
+                        Status: Ativo
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-black text-white text-base leading-tight drop-shadow-sm">FleetAI</h4>
-                    <span className="text-[10px] font-bold text-indigo-100 uppercase tracking-widest flex items-center gap-1">
-                      <Zap className="w-3 h-3 text-yellow-300 fill-yellow-300" />
-                      Status: Ativo
-                    </span>
-                  </div>
+                  
+                  <p className="text-xs font-semibold text-indigo-50/90 leading-relaxed mt-1">
+                    Sua inteligência artificial integrada está monitorando a frota e gerando predições ao vivo.
+                  </p>
+                  
+                  <button 
+                    onClick={() => window.dispatchEvent(new Event('open-fleet-ai'))}
+                    className="w-full mt-2 py-2 bg-white/20 hover:bg-white/30 border border-white/20 rounded-xl text-xs font-bold text-white transition-colors duration-300"
+                  >
+                    Abrir Assistente
+                  </button>
                 </div>
-                
-                <p className="text-xs font-semibold text-indigo-50/90 leading-relaxed mt-1">
-                  Sua inteligência artificial integrada está monitorando a frota e gerando predições ao vivo.
-                </p>
-                
-                <button 
-                  onClick={() => window.dispatchEvent(new Event('open-fleet-ai'))}
-                  className="w-full mt-2 py-2 bg-white/20 hover:bg-white/30  border border-white/20 rounded-xl text-xs font-bold text-white transition-colors duration-300"
-                >
-                  Abrir Assistente
-                </button>
               </div>
             </div>
-          </div>
+          )}
 
         </div>
       </motion.div>

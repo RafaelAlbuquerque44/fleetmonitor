@@ -1,10 +1,10 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from .models import Veiculo, Motorista, Telemetria, Manutencao
+from .models import Veiculo, Motorista, Telemetria, Manutencao, Conta
 from .serializers import (
     VeiculoSerializer, MotoristaSerializer, 
-    TelemetriaSerializer, ManutencaoSerializer, UsuarioSerializer
+    TelemetriaSerializer, ManutencaoSerializer, UsuarioSerializer, ContaSerializer
 )
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -28,6 +28,9 @@ class ManutencaoViewSet(viewsets.ModelViewSet):
     queryset = Manutencao.objects.all()
     serializer_class = ManutencaoSerializer
 
+class ContaViewSet(viewsets.ModelViewSet):
+    queryset = Conta.objects.all()
+    serializer_class = ContaSerializer
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def register(request):

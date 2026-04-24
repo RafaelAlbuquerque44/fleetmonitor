@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
+import { useAccount } from './AccountContext';
 
 export interface Driver {
   id: number;
@@ -17,6 +18,7 @@ interface DriverContextType {
   addDriver: (d: Driver) => void;
   removeDriver: (id: number) => void;
   updateDriver: (id: number, data: Partial<Driver>) => void;
+  clearDrivers: () => void;
 }
 
 const mockDrivers: Driver[] = [
@@ -33,14 +35,30 @@ const mockDrivers: Driver[] = [
 const DriverContext = createContext<DriverContextType | undefined>(undefined);
 
 export const DriverProvider: React.FC<{children: ReactNode}> = ({ children }) => {
-  const [drivers, setDrivers] = useState<Driver[]>(() => {
-    const saved = localStorage.getItem('ecoFleet_drivers');
-    return saved ? JSON.parse(saved) : mockDrivers;
-  });
+  const { activeAccountId, contas } = useAccount();
+  const [drivers, setDrivers] = useState<Driver[]>([]);
+  const currentAccountRef = useRef<number | null>(null);
 
   useEffect(() => {
-    localStorage.setItem('ecoFleet_drivers', JSON.stringify(drivers));
-  }, [drivers]);
+    if (!activeAccountId) return;
+    currentAccountRef.current = activeAccountId;
+    
+    const saved = localStorage.getItem(`ecoFleet_drivers_${activeAccountId}`);
+    if (saved) {
+      setDrivers(JSON.parse(saved));
+    } else {
+      if (activeAccountId === 999999) {
+        setDrivers(mockDrivers);
+      } else {
+        setDrivers([]);
+      }
+    }
+  }, [activeAccountId, contas]);
+
+  useEffect(() => {
+    if (!activeAccountId || currentAccountRef.current !== activeAccountId) return;
+    localStorage.setItem(`ecoFleet_drivers_${activeAccountId}`, JSON.stringify(drivers));
+  }, [drivers, activeAccountId]);
 
   const addDriver = (newDriver: Driver) => {
     setDrivers(prev => [...prev, newDriver]);
@@ -54,8 +72,12 @@ export const DriverProvider: React.FC<{children: ReactNode}> = ({ children }) =>
     setDrivers(prev => prev.map(d => d.id === id ? { ...d, ...data } : d));
   };
 
+  const clearDrivers = () => {
+    setDrivers([]);
+  };
+
   return (
-    <DriverContext.Provider value={{ drivers, addDriver, removeDriver, updateDriver }}>
+    <DriverContext.Provider value={{ drivers, addDriver, removeDriver, updateDriver, clearDrivers }}>
       {children}
     </DriverContext.Provider>
   );

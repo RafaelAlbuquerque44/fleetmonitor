@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
+import { useAccount } from './AccountContext';
 
 export interface Vehicle {
   id: number;
@@ -27,6 +28,7 @@ interface VehicleContextType {
   addVehicle: (v: Vehicle) => void;
   removeVehicle: (id: number) => void;
   updateVehicle: (id: number, data: Partial<Vehicle>) => void;
+  clearVehicles: () => void;
 }
 
 const mockVehicles: Vehicle[] = [
@@ -40,21 +42,39 @@ const mockVehicles: Vehicle[] = [
 const VehicleContext = createContext<VehicleContextType | undefined>(undefined);
 
 export function VehicleProvider({ children }: { children: ReactNode }) {
-  const [vehicles, setVehicles] = useState<Vehicle[]>(() => {
-    const saved = localStorage.getItem('ecoFleet_vehicles');
-    return saved ? JSON.parse(saved) : mockVehicles;
-  });
+  const { activeAccountId, contas } = useAccount();
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const currentAccountRef = useRef<number | null>(null);
 
+  // Update vehicles when active account changes
   useEffect(() => {
-    localStorage.setItem('ecoFleet_vehicles', JSON.stringify(vehicles));
-  }, [vehicles]);
+    if (!activeAccountId) return;
+    currentAccountRef.current = activeAccountId;
+    
+    const saved = localStorage.getItem(`ecoFleet_vehicles_${activeAccountId}`);
+    if (saved) {
+      setVehicles(JSON.parse(saved));
+    } else {
+      // Se for a conta mock Admin Global, carrega o mock de veículos
+      if (activeAccountId === 999999) {
+        setVehicles(mockVehicles);
+      } else {
+        setVehicles([]); // Outras contas (criadas pelo usuário) começam vazias
+      }
+    }
+  }, [activeAccountId, contas]);
+
+  // Salvar no localStorage sempre que mudar, garantindo que salva na conta correta!
+  useEffect(() => {
+    if (!activeAccountId || currentAccountRef.current !== activeAccountId) return;
+    localStorage.setItem(`ecoFleet_vehicles_${activeAccountId}`, JSON.stringify(vehicles));
+  }, [vehicles, activeAccountId]);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setVehicles(prevVehicles => 
         prevVehicles.map(v => {
           if (v.status === 'active') {
-             // Caminhão na rua gera lucro alto, mas queima diesel e desgasta pneu
              const revenueGain = Math.floor(Math.random() * 800) + 200;
              const fuelCost = Math.floor(Math.random() * 150) + 50;
              const maintenanceCost = Math.floor(Math.random() * 20);
@@ -66,7 +86,6 @@ export function VehicleProvider({ children }: { children: ReactNode }) {
              };
           } 
           if (v.status === 'maintenance') {
-             // Caminhão na oficina só consome dinheiro
              const mechanicCost = Math.floor(Math.random() * 500) + 100;
              return {
                ...v,
@@ -93,8 +112,12 @@ export function VehicleProvider({ children }: { children: ReactNode }) {
     setVehicles(prev => prev.map(v => v.id === id ? { ...v, ...data } : v));
   };
 
+  const clearVehicles = () => {
+    setVehicles([]);
+  };
+
   return (
-    <VehicleContext.Provider value={{ vehicles, addVehicle, removeVehicle, updateVehicle }}>
+    <VehicleContext.Provider value={{ vehicles, addVehicle, removeVehicle, updateVehicle, clearVehicles }}>
       {children}
     </VehicleContext.Provider>
   );

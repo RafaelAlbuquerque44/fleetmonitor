@@ -9,12 +9,15 @@ import Tracking from './pages/Tracking';
 import Reports from './pages/Reports';
 import Finance from './pages/Finance';
 import Maintenance from './pages/Maintenance';
+import Marketplace from './pages/Marketplace';
 import NotFound from './pages/NotFound';
 import { VehicleProvider } from './lib/VehicleContext';
 import { DriverProvider } from './lib/DriverContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AccountProvider } from './lib/AccountContext';
 import Landing from './pages/Landing';
+import CreateAccount from './pages/CreateAccount';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -25,6 +28,7 @@ function App() {
   return (
     <AuthProvider>
       <ThemeProvider>
+      <AccountProvider>
       <DriverProvider>
         <VehicleProvider>
           <BrowserRouter>
@@ -43,13 +47,17 @@ function App() {
                 <Route path="/maintenance" element={<Maintenance />} />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/finance" element={<Finance />} />
+                <Route path="/marketplace" element={<Marketplace />} />
               </Route>
+              
+              <Route path="/nova-conta" element={<ProtectedRoute><CreateAccount /></ProtectedRoute>} />
               
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
         </VehicleProvider>
       </DriverProvider>
+      </AccountProvider>
       </ThemeProvider>
     </AuthProvider>
   );

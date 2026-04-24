@@ -14,8 +14,9 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import { Car, Zap, AlertTriangle, TrendingDown, DollarSign, Trophy, BrainCircuit, BellRing, Clock, AlertOctagon, Target, X, CheckCircle2 } from 'lucide-react';
+import { Car, Zap, AlertTriangle, TrendingDown, DollarSign, Trophy, BrainCircuit, BellRing, Clock, AlertOctagon, Target, X, CheckCircle2, Lock } from 'lucide-react';
 import { useVehicles } from '../lib/VehicleContext';
+import { useAccount } from '../lib/AccountContext';
 import { useTheme } from '../contexts/ThemeContext';
 
 const mockFuelData = [
@@ -87,6 +88,7 @@ const itemVariants: Variants = {
 
 export default function Dashboard() {
   const { vehicles } = useVehicles();
+  const { activeAccount } = useAccount();
   const { theme } = useTheme();
   const [isDriversModalOpen, setIsDriversModalOpen] = useState(false);
   const [isAlertsModalOpen, setIsAlertsModalOpen] = useState(false);
@@ -94,6 +96,17 @@ export default function Dashboard() {
   const totalVehicles = vehicles.length;
   const activeVehicles = vehicles.filter(v => v.status === 'active').length;
   const maintenanceVehicles = vehicles.filter(v => v.status === 'maintenance').length;
+
+  const isGlobalAdmin = activeAccount?.id === 999999;
+  const hasVehicles = totalVehicles > 0;
+  
+  const currentFuelData = isGlobalAdmin ? mockFuelData : [];
+  const currentIdleData = isGlobalAdmin ? idleTimeData : [];
+  const currentTopDrivers = isGlobalAdmin ? topDrivers : [];
+  const currentExtendedDrivers = isGlobalAdmin ? extendedDrivers : [];
+  const currentLiveAlerts = isGlobalAdmin ? liveAlerts : [];
+  const currentExtendedAlerts = isGlobalAdmin ? extendedAlerts : [];
+  const currentAiPredictions = isGlobalAdmin ? aiPredictions : [];
 
   return (
     <motion.div 
@@ -153,21 +166,24 @@ export default function Dashboard() {
           </div>
         </motion.div>
         
-        <motion.div variants={itemVariants} whileHover={{ y: -4, transition: { duration: 0.2 } }} className="relative overflow-hidden bg-[#f1f5f9]  dark:bg-white/5  p-6 rounded-2xl shadow-[0_2px_6px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-200/60 dark:border-white/10 transition-all hover:shadow-lg dark:hover:shadow-xl hover:shadow-green-500/10 dark:hover:shadow-green-500/5 group">
-          <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-green-500/5 dark:bg-green-500/10 rounded-full blur-2xl group-hover:bg-green-500/10 dark:group-hover:bg-green-500/20 transition-colors"></div>
-          <div className="relative flex items-center gap-4">
-            <div className="p-3.5 bg-green-50 dark:bg-green-500/20 text-green-600 dark:text-green-400 rounded-xl shadow-sm dark:shadow-inner border border-green-100 dark:border-green-500/20">
-              <DollarSign className="w-7 h-7" />
+        {/* Econ. Semanal - Requires Financeiro */}
+        {(activeAccount?.produto_financeiro || isGlobalAdmin) && (
+          <motion.div variants={itemVariants} whileHover={{ y: -4, transition: { duration: 0.2 } }} className="relative overflow-hidden bg-[#f1f5f9]  dark:bg-white/5  p-6 rounded-2xl shadow-[0_2px_6px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-200/60 dark:border-white/10 transition-all hover:shadow-lg dark:hover:shadow-xl hover:shadow-green-500/10 dark:hover:shadow-green-500/5 group">
+            <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-green-500/5 dark:bg-green-500/10 rounded-full blur-2xl group-hover:bg-green-500/10 dark:group-hover:bg-green-500/20 transition-colors"></div>
+            <div className="relative flex items-center gap-4">
+              <div className="p-3.5 bg-green-50 dark:bg-green-500/20 text-green-600 dark:text-green-400 rounded-xl shadow-sm dark:shadow-inner border border-green-100 dark:border-green-500/20">
+                <DollarSign className="w-7 h-7" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-slate-400 dark:text-fleet-200 uppercase tracking-widest mb-1">Econ. Semanal</p>
+                <h3 className="text-3xl font-black text-slate-800 dark:text-white tracking-tight flex items-baseline gap-2">
+                  {hasVehicles ? 'R$ 1.2k' : 'R$ 0,00'}
+                  {hasVehicles && <span className="text-sm font-bold text-green-700 dark:text-green-300 flex items-center bg-green-100 dark:bg-green-500/20 px-2 py-0.5 rounded-md border border-green-200 dark:border-green-500/20"><TrendingDown className="w-3 h-3 mr-1" strokeWidth={3}/>8%</span>}
+                </h3>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-bold text-slate-400 dark:text-fleet-200 uppercase tracking-widest mb-1">Econ. Semanal</p>
-              <h3 className="text-3xl font-black text-slate-800 dark:text-white tracking-tight flex items-baseline gap-2">
-                R$ 1.2k 
-                <span className="text-sm font-bold text-green-700 dark:text-green-300 flex items-center bg-green-100 dark:bg-green-500/20 px-2 py-0.5 rounded-md border border-green-200 dark:border-green-500/20"><TrendingDown className="w-3 h-3 mr-1" strokeWidth={3}/>8%</span>
-              </h3>
-            </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        )}
 
         <motion.div variants={itemVariants} whileHover={{ y: -4, transition: { duration: 0.2 } }} className="relative overflow-hidden bg-[#f1f5f9]  dark:bg-white/5  p-6 rounded-2xl shadow-[0_2px_6px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-200/60 dark:border-white/10 transition-all hover:shadow-lg dark:hover:shadow-xl hover:shadow-yellow-500/10 dark:hover:shadow-yellow-500/5 group">
           <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-yellow-500/5 dark:bg-alert/10 rounded-full blur-2xl group-hover:bg-yellow-500/10 dark:group-hover:bg-alert/20 transition-colors"></div>
@@ -182,21 +198,24 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
-        <motion.div variants={itemVariants} whileHover={{ y: -4, transition: { duration: 0.2 } }} className="relative overflow-hidden bg-[#f1f5f9]  dark:bg-white/5  p-6 rounded-2xl shadow-[0_2px_6px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-200/60 dark:border-white/10 transition-all hover:shadow-lg dark:hover:shadow-xl hover:shadow-cyan-500/10 dark:hover:shadow-cyan-500/5 group">
-          <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-cyan-500/5 dark:bg-cyan-500/10 rounded-full blur-2xl group-hover:bg-cyan-500/10 dark:group-hover:bg-cyan-500/20 transition-colors"></div>
-           <div className="relative flex items-center gap-4">
-            <div className="p-3.5 bg-cyan-50 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 rounded-xl shadow-sm dark:shadow-inner border border-cyan-100 dark:border-cyan-500/20">
-              <Zap className="w-7 h-7" />
+        {/* Emissões - Requires Telemetria or Roteirizacao */}
+        {(activeAccount?.produto_telemetria || activeAccount?.produto_roteirizacao || isGlobalAdmin) && (
+          <motion.div variants={itemVariants} whileHover={{ y: -4, transition: { duration: 0.2 } }} className="relative overflow-hidden bg-[#f1f5f9]  dark:bg-white/5  p-6 rounded-2xl shadow-[0_2px_6px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-200/60 dark:border-white/10 transition-all hover:shadow-lg dark:hover:shadow-xl hover:shadow-cyan-500/10 dark:hover:shadow-cyan-500/5 group">
+            <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-cyan-500/5 dark:bg-cyan-500/10 rounded-full blur-2xl group-hover:bg-cyan-500/10 dark:group-hover:bg-cyan-500/20 transition-colors"></div>
+             <div className="relative flex items-center gap-4">
+              <div className="p-3.5 bg-cyan-50 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 rounded-xl shadow-sm dark:shadow-inner border border-cyan-100 dark:border-cyan-500/20">
+                <Zap className="w-7 h-7" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-slate-400 dark:text-fleet-200 uppercase tracking-widest mb-1">Emissões CO₂</p>
+                <h3 className="text-3xl font-black text-slate-800 dark:text-white tracking-tight flex items-baseline gap-2">
+                  {hasVehicles ? '-4.2%' : '0%'}
+                  {hasVehicles && <span className="text-xs font-bold text-slate-600 dark:text-fleet-100 bg-slate-100 dark:bg-white/10 px-2 py-0.5 rounded-md border border-slate-200 dark:border-white/5">Mês</span>}
+                </h3>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-bold text-slate-400 dark:text-fleet-200 uppercase tracking-widest mb-1">Emissões CO₂</p>
-              <h3 className="text-3xl font-black text-slate-800 dark:text-white tracking-tight flex items-baseline gap-2">
-                -4.2% 
-                <span className="text-xs font-bold text-slate-600 dark:text-fleet-100 bg-slate-100 dark:bg-white/10 px-2 py-0.5 rounded-md border border-slate-200 dark:border-white/5">Mês</span>
-              </h3>
-            </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        )}
       </div>
 
       {/* Main Charts area */}
@@ -206,27 +225,31 @@ export default function Dashboard() {
              Consumo de Combustível 
              <span className="text-xs px-2 py-1 bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/5 text-slate-600 dark:text-fleet-200 rounded-md font-semibold">Últimos 7 dias</span>
           </h3>
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={mockFuelData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme === 'dark' ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"} />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: theme === 'dark' ? '#93c5fd' : '#64748b', fontWeight: 600, fontSize: 13}} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: theme === 'dark' ? '#93c5fd' : '#64748b', fontWeight: 600, fontSize: 13}} dx={-10} />
-                <Tooltip 
-                  contentStyle={{ borderRadius: '16px', border: theme === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)', background: theme === 'dark' ? '#1E3A8A' : '#ffffff', color: theme === 'dark' ? '#fff' : '#0f172a', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '12px' }}
-                  cursor={{stroke: theme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)', strokeWidth: 2}}
-                  itemStyle={{ color: theme === 'dark' ? '#fff' : '#020617' }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="cons" 
-                  stroke="#3b82f6" 
-                  strokeWidth={5}
-                  dot={{ r: 4, strokeWidth: 3, fill: theme === 'dark' ? '#1E3A8A' : '#ffffff' }}
-                  activeDot={{ r: 7, fill: '#3b82f6', stroke: theme === 'dark' ? '#fff' : '#1e293b', strokeWidth: 3 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+          <div className="h-72 flex items-center justify-center">
+            {currentFuelData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={currentFuelData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme === 'dark' ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: theme === 'dark' ? '#93c5fd' : '#64748b', fontWeight: 600, fontSize: 13}} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fill: theme === 'dark' ? '#93c5fd' : '#64748b', fontWeight: 600, fontSize: 13}} dx={-10} />
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '16px', border: theme === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)', background: theme === 'dark' ? '#1E3A8A' : '#ffffff', color: theme === 'dark' ? '#fff' : '#0f172a', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '12px' }}
+                    cursor={{stroke: theme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)', strokeWidth: 2}}
+                    itemStyle={{ color: theme === 'dark' ? '#fff' : '#020617' }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="cons" 
+                    stroke="#3b82f6" 
+                    strokeWidth={5}
+                    dot={{ r: 4, strokeWidth: 3, fill: theme === 'dark' ? '#1E3A8A' : '#ffffff' }}
+                    activeDot={{ r: 7, fill: '#3b82f6', stroke: theme === 'dark' ? '#fff' : '#1e293b', strokeWidth: 3 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-slate-400 dark:text-fleet-300 font-medium">Aguardando dados de telemetria da frota.</p>
+            )}
           </div>
         </motion.div>
 
@@ -236,32 +259,36 @@ export default function Dashboard() {
             Análise de Tempo (Hoje)
           </h3>
           <p className="text-sm font-medium text-slate-500 dark:text-fleet-200/70 mb-6">Proporção ociosa vs rodando</p>
-          <div className="flex-1 min-h-[200px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={idleTimeData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={65}
-                  outerRadius={85}
-                  paddingAngle={5}
-                  dataKey="value"
-                  stroke="none"
-                >
-                  {idleTimeData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  contentStyle={{ borderRadius: '12px', border: 'none', background: theme === 'dark' ? '#172554' : '#ffffff', color: theme === 'dark' ? '#fff' : '#0f172a', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                  itemStyle={{ fontWeight: 600, color: theme === 'dark' ? '#fff' : '#0f172a' }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+          <div className="flex-1 min-h-[200px] flex items-center justify-center">
+            {currentIdleData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={currentIdleData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={65}
+                    outerRadius={85}
+                    paddingAngle={5}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {currentIdleData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '12px', border: 'none', background: theme === 'dark' ? '#172554' : '#ffffff', color: theme === 'dark' ? '#fff' : '#0f172a', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                    itemStyle={{ fontWeight: 600, color: theme === 'dark' ? '#fff' : '#0f172a' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-slate-400 dark:text-fleet-300 font-medium">Sem dados no momento.</p>
+            )}
           </div>
           <div className="mt-4 flex flex-col gap-3">
-            {idleTimeData.map((item, index) => (
+            {currentIdleData.length > 0 && currentIdleData.map((item, index) => (
               <div key={index} className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-3">
                   <div className="w-3 h-3 rounded-full shadow-inner" style={{ backgroundColor: item.color }}></div>
@@ -292,7 +319,7 @@ export default function Dashboard() {
             </button>
           </div>
           <div className="space-y-3">
-            {topDrivers.map((driver, idx) => (
+            {currentTopDrivers.length > 0 ? currentTopDrivers.map((driver, idx) => (
               <motion.div 
                 whileHover={{ scale: 1.02 }} 
                 key={driver.id} 
@@ -312,41 +339,49 @@ export default function Dashboard() {
                   <span className="text-xs font-bold text-green-700 dark:text-green-300 ml-1 bg-green-100 dark:bg-green-500/20 px-1 py-0.5 rounded border border-green-200 dark:border-green-500/20">({driver.trend})</span>
                 </div>
               </motion.div>
-            ))}
+            )) : (
+              <p className="text-center text-sm text-slate-400 dark:text-fleet-300 py-4">Sua frota ainda não registrou pontuações de motoristas.</p>
+            )}
           </div>
         </motion.div>
 
         {/* AI Predictive Maintenance */}
-        <motion.div variants={itemVariants} className="bg-[#f1f5f9]  dark:bg-white/5  p-6 rounded-2xl shadow-sm relative overflow-hidden border border-gray-200/60 dark:border-white/10">
-          <div className="absolute -top-24 -right-24 w-64 h-64 bg-fleet-500/5 dark:bg-white/5 rounded-full blur-3xl"></div>
-          <div className="flex justify-between items-center mb-6 relative z-10">
-            <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
-              <BrainCircuit className="w-5 h-5 text-fleet-500 dark:text-fleet-300" />
-              IA Preditiva
-            </h3>
-            <span className="text-xs font-black px-2 py-1 bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-fleet-200 rounded-md border border-slate-200 dark:border-white/10 backdrop-blur-sm animate-pulse">
-              ANALISANDO
-            </span>
-          </div>
-          <p className="text-sm font-medium text-slate-500 dark:text-fleet-200/70 mb-4 relative z-10">Alertas de Manutenção (Próx. 7 dias):</p>
-          <div className="space-y-3 relative z-10">
-            {aiPredictions.map((pred) => (
-              <div key={pred.id} className="p-4 rounded-xl border border-gray-200/60 dark:border-white/10 bg-gray-50 dark:bg-white/5  hover:bg-gray-100 dark:hover:bg-white/10 transition cursor-pointer">
-                <div className="flex justify-between items-start mb-2">
-                  <span className="font-mono text-sm font-bold text-slate-700 dark:text-white bg-slate-200 dark:bg-black/40 px-2 py-0.5 rounded border border-gray-300 dark:border-white/10 uppercase">{pred.plate}</span>
-                  <span className="text-xs font-black text-red-600 dark:text-red-300 bg-red-100 dark:bg-red-900/50 px-2 py-0.5 rounded border border-red-200 dark:border-red-500/20">{pred.probability}% risco</span>
+        {(activeAccount?.produto_ia_assistente || isGlobalAdmin) && (
+          <motion.div variants={itemVariants} className="bg-[#f1f5f9]  dark:bg-white/5  p-6 rounded-2xl shadow-sm relative overflow-hidden border border-gray-200/60 dark:border-white/10">
+            <div className="absolute -top-24 -right-24 w-64 h-64 bg-fleet-500/5 dark:bg-white/5 rounded-full blur-3xl"></div>
+            <div className="flex justify-between items-center mb-6 relative z-10">
+              <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                <BrainCircuit className="w-5 h-5 text-fleet-500 dark:text-fleet-300" />
+                IA Preditiva
+              </h3>
+              {hasVehicles && (
+                <span className="text-xs font-black px-2 py-1 bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-fleet-200 rounded-md border border-slate-200 dark:border-white/10 backdrop-blur-sm animate-pulse">
+                  ANALISANDO
+                </span>
+              )}
+            </div>
+            <p className="text-sm font-medium text-slate-500 dark:text-fleet-200/70 mb-4 relative z-10">Alertas de Manutenção (Próx. 7 dias):</p>
+            <div className="space-y-3 relative z-10">
+              {currentAiPredictions.length > 0 ? currentAiPredictions.map((pred) => (
+                <div key={pred.id} className="p-4 rounded-xl border border-gray-200/60 dark:border-white/10 bg-gray-50 dark:bg-white/5  hover:bg-gray-100 dark:hover:bg-white/10 transition cursor-pointer">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="font-mono text-sm font-bold text-slate-700 dark:text-white bg-slate-200 dark:bg-black/40 px-2 py-0.5 rounded border border-gray-300 dark:border-white/10 uppercase">{pred.plate}</span>
+                    <span className="text-xs font-black text-red-600 dark:text-red-300 bg-red-100 dark:bg-red-900/50 px-2 py-0.5 rounded border border-red-200 dark:border-red-500/20">{pred.probability}% risco</span>
+                  </div>
+                  <p className="text-sm text-slate-800 dark:text-white font-semibold">{pred.component}</p>
+                  <div className="mt-4 flex items-center justify-between">
+                    <span className="text-xs font-medium text-slate-500 dark:text-fleet-300">Falha em {pred.daysLeft} dias</span>
+                    <button className="text-xs font-bold bg-[#f1f5f9] dark:bg-white/10 text-slate-700 dark:text-white border border-gray-200 dark:border-white/20 px-3 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-white hover:text-slate-800 dark:hover:text-gray-900 transition shadow-sm">
+                      Agendar
+                    </button>
+                  </div>
                 </div>
-                <p className="text-sm text-slate-800 dark:text-white font-semibold">{pred.component}</p>
-                <div className="mt-4 flex items-center justify-between">
-                  <span className="text-xs font-medium text-slate-500 dark:text-fleet-300">Falha em {pred.daysLeft} dias</span>
-                  <button className="text-xs font-bold bg-[#f1f5f9] dark:bg-white/10 text-slate-700 dark:text-white border border-gray-200 dark:border-white/20 px-3 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-white hover:text-slate-800 dark:hover:text-gray-900 transition shadow-sm">
-                    Agendar
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </motion.div>
+              )) : (
+                <p className="text-center text-sm text-slate-400 dark:text-fleet-300 py-4">Sua frota não apresenta anomalias ou falhas iminentes no momento.</p>
+              )}
+            </div>
+          </motion.div>
+        )}
 
         {/* Real-time Alerts Feed */}
         <motion.div variants={itemVariants} className="bg-[#f1f5f9]  dark:bg-white/5  p-6 rounded-2xl shadow-[0_2px_6px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-200/60 dark:border-white/10">
@@ -357,7 +392,7 @@ export default function Dashboard() {
             </h3>
           </div>
           <div className="relative border-l-2 border-gray-200 dark:border-white/10 ml-3 space-y-6">
-            {liveAlerts.map((alert) => {
+            {currentLiveAlerts.length > 0 ? currentLiveAlerts.map((alert) => {
               const Icon = alert.icon;
               return (
                 <div key={alert.id} className="relative pl-6">
@@ -373,7 +408,11 @@ export default function Dashboard() {
                   </div>
                 </div>
               );
-            })}
+            }) : (
+              <div className="pl-6 pt-2 pb-2">
+                <p className="text-sm text-slate-400 dark:text-fleet-300">Nenhum alerta recente para sua frota.</p>
+              </div>
+            )}
           </div>
           <button 
             onClick={() => setIsAlertsModalOpen(true)}
@@ -435,7 +474,7 @@ export default function Dashboard() {
                     </div>
                     
                     <div className="mt-8 space-y-3 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
-                       {extendedDrivers.map((driver, idx) => (
+                       {currentExtendedDrivers.length > 0 ? currentExtendedDrivers.map((driver, idx) => (
                         <div key={driver.id} className="flex items-center justify-between p-4 rounded-2xl border border-gray-200/60 dark:border-white/5 bg-gray-50 dark:bg-white/5 hover:border-fleet-300 dark:hover:border-fleet-400 hover:bg-gray-100 dark:hover:bg-white/10 transition hover:shadow-sm">
                           <div className="flex items-center gap-4">
                             <span className="text-slate-400 dark:text-white/50 font-black w-4 text-right">{idx + 1}º</span>
@@ -452,7 +491,9 @@ export default function Dashboard() {
                             <span className={`text-xs font-bold ml-1 px-1 py-0.5 rounded-md border ${driver.trend.startsWith('+') ? 'text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-500/20 border-green-200 dark:border-green-500/20' : 'text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-500/20 border-red-200 dark:border-red-500/20'}`}>({driver.trend})</span>
                           </div>
                         </div>
-                      ))}
+                      )) : (
+                        <p className="text-center text-sm text-slate-400">Nenhum motorista pontuado.</p>
+                      )}
                     </div>
                   </div>
                 </DialogPanel>
@@ -511,7 +552,7 @@ export default function Dashboard() {
                     </div>
                     
                     <div className="mt-8 relative border-l-2 border-gray-200 dark:border-white/10 ml-5 space-y-8 max-h-[60vh] overflow-y-auto pr-2 pb-4 pt-2 custom-scrollbar">
-                       {extendedAlerts.map((alert) => {
+                       {currentExtendedAlerts.length > 0 ? currentExtendedAlerts.map((alert) => {
                          const Icon = alert.icon;
                          return (
                            <div key={alert.id} className="relative pl-8">
@@ -531,7 +572,11 @@ export default function Dashboard() {
                              </div>
                            </div>
                          );
-                       })}
+                       }) : (
+                         <div className="pl-8 pt-4">
+                           <p className="text-sm text-slate-400">Nenhum evento registrado no histórico.</p>
+                         </div>
+                       )}
                     </div>
                   </div>
                 </DialogPanel>
