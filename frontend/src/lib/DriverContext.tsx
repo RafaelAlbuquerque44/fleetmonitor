@@ -37,14 +37,14 @@ const DriverContext = createContext<DriverContextType | undefined>(undefined);
 export const DriverProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   const { activeAccountId, contas } = useAccount();
   const [drivers, setDrivers] = useState<Driver[]>([]);
-  const currentAccountRef = useRef<number | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     if (!activeAccountId) return;
-    currentAccountRef.current = activeAccountId;
+    setIsLoaded(false);
     
     const saved = localStorage.getItem(`ecoFleet_drivers_${activeAccountId}`);
-    if (saved) {
+    if (saved && saved !== '[]') {
       setDrivers(JSON.parse(saved));
     } else {
       if (activeAccountId === 999999) {
@@ -53,12 +53,13 @@ export const DriverProvider: React.FC<{children: ReactNode}> = ({ children }) =>
         setDrivers([]);
       }
     }
-  }, [activeAccountId, contas]);
+    setIsLoaded(true);
+  }, [activeAccountId]);
 
   useEffect(() => {
-    if (!activeAccountId || currentAccountRef.current !== activeAccountId) return;
+    if (!isLoaded || !activeAccountId) return;
     localStorage.setItem(`ecoFleet_drivers_${activeAccountId}`, JSON.stringify(drivers));
-  }, [drivers, activeAccountId]);
+  }, [drivers, activeAccountId, isLoaded]);
 
   const addDriver = (newDriver: Driver) => {
     setDrivers(prev => [...prev, newDriver]);

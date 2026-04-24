@@ -44,15 +44,15 @@ const VehicleContext = createContext<VehicleContextType | undefined>(undefined);
 export function VehicleProvider({ children }: { children: ReactNode }) {
   const { activeAccountId, contas } = useAccount();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const currentAccountRef = useRef<number | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   // Update vehicles when active account changes
   useEffect(() => {
     if (!activeAccountId) return;
-    currentAccountRef.current = activeAccountId;
+    setIsLoaded(false);
     
     const saved = localStorage.getItem(`ecoFleet_vehicles_${activeAccountId}`);
-    if (saved) {
+    if (saved && saved !== '[]') {
       setVehicles(JSON.parse(saved));
     } else {
       // Se for a conta mock Admin Global, carrega o mock de veículos
@@ -62,13 +62,14 @@ export function VehicleProvider({ children }: { children: ReactNode }) {
         setVehicles([]); // Outras contas (criadas pelo usuário) começam vazias
       }
     }
-  }, [activeAccountId, contas]);
+    setIsLoaded(true);
+  }, [activeAccountId]);
 
   // Salvar no localStorage sempre que mudar, garantindo que salva na conta correta!
   useEffect(() => {
-    if (!activeAccountId || currentAccountRef.current !== activeAccountId) return;
+    if (!isLoaded || !activeAccountId) return;
     localStorage.setItem(`ecoFleet_vehicles_${activeAccountId}`, JSON.stringify(vehicles));
-  }, [vehicles, activeAccountId]);
+  }, [vehicles, activeAccountId, isLoaded]);
 
   useEffect(() => {
     const interval = setInterval(() => {

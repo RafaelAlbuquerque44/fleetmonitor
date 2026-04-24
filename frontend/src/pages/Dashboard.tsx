@@ -16,6 +16,7 @@ import {
 } from 'recharts';
 import { Car, Zap, AlertTriangle, TrendingDown, DollarSign, Trophy, BrainCircuit, BellRing, Clock, AlertOctagon, Target, X, CheckCircle2, Lock } from 'lucide-react';
 import { useVehicles } from '../lib/VehicleContext';
+import { useDrivers } from '../lib/DriverContext';
 import { useAccount } from '../lib/AccountContext';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -88,6 +89,7 @@ const itemVariants: Variants = {
 
 export default function Dashboard() {
   const { vehicles } = useVehicles();
+  const { drivers } = useDrivers();
   const { activeAccount } = useAccount();
   const { theme } = useTheme();
   const [isDriversModalOpen, setIsDriversModalOpen] = useState(false);
@@ -100,10 +102,23 @@ export default function Dashboard() {
   const isGlobalAdmin = activeAccount?.id === 999999;
   const hasVehicles = totalVehicles > 0;
   
+  // Real dynamic drivers from context
+  const dynamicDrivers = [...drivers]
+    .sort((a, b) => b.score - a.score)
+    .map(d => ({
+      id: d.id,
+      name: d.name,
+      score: d.score,
+      trend: d.score >= 90 ? '+2' : d.score >= 80 ? '+1' : '-1',
+      badge: d.tier,
+      color: d.tier === 'Gold' ? 'text-yellow-400' : d.tier === 'Silver' ? 'text-gray-300' : d.tier === 'Bronze' ? 'text-amber-500' : 'text-red-400',
+      bg: d.tier === 'Gold' ? 'bg-yellow-500/10' : d.tier === 'Silver' ? 'bg-gray-500/10' : d.tier === 'Bronze' ? 'bg-amber-500/10' : 'bg-red-500/10'
+    }));
+
   const currentFuelData = isGlobalAdmin ? mockFuelData : [];
   const currentIdleData = isGlobalAdmin ? idleTimeData : [];
-  const currentTopDrivers = isGlobalAdmin ? topDrivers : [];
-  const currentExtendedDrivers = isGlobalAdmin ? extendedDrivers : [];
+  const currentTopDrivers = dynamicDrivers.slice(0, 5);
+  const currentExtendedDrivers = dynamicDrivers;
   const currentLiveAlerts = isGlobalAdmin ? liveAlerts : [];
   const currentExtendedAlerts = isGlobalAdmin ? extendedAlerts : [];
   const currentAiPredictions = isGlobalAdmin ? aiPredictions : [];

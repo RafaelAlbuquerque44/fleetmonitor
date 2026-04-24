@@ -132,7 +132,7 @@ export default function Drivers() {
               {/* Decorative background blur */}
               <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#f1f5f9]  dark:bg-white/5 rounded-full blur-2xl group-hover:bg-gray-50 dark:bg-white/10 transition-colors"></div>
 
-              <div className="absolute top-5 right-5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+              <div className="absolute top-5 right-5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
                  <button onClick={() => openEditDriver(driver)} className="p-2 text-slate-500 dark:text-fleet-200 hover:text-slate-800 dark:text-white rounded-lg hover:bg-gray-50 dark:bg-white/10 transition border border-transparent hover:border-gray-200 dark:border-white/10">
                    <Edit2 className="w-4 h-4" />
                  </button>
