@@ -34,7 +34,8 @@ export default function CreateAccount() {
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let { name, value, type, checked } = e.target;
+    const { name, type, checked } = e.target;
+    let { value } = e.target;
     
     if (name === 'documento') {
       value = value.replace(/\D/g, ''); // Remove tudo o que não é dígito

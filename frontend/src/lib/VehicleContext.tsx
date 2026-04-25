@@ -1,4 +1,6 @@
-import { createContext, useContext, useState, useEffect, useRef } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+/* eslint-disable react-hooks/set-state-in-effect */
+import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { useAccount } from './AccountContext';
 
@@ -42,7 +44,7 @@ const mockVehicles: Vehicle[] = [
 const VehicleContext = createContext<VehicleContextType | undefined>(undefined);
 
 export function VehicleProvider({ children }: { children: ReactNode }) {
-  const { activeAccountId, contas } = useAccount();
+  const { activeAccountId } = useAccount();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 

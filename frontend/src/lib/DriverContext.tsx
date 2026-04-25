@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+/* eslint-disable react-hooks/set-state-in-effect */
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { useAccount } from './AccountContext';
 
@@ -35,7 +37,7 @@ const mockDrivers: Driver[] = [
 const DriverContext = createContext<DriverContextType | undefined>(undefined);
 
 export const DriverProvider: React.FC<{children: ReactNode}> = ({ children }) => {
-  const { activeAccountId, contas } = useAccount();
+  const { activeAccountId } = useAccount();
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
