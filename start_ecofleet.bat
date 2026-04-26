@@ -1,27 +1,35 @@
 @echo off
-title EcoFleet Gerenciador de Inicializacao
+title FleetMonitor - Gerenciador de Inicializacao
 color 0A
 
 echo =======================================================
-echo          Inicializando EcoFleet - Gestao Web
+echo        Inicializando FleetMonitor - Gestao Web
 echo =======================================================
 echo.
 
-echo [1/3] Iniciando Servidor Backend (API)...
-start "EcoFleet API (Backend)" cmd /c "cd backend && venv\Scripts\activate.bat && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+echo [1/4] Iniciando Servidor Backend (Django API)...
+start "FleetMonitor API (Django)" cmd /k "cd /d "%~dp0backend" && venv_django\Scripts\activate.bat && python manage.py runserver 8000"
 
-timeout /t 3 /nobreak >nul
+timeout /t 4 /nobreak >nul
 
-echo [2/3] Iniciando Simulador IoT de Telemetria...
-start "EcoFleet Telemetry Simulator" cmd /c "cd backend && venv\Scripts\activate.bat && python simulator.py"
+echo [2/4] Iniciando Simulador IoT de Telemetria...
+start "FleetMonitor Telemetry Simulator" cmd /k "cd /d "%~dp0backend" && venv_django\Scripts\activate.bat && python simulator.py"
 
-echo [3/3] Iniciando o Frontend e o Navegador...
-:: O parametro --open fara o Vite abrir o seu navegador padrao automaticamente
-start "EcoFleet Web UI" cmd /c "cd frontend && npm run dev -- --open"
+timeout /t 2 /nobreak >nul
+
+echo [3/4] Iniciando o Frontend (Vite)...
+start "FleetMonitor Web UI" cmd /k "cd /d "%~dp0frontend" && npm run dev"
+
+timeout /t 5 /nobreak >nul
+
+echo [4/4] Abrindo o navegador...
+start http://localhost:5173
 
 echo.
 echo =======================================================
-echo     Tudo Pronto! O EcoFleet esta abrindo no navegador.
+echo   Tudo Pronto! FleetMonitor esta rodando em:
+echo   Frontend  -> http://localhost:5173
+echo   Backend   -> http://localhost:8000
 echo =======================================================
-timeout /t 5 >nul
-exit
+echo.
+pause
