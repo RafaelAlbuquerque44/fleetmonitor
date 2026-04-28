@@ -252,8 +252,9 @@ export default function Landing() {
               Módulos do Sistema
             </motion.h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, index) => {
+          {/* Top row: first 3 cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
+            {features.slice(0, 3).map((feature, index) => {
               const Icon = feature.Icon;
               return (
                 <motion.div
@@ -264,9 +265,37 @@ export default function Landing() {
                   transition={{ duration: 0.6, delay: index * 0.1, ease: "easeOut" }}
                   className="group relative p-8 md:p-10 bg-white dark:bg-[#112340] rounded-[32px] shadow-lg hover:shadow-2xl transition-all duration-500 border border-slate-100 dark:border-white/5 hover:border-blue-500/30 dark:hover:border-blue-500/50 flex flex-col overflow-hidden"
                 >
-                  {/* Glow effect on hover */}
                   <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-indigo-500/0 group-hover:from-blue-500/5 group-hover:to-indigo-500/10 transition-all duration-500 pointer-events-none"></div>
-                  
+                  <div className="mb-8 relative z-10">
+                    <div className="w-16 h-16 rounded-2xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:scale-110 group-hover:-translate-y-2 group-hover:bg-blue-600 group-hover:text-white transition-all duration-500 shadow-sm group-hover:shadow-blue-500/40">
+                       <Icon className="w-8 h-8" />
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-black mb-4 text-slate-800 dark:text-white uppercase tracking-wide group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors relative z-10">
+                    {feature.title}
+                  </h3>
+                  <p className="text-slate-600 dark:text-fleet-100/70 leading-relaxed font-medium text-[15px] flex-grow relative z-10">
+                    {feature.description}
+                  </p>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          {/* Bottom row: last 2 cards centered */}
+          <div className="flex flex-col md:flex-row justify-center gap-8">
+            {features.slice(3).map((feature, index) => {
+              const Icon = feature.Icon;
+              return (
+                <motion.div
+                  key={index + 3}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ duration: 0.6, delay: (index + 3) * 0.1, ease: "easeOut" }}
+                  className="group relative p-8 md:p-10 bg-white dark:bg-[#112340] rounded-[32px] shadow-lg hover:shadow-2xl transition-all duration-500 border border-slate-100 dark:border-white/5 hover:border-blue-500/30 dark:hover:border-blue-500/50 flex flex-col overflow-hidden w-full lg:w-[calc(33.333%-1rem)]"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-indigo-500/0 group-hover:from-blue-500/5 group-hover:to-indigo-500/10 transition-all duration-500 pointer-events-none"></div>
                   <div className="mb-8 relative z-10">
                     <div className="w-16 h-16 rounded-2xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:scale-110 group-hover:-translate-y-2 group-hover:bg-blue-600 group-hover:text-white transition-all duration-500 shadow-sm group-hover:shadow-blue-500/40">
                        <Icon className="w-8 h-8" />
