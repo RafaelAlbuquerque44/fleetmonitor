@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Veiculo, Motorista, Telemetria, Manutencao, Conta
+from .models import Veiculo, Motorista, Manutencao, Conta
 
 Usuario = get_user_model()
 
@@ -22,11 +22,6 @@ class VeiculoSerializer(serializers.ModelSerializer):
 class MotoristaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Motorista
-        fields = '__all__'
-
-class TelemetriaSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Telemetria
         fields = '__all__'
 
 class ManutencaoSerializer(serializers.ModelSerializer):

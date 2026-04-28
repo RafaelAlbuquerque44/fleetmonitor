@@ -46,17 +46,6 @@ class Veiculo(models.Model):
     def __str__(self):
         return f"{self.modelo} - {self.placa}"
 
-class Telemetria(models.Model):
-    veiculo = models.ForeignKey(Veiculo, on_delete=models.CASCADE, related_name='telemetria')
-    data_hora = models.DateTimeField(auto_now_add=True)
-    latitude = models.FloatField(null=True, blank=True)
-    longitude = models.FloatField(null=True, blank=True)
-    velocidade = models.FloatField(null=True, blank=True)
-    consumo_combustivel = models.FloatField(null=True, blank=True)
-    rpm = models.IntegerField(null=True, blank=True)
-
-    def __str__(self):
-        return f"Telemetria {self.id} - {self.veiculo.placa}"
 
 class Manutencao(models.Model):
     veiculo = models.ForeignKey(Veiculo, on_delete=models.CASCADE, related_name='manutencoes')
@@ -76,7 +65,6 @@ class Conta(models.Model):
     status = models.CharField(max_length=20, default='ativo') # ativo, inativo, pendente
     
     # Produtos/Módulos habilitados
-    produto_telemetria = models.BooleanField(default=False)
     produto_manutencao = models.BooleanField(default=False)
     produto_financeiro = models.BooleanField(default=False)
     produto_ia_assistente = models.BooleanField(default=False)

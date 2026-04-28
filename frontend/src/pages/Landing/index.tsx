@@ -1,14 +1,9 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Truck, ShieldCheck, Map, TrendingUp, Zap, Target, CheckCircle2, ChevronDown, ArrowRight, Smartphone } from 'lucide-react';
+import { Truck, ShieldCheck, TrendingUp, Zap, Target, CheckCircle2, ChevronDown, ArrowRight, Smartphone } from 'lucide-react';
 
 const features = [
-  {
-    Icon: Map,
-    title: 'Monitoramento em Tempo Real',
-    description: 'Acompanhe a localização exata de cada veículo da sua frota 24/7 com precisão de GPS.'
-  },
   {
     Icon: TrendingUp,
     title: 'Controle Financeiro Completo',
@@ -493,7 +488,7 @@ export default function Landing() {
            <div className="p-3 bg-white/5 rounded-2xl border border-white/10">
              <Truck className="w-8 h-8 text-blue-500" />
            </div>
-           <span className="text-3xl font-black italic tracking-tighter uppercase drop-shadow-md">FleetMonitor S.A.</span>
+           <span className="text-3xl font-black italic tracking-tighter uppercase drop-shadow-md">FleetMonitor </span>
         </div>
         <p className="text-[13px] font-medium tracking-wider text-white/40">&copy; {new Date().getFullYear()} FleetMonitor Sistema Logístico.<br className="md:hidden" /> Todos os direitos reservados.</p>
         <div className="mt-8 text-[11px] font-bold tracking-widest uppercase text-white/30 flex flex-wrap gap-6 justify-center">

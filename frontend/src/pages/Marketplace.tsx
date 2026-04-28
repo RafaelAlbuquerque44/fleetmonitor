@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  MapPin, 
   Leaf, 
   Wrench, 
   Wallet, 
@@ -24,14 +23,6 @@ interface ModuleConfig {
 }
 
 const MODULES: ModuleConfig[] = [
-  {
-    id: 'produto_telemetria',
-    name: 'Rastreamento',
-    description: 'Monitoramento em tempo real, velocidade, alertas e análise de tempo ocioso para toda a frota.',
-    icon: MapPin,
-    color: 'text-blue-500',
-    bgColor: 'bg-blue-500/10'
-  },
   {
     id: 'produto_roteirizacao',
     name: 'ESG & Relatórios',

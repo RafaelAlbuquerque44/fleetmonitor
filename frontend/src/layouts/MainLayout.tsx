@@ -4,27 +4,21 @@ import {
   LayoutDashboard, 
   CarFront, 
   Users, 
-  MapPin, 
   Leaf, 
   Wrench,
   ChevronRight,
-  Sparkles,
-  Activity,
   Wallet,
-  ShoppingBag,
-  Zap
+  ShoppingBag
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import TopBar from '../components/TopBar';
 import AnimatedBackground from '../components/AnimatedBackground';
-import { useVehicles } from '../lib/VehicleContext';
 import { useAccount } from '../lib/AccountContext';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Veículos', href: '/vehicles', icon: CarFront },
   { name: 'Motoristas', href: '/drivers', icon: Users },
-  { name: 'Rastreamento', href: '/tracking', icon: MapPin },
   { name: 'IA & Oficina', href: '/maintenance', icon: Wrench },
   { name: 'ESG & Relatórios', href: '/reports', icon: Leaf },
   { name: 'Controle Financeiro', href: '/finance', icon: Wallet },
@@ -33,19 +27,13 @@ const navigation = [
 
 export default function MainLayout() {
   const location = useLocation();
-  const { vehicles } = useVehicles();
   const { activeAccount } = useAccount();
   
-  const activeVehicles = vehicles.filter(v => v.status === 'active').length;
-  const maintenanceVehicles = vehicles.filter(v => v.status === 'maintenance').length;
-  const totalVehicles = Math.max(vehicles.length, 1); // Prevents division by zero
-
   const filteredNavigation = navigation.filter(item => {
     // Se não há conta ativa (carregando) ou se for a conta de ID 999999 (mock Admin Global) que pode ter todos os módulos mockados
     if (!activeAccount || activeAccount.id === 999999) return true;
     
     if (item.name === 'Dashboard' || item.name === 'Veículos' || item.name === 'Motoristas' || item.name === 'Marketplace') return true;
-    if (item.name === 'Rastreamento') return activeAccount.produto_telemetria;
     if (item.name === 'IA & Oficina') return activeAccount.produto_manutencao;
     if (item.name === 'ESG & Relatórios') return activeAccount.produto_roteirizacao;
     if (item.name === 'Controle Financeiro') return activeAccount.produto_financeiro;
@@ -122,49 +110,6 @@ export default function MainLayout() {
               })}
             </nav>
 
-            {/* Quick Status Mini Widget */}
-            <div className="mt-8 mb-4 px-4">
-              <div className="bg-white dark:bg-white/5 rounded-2xl p-4 border border-gray-200/80 dark:border-white/10 shadow-[0_2px_10px_rgba(0,0,0,0.03)] transition-colors duration-500 hover:shadow-[0_4px_15px_rgba(0,0,0,0.05)]">
-                <div className="flex items-center justify-between mb-3">
-                  <h5 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                    <Activity className="w-3.5 h-3.5 text-emerald-500" />
-                    Frota em Tempo Real
-                  </h5>
-                </div>
-                
-                <div className="space-y-3">
-                  <div>
-                    <div className="flex justify-between text-[11px] font-bold mb-1">
-                      <span className="text-slate-500 dark:text-slate-400">Em Rota</span>
-                      <span className="text-emerald-600 dark:text-emerald-400">{activeVehicles} de {vehicles.length}</span>
-                    </div>
-                    <div className="h-1.5 w-full bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${(activeVehicles / totalVehicles) * 100}%` }}
-                        transition={{ duration: 1, ease: "easeOut" }}
-                        className="h-full bg-emerald-500 rounded-full" 
-                      />
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <div className="flex justify-between text-[11px] font-bold mb-1">
-                      <span className="text-slate-500 dark:text-slate-400">Manutenção</span>
-                      <span className="text-amber-600 dark:text-amber-400">{maintenanceVehicles} de {vehicles.length}</span>
-                    </div>
-                    <div className="h-1.5 w-full bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${(maintenanceVehicles / totalVehicles) * 100}%` }}
-                        transition={{ duration: 1, ease: "easeOut" }}
-                        className="h-full bg-amber-500 rounded-full" 
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
 
           </div>
 

@@ -2,13 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Building2, Mail, Phone, FileText, CheckCircle2, 
-  ChevronRight, ArrowLeft, ShieldCheck, Activity,
+  ChevronRight, ArrowLeft, ShieldCheck,
   Wrench, DollarSign, BrainCircuit, Route as RouteIcon
 } from 'lucide-react';
 import { useAccount } from '../lib/AccountContext';
 
 const PRODUCTS = [
-  { id: 'produto_telemetria', name: 'Telemetria Avançada', icon: Activity, desc: 'Monitoramento em tempo real de frota, velocidade e consumo.', color: 'text-blue-500', bg: 'bg-blue-500/10' },
   { id: 'produto_manutencao', name: 'Gestão de Manutenção', icon: Wrench, desc: 'Controle de preventivas, corretivas e estoque de peças.', color: 'text-orange-500', bg: 'bg-orange-500/10' },
   { id: 'produto_financeiro', name: 'Módulo Financeiro', icon: DollarSign, desc: 'Controle de custos, receitas e relatórios de DRE da frota.', color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
   { id: 'produto_ia_assistente', name: 'IA Assistente Preditiva', icon: BrainCircuit, desc: 'Previsões de falhas e análise inteligente de dados da frota.', color: 'text-purple-500', bg: 'bg-purple-500/10' },
@@ -26,7 +25,6 @@ export default function CreateAccount() {
     documento: '',
     email_contato: '',
     telefone: '',
-    produto_telemetria: false,
     produto_manutencao: false,
     produto_financeiro: false,
     produto_ia_assistente: false,
@@ -339,7 +337,7 @@ export default function CreateAccount() {
                     onClick={() => {
                       setFormData({
                         nome_cliente: '', documento: '', email_contato: '', telefone: '',
-                        produto_telemetria: false, produto_manutencao: false, produto_financeiro: false,
+                        produto_manutencao: false, produto_financeiro: false,
                         produto_ia_assistente: false, produto_roteirizacao: false,
                       });
                       setStep(1);

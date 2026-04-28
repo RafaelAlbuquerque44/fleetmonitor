@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import VeiculoViewSet, MotoristaViewSet, TelemetriaViewSet, ManutencaoViewSet, ContaViewSet, register
+from .views import VeiculoViewSet, MotoristaViewSet, ManutencaoViewSet, ContaViewSet, register
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -9,7 +9,6 @@ from rest_framework_simplejwt.views import (
 router = DefaultRouter()
 router.register(r'veiculos', VeiculoViewSet)
 router.register(r'motoristas', MotoristaViewSet)
-router.register(r'telemetria', TelemetriaViewSet)
 router.register(r'manutencoes', ManutencaoViewSet)
 router.register(r'contas', ContaViewSet)
 
