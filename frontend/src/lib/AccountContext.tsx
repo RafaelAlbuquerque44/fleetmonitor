@@ -1,11 +1,13 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
+
 export interface Conta {
   id: number;
   nome_cliente: string;
   documento: string;
   email_contato: string;
   status: string;
+  produto_telemetria?: boolean;
   produto_manutencao?: boolean;
   produto_financeiro?: boolean;
   produto_ia_assistente?: boolean;
@@ -19,6 +21,8 @@ interface AccountContextType {
   activeAccount: Conta | null;
   setActiveAccountId: (id: number) => void;
   refreshContas: () => Promise<void>;
+  addConta: (conta: Conta) => void;
+  updateConta: (id: number, data: Partial<Conta>) => void;
   isLoading: boolean;
 }
 
@@ -28,61 +32,74 @@ const ADMIN_GLOBAL_MOCK: Conta = {
   documento: "00.000.000/0001-00",
   email_contato: "admin@fleetmonitor.com",
   status: "ativo",
+  produto_telemetria: true,
   produto_manutencao: true,
   produto_financeiro: true,
   produto_ia_assistente: true,
   produto_roteirizacao: true
 };
 
+const STORAGE_KEY = 'ecoFleet_contas';
+
+function loadContas(): Conta[] {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed: Conta[] = JSON.parse(saved);
+      // Always ensure Admin Global is present and up-to-date
+      const withoutMock = parsed.filter(c => c.id !== 999999);
+      return [ADMIN_GLOBAL_MOCK, ...withoutMock];
+    }
+  } catch {
+    // ignore parse errors
+  }
+  return [ADMIN_GLOBAL_MOCK];
+}
+
+function saveContas(contas: Conta[]) {
+  // Don't save the mock entry itself – it's always injected on load
+  const toSave = contas.filter(c => c.id !== 999999);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+}
+
 const AccountContext = createContext<AccountContextType | undefined>(undefined);
 
 export function AccountProvider({ children }: { children: ReactNode }) {
-  const [contas, setContas] = useState<Conta[]>([ADMIN_GLOBAL_MOCK]);
-  const [isLoading, setIsLoading] = useState(true);
-  
+  const [contas, setContas] = useState<Conta[]>(() => loadContas());
+  const [isLoading] = useState(false);
+
   const [activeAccountId, setActiveAccountIdState] = useState<number | null>(() => {
     const saved = localStorage.getItem('fleet_active_account');
-    return saved ? parseInt(saved, 10) : null;
+    return saved ? parseInt(saved, 10) : ADMIN_GLOBAL_MOCK.id;
   });
+
+  // Persist whenever contas changes
+  useEffect(() => {
+    saveContas(contas);
+  }, [contas]);
 
   const setActiveAccountId = (id: number) => {
     setActiveAccountIdState(id);
     localStorage.setItem('fleet_active_account', id.toString());
   };
 
+  // refreshContas now just re-reads from localStorage (no network call)
   const refreshContas = async () => {
-    setIsLoading(true);
-    try {
-      const res = await fetch('http://localhost:8000/contas/');
-      if (res.ok) {
-        const data = await res.json();
-        const todasContas = [ADMIN_GLOBAL_MOCK, ...data];
-        setContas(todasContas);
-        
-        // Se temos contas e não temos uma ativa, ou a ativa não existe mais
-        if (todasContas.length > 0) {
-          if (!activeAccountId || !todasContas.find((c: Conta) => c.id === activeAccountId)) {
-            setActiveAccountId(ADMIN_GLOBAL_MOCK.id);
-          }
-        }
-      }
-    } catch (e) {
-      console.error("Erro ao buscar contas", e);
-    } finally {
-      setIsLoading(false);
-    }
+    setContas(loadContas());
   };
 
-  // Carregar contas inicialmente
-  useEffect(() => {
-    refreshContas();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const addConta = (conta: Conta) => {
+    setContas(prev => [...prev, conta]);
+  };
+
+  const updateConta = (id: number, data: Partial<Conta>) => {
+    setContas(prev => prev.map(c => c.id === id ? { ...c, ...data } : c));
+  };
 
   const activeAccount = contas.find(c => c.id === activeAccountId) || null;
 
   return (
-    <AccountContext.Provider value={{ contas, activeAccountId, activeAccount, setActiveAccountId, refreshContas, isLoading }}>
+    <AccountContext.Provider value={{ contas, activeAccountId, activeAccount, setActiveAccountId, refreshContas, addConta, updateConta, isLoading }}>
       {children}
     </AccountContext.Provider>
   );

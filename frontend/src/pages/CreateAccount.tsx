@@ -6,6 +6,7 @@ import {
   Wrench, DollarSign, BrainCircuit, Route as RouteIcon
 } from 'lucide-react';
 import { useAccount } from '../lib/AccountContext';
+import type { Conta } from '../lib/AccountContext';
 
 const PRODUCTS = [
   { id: 'produto_manutencao', name: 'Gestão de Manutenção', icon: Wrench, desc: 'Controle de preventivas, corretivas e estoque de peças.', color: 'text-orange-500', bg: 'bg-orange-500/10' },
@@ -16,7 +17,7 @@ const PRODUCTS = [
 
 export default function CreateAccount() {
   const navigate = useNavigate();
-  const { refreshContas, setActiveAccountId } = useAccount();
+  const { addConta, setActiveAccountId } = useAccount();
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   
@@ -71,38 +72,31 @@ export default function CreateAccount() {
   const handleSubmit = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:8000/contas/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
-      
-      if (response.ok) {
-        const novaConta = await response.json();
-        
-        // Atualiza a lista de contas globalmente
-        await refreshContas();
-        
-        // Muda para a conta recém criada (cujos arrays estarão zerados em seus respectivos contextos)
-        if (novaConta && novaConta.id) {
-          setActiveAccountId(novaConta.id);
-        }
-        
-        setStep(3); // Sucesso
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        let errorMsg = "Verifique os dados informados.";
-        if (Object.keys(errorData).length > 0) {
-           errorMsg = Object.entries(errorData).map(([key, val]) => {
-             const keyName = key === 'documento' ? 'CNPJ' : key === 'email_contato' ? 'E-mail' : key;
-             return `${keyName}: ${val}`;
-           }).join('\n');
-        }
-        alert(`Erro ao criar conta:\n${errorMsg}`);
-      }
+      // Generate a unique numeric ID based on timestamp
+      const newId = Date.now();
+
+      const novaConta: Conta = {
+        id: newId,
+        nome_cliente: formData.nome_cliente,
+        documento: formData.documento,
+        email_contato: formData.email_contato,
+        status: 'ativo',
+        produto_telemetria: false, // Default to false since removed from options
+        produto_manutencao: formData.produto_manutencao,
+        produto_financeiro: formData.produto_financeiro,
+        produto_ia_assistente: formData.produto_ia_assistente,
+        produto_roteirizacao: formData.produto_roteirizacao,
+        criado_em: new Date().toISOString(),
+      };
+
+      // Persist locally and activate the new account
+      addConta(novaConta);
+      setActiveAccountId(novaConta.id);
+
+      setStep(3); // Sucesso
     } catch (error) {
       console.error(error);
-      alert("Erro de conexão com o servidor.");
+      alert("Erro ao criar conta. Tente novamente.");
     } finally {
       setIsLoading(false);
     }

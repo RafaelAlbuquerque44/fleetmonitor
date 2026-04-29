@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
+  MapPin, 
   Leaf, 
   Wrench, 
   Wallet, 
@@ -23,6 +24,14 @@ interface ModuleConfig {
 }
 
 const MODULES: ModuleConfig[] = [
+  {
+    id: 'produto_telemetria',
+    name: 'Rastreamento',
+    description: 'Monitoramento em tempo real, velocidade, alertas e análise de tempo ocioso para toda a frota.',
+    icon: MapPin,
+    color: 'text-blue-500',
+    bgColor: 'bg-blue-500/10'
+  },
   {
     id: 'produto_roteirizacao',
     name: 'ESG & Relatórios',
@@ -58,7 +67,7 @@ const MODULES: ModuleConfig[] = [
 ];
 
 export default function Marketplace() {
-  const { activeAccount, refreshContas } = useAccount();
+  const { activeAccount, refreshContas, updateConta } = useAccount();
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
 
   // ID 999999 é a conta Admin Global (mock) que tem tudo fixo
@@ -69,24 +78,12 @@ export default function Marketplace() {
     
     setIsProcessing(moduleId);
     try {
-      const response = await fetch(`http://localhost:8000/contas/${activeAccount.id}/`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          [moduleId]: !currentValue
-        })
-      });
-
-      if (response.ok) {
-        // Atualiza todo o sistema com a nova configuração de conta
-        await refreshContas();
-      } else {
-        console.error("Erro ao atualizar módulo");
-      }
+      // Update locally in context and persist to localStorage
+      updateConta(activeAccount.id, { [moduleId]: !currentValue });
+      // refreshContas re-reads from localStorage so other consumers stay in sync
+      await refreshContas();
     } catch (error) {
-      console.error("Erro de rede:", error);
+      console.error("Erro ao atualizar módulo:", error);
     } finally {
       setIsProcessing(null);
     }
