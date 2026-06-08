@@ -1,0 +1,64 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import MainLayout from './layouts/MainLayout';
+import AuthLayout from './layouts/AuthLayout';
+import Dashboard from './pages/Dashboard';
+import Login from './pages/Login';
+import Vehicles from './pages/Vehicles';
+import Drivers from './pages/Drivers';
+import Reports from './pages/Reports';
+import Maintenance from './pages/Maintenance';
+import Marketplace from './pages/Marketplace';
+import Portaria from './pages/Portaria';
+import NotFound from './pages/NotFound';
+import { VehicleProvider } from './lib/VehicleContext';
+import { DriverProvider } from './lib/DriverContext';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AccountProvider } from './lib/AccountContext';
+import Landing from './pages/Landing';
+import CreateAccount from './pages/CreateAccount';
+
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <ThemeProvider>
+      <AccountProvider>
+      <DriverProvider>
+        <VehicleProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Landing />} />
+              
+              <Route element={<AuthLayout />}>
+                <Route path="/login" element={<Login />} />
+              </Route>
+              
+              <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/vehicles" element={<Vehicles />} />
+                <Route path="/portaria" element={<Portaria />} />
+                <Route path="/drivers" element={<Drivers />} />
+                <Route path="/maintenance" element={<Maintenance />} />
+                <Route path="/reports" element={<Reports />} />
+                <Route path="/marketplace" element={<Marketplace />} />
+              </Route>
+              
+              <Route path="/nova-conta" element={<ProtectedRoute><CreateAccount /></ProtectedRoute>} />
+              
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </VehicleProvider>
+      </DriverProvider>
+      </AccountProvider>
+      </ThemeProvider>
+    </AuthProvider>
+  );
+}
+
+export default App;

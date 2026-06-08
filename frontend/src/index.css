@@ -1,0 +1,47 @@
+@import "tailwindcss";
+@import 'leaflet/dist/leaflet.css';
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --color-fleet-50: #eff6ff;
+  --color-fleet-100: #dbeafe;
+  --color-fleet-200: #bfdbfe;
+  --color-fleet-300: #93c5fd;
+  --color-fleet-400: #60a5fa;
+  --color-fleet-500: #3b82f6;
+  --color-fleet-600: #1E3A8A;
+  --color-fleet-700: #172554;
+  --color-fleet-800: #0f172a;
+  --color-fleet-900: #020617;
+  --color-secondary: #4B5563;
+  --color-alert: #FACC15;
+}
+
+@layer base {
+  body {
+    @apply bg-fleet-900 text-fleet-50 font-sans antialiased overflow-x-hidden;
+  }
+  
+  ::selection {
+    @apply bg-fleet-400/30 text-white;
+  }
+}
+
+/* Custom premium scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-fleet-700 rounded-full;
+  border: 2px solid theme('colors.fleet.900'); /* Creates padding effect */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-fleet-500;
+}

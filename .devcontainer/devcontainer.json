@@ -1,0 +1,11 @@
+{
+  "name": "FleetMonitor Dev",
+  "dockerComposeFile": ["../docker-compose.yml"],
+  "service": "backend",
+  "workspaceFolder": "/app",
+  "shutdownAction": "stopCompose",
+  "extensions": [
+    "ms-python.python",
+    "esbenp.prettier-vscode"
+  ]
+}
