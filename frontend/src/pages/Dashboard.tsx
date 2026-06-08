@@ -7,9 +7,14 @@ import {
   PieChart,
   Pie,
   Cell,
-  Tooltip
+  Tooltip,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid
 } from 'recharts';
-import { Car, AlertTriangle, Trophy, BrainCircuit, BellRing, Clock, AlertOctagon, Target, X, CheckCircle2 } from 'lucide-react';
+import { Car, AlertTriangle, Trophy, BrainCircuit, BellRing, Clock, AlertOctagon, Target, X, CheckCircle2, PieChart as PieChartIcon, BarChart3 } from 'lucide-react';
 import { useVehicles } from '../lib/VehicleContext';
 import { useDrivers } from '../lib/DriverContext';
 import { useAccount } from '../lib/AccountContext';
@@ -70,6 +75,7 @@ export default function Dashboard() {
   const { theme } = useTheme();
   const [isDriversModalOpen, setIsDriversModalOpen] = useState(false);
   const [isAlertsModalOpen, setIsAlertsModalOpen] = useState(false);
+  const [chartType, setChartType] = useState<'pie' | 'bar'>('pie');
   
   
   const totalVehicles = vehicles.length;
@@ -179,36 +185,73 @@ export default function Dashboard() {
       <div className="w-full mb-8">
 
         <motion.div variants={itemVariants} className="bg-[#f1f5f9]  dark:bg-white/5  p-6 rounded-2xl shadow-[0_2px_6px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-200/60 dark:border-white/10 flex flex-col">
-          <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-1 flex items-center gap-2">
-            <Clock className="w-5 h-5 text-fleet-500 dark:text-fleet-300" />
-            Análise de Tempo (Hoje)
-          </h3>
+          <div className="flex justify-between items-start mb-1">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+              <Clock className="w-5 h-5 text-fleet-500 dark:text-fleet-300" />
+              Análise de Tempo (Hoje)
+            </h3>
+            
+            <div className="flex bg-gray-100 dark:bg-black/30 p-1 rounded-lg border border-gray-200 dark:border-white/5">
+              <button 
+                onClick={() => setChartType('pie')}
+                className={`p-1.5 rounded-md flex items-center justify-center transition-all ${chartType === 'pie' ? 'bg-white dark:bg-white/10 shadow-sm text-fleet-600 dark:text-white' : 'text-slate-500 dark:text-fleet-300 hover:text-slate-800 dark:hover:text-white'}`}
+                title="Gráfico de Pizza"
+              >
+                <PieChartIcon className="w-4 h-4" />
+              </button>
+              <button 
+                onClick={() => setChartType('bar')}
+                className={`p-1.5 rounded-md flex items-center justify-center transition-all ${chartType === 'bar' ? 'bg-white dark:bg-white/10 shadow-sm text-fleet-600 dark:text-white' : 'text-slate-500 dark:text-fleet-300 hover:text-slate-800 dark:hover:text-white'}`}
+                title="Gráfico de Barras"
+              >
+                <BarChart3 className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
           <p className="text-sm font-medium text-slate-500 dark:text-fleet-200/70 mb-2">Proporção ociosa vs rodando</p>
           
-          <div className="flex flex-col md:flex-row items-center gap-8 mt-4">
-            <div className="flex-1 w-full h-[300px]">
+          <div className={`flex ${chartType === 'pie' ? 'flex-col md:flex-row items-center' : 'flex-col'} gap-8 mt-4`}>
+            <div className={`flex-1 w-full ${chartType === 'pie' ? 'h-[300px]' : 'h-[350px]'}`}>
               {currentIdleData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={currentIdleData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={90}
-                      outerRadius={120}
-                      paddingAngle={5}
-                      dataKey="value"
-                      stroke="none"
-                    >
-                      {currentIdleData.map((entry: any, index: number) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      contentStyle={{ borderRadius: '12px', border: 'none', background: theme === 'dark' ? '#172554' : '#ffffff', color: theme === 'dark' ? '#fff' : '#0f172a', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                      itemStyle={{ fontWeight: 600, color: theme === 'dark' ? '#fff' : '#0f172a' }}
-                    />
-                  </PieChart>
+                  {chartType === 'pie' ? (
+                    <PieChart>
+                      <Pie
+                        data={currentIdleData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={90}
+                        outerRadius={120}
+                        paddingAngle={5}
+                        dataKey="value"
+                        stroke="none"
+                      >
+                        {currentIdleData.map((entry: any, index: number) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ borderRadius: '12px', border: 'none', background: theme === 'dark' ? '#172554' : '#ffffff', color: theme === 'dark' ? '#fff' : '#0f172a', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                        itemStyle={{ fontWeight: 600, color: theme === 'dark' ? '#fff' : '#0f172a' }}
+                      />
+                    </PieChart>
+                  ) : (
+                    <BarChart data={currentIdleData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? '#334155' : '#e2e8f0'} vertical={false} />
+                      <XAxis dataKey="name" stroke={theme === 'dark' ? '#94a3b8' : '#64748b'} tick={{ fill: theme === 'dark' ? '#94a3b8' : '#64748b', fontSize: 12 }} />
+                      <YAxis stroke={theme === 'dark' ? '#94a3b8' : '#64748b'} tick={{ fill: theme === 'dark' ? '#94a3b8' : '#64748b', fontSize: 12 }} />
+                      <Tooltip 
+                        contentStyle={{ borderRadius: '12px', border: 'none', background: theme === 'dark' ? '#172554' : '#ffffff', color: theme === 'dark' ? '#fff' : '#0f172a', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                        itemStyle={{ fontWeight: 600, color: theme === 'dark' ? '#fff' : '#0f172a' }}
+                        cursor={{ fill: theme === 'dark' ? '#1e293b' : '#f1f5f9' }}
+                      />
+                      <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                        {currentIdleData.map((entry: any, index: number) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  )}
                 </ResponsiveContainer>
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
@@ -217,17 +260,20 @@ export default function Dashboard() {
               )}
             </div>
             
-            <div className="flex-1 w-full flex flex-col justify-center gap-5 md:pr-8">
-              {currentIdleData.length > 0 && currentIdleData.map((item: any, index: number) => (
-                <div key={index} className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-4 h-4 rounded-full shadow-inner" style={{ backgroundColor: item.color }}></div>
-                    <span className="text-base text-slate-600 dark:text-fleet-100 font-semibold">{item.name}</span>
+            
+            {chartType === 'pie' && (
+              <div className="flex-1 w-full flex flex-col justify-center gap-5 md:pr-8">
+                {currentIdleData.length > 0 && currentIdleData.map((item: any, index: number) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-4 h-4 rounded-full shadow-inner" style={{ backgroundColor: item.color }}></div>
+                      <span className="text-base text-slate-600 dark:text-fleet-100 font-semibold">{item.name}</span>
+                    </div>
+                    <span className="text-lg font-black text-slate-800 dark:text-white">{item.value}%</span>
                   </div>
-                  <span className="text-lg font-black text-slate-800 dark:text-white">{item.value}%</span>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </motion.div>
       </div>
