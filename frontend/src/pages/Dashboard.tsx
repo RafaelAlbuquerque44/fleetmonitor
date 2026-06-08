@@ -9,7 +9,7 @@ import {
   Cell,
   Tooltip
 } from 'recharts';
-import { Car, Zap, AlertTriangle, Trophy, BrainCircuit, BellRing, Clock, AlertOctagon, Target, X, CheckCircle2 } from 'lucide-react';
+import { Car, AlertTriangle, Trophy, BrainCircuit, BellRing, Clock, AlertOctagon, Target, X, CheckCircle2 } from 'lucide-react';
 import { useVehicles } from '../lib/VehicleContext';
 import { useDrivers } from '../lib/DriverContext';
 import { useAccount } from '../lib/AccountContext';
@@ -144,7 +144,7 @@ export default function Dashboard() {
       </div>
 
       {/* KPI Cards section - using premium glassmorphism logic */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl mx-auto mb-8">
         <motion.div variants={itemVariants} whileHover={{ y: -4, transition: { duration: 0.2 } }} className="relative overflow-hidden bg-[#f1f5f9]  dark:bg-white/5  p-6 rounded-2xl shadow-[0_2px_6px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-200/60 dark:border-white/10 transition-all hover:shadow-lg dark:hover:shadow-xl hover:shadow-gray-200/50 dark:hover:shadow-white/5 group">
           <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-fleet-500/5 dark:bg-white/5 rounded-full blur-2xl group-hover:bg-fleet-500/10 dark:group-hover:bg-white/10 transition-colors"></div>
           <div className="relative flex items-center gap-4">
@@ -173,28 +173,10 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
-        {/* Emissões - Requires Roteirizacao */}
-        {(activeAccount?.produto_roteirizacao || isGlobalAdmin) && (
-          <motion.div variants={itemVariants} whileHover={{ y: -4, transition: { duration: 0.2 } }} className="relative overflow-hidden bg-[#f1f5f9]  dark:bg-white/5  p-6 rounded-2xl shadow-[0_2px_6px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-200/60 dark:border-white/10 transition-all hover:shadow-lg dark:hover:shadow-xl hover:shadow-cyan-500/10 dark:hover:shadow-cyan-500/5 group">
-            <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-cyan-500/5 dark:bg-cyan-500/10 rounded-full blur-2xl group-hover:bg-cyan-500/10 dark:group-hover:bg-cyan-500/20 transition-colors"></div>
-             <div className="relative flex items-center gap-4">
-              <div className="p-3.5 bg-cyan-50 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 rounded-xl shadow-sm dark:shadow-inner border border-cyan-100 dark:border-cyan-500/20">
-                <Zap className="w-7 h-7" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-slate-400 dark:text-fleet-200 uppercase tracking-widest mb-1">Emissões CO₂</p>
-                <h3 className="text-3xl font-black text-slate-800 dark:text-white tracking-tight flex items-baseline gap-2">
-                  {hasVehicles ? '-4.2%' : '0%'}
-                  {hasVehicles && <span className="text-xs font-bold text-slate-600 dark:text-fleet-100 bg-slate-100 dark:bg-white/10 px-2 py-0.5 rounded-md border border-slate-200 dark:border-white/5">Mês</span>}
-                </h3>
-              </div>
-            </div>
-          </motion.div>
-        )}
       </div>
 
       {/* Main Charts area */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="w-full max-w-3xl mx-auto mb-8">
 
         <motion.div variants={itemVariants} className="bg-[#f1f5f9]  dark:bg-white/5  p-6 rounded-2xl shadow-[0_2px_6px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-200/60 dark:border-white/10 flex flex-col">
           <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-1 flex items-center gap-2">
@@ -202,7 +184,7 @@ export default function Dashboard() {
             Análise de Tempo (Hoje)
           </h3>
           <p className="text-sm font-medium text-slate-500 dark:text-fleet-200/70 mb-6">Proporção ociosa vs rodando</p>
-          <div className="flex-1 min-h-[200px] flex items-center justify-center">
+          <div className="flex-1 min-h-[300px] flex items-center justify-center">
             {currentIdleData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
