@@ -62,9 +62,12 @@ export default function Portaria() {
     { id: 2, empresa: 'Fornecedor Beta', placa: 'BBB-9999', entrada: '15:10', doca: 'Doca 05', status: 'Aguardando' }
   ]);
 
-  const patioSlots = Array.from({ length: 12 }, (_, i) => {
-    const isRowA = i < 6;
-    const slotName = `${isRowA ? 'A' : 'B'}${isRowA ? i + 1 : i - 5}`;
+  const [totalSlots, setTotalSlots] = useState(12);
+
+  const patioSlots = Array.from({ length: totalSlots }, (_, i) => {
+    const half = Math.ceil(totalSlots / 2);
+    const isRowA = i < half;
+    const slotName = `${isRowA ? 'A' : 'B'}${isRowA ? i + 1 : i - half + 1}`;
     const vehiclesInPatio = vehicles.filter(v => v.statusPatio === 'no_patio');
     const vehicleInPatio = vehiclesInPatio[i] || null;
     return { name: slotName, vehicle: vehicleInPatio };
@@ -361,7 +364,7 @@ export default function Portaria() {
               </div>
               <div className="grid grid-cols-2 gap-12 relative z-10">
                 <div className="grid grid-cols-2 gap-2">
-                  {patioSlots.slice(0, 6).map((slot, idx) => (
+                  {patioSlots.slice(0, Math.ceil(totalSlots / 2)).map((slot, idx) => (
                     <div key={idx} className={`h-16 rounded-lg border-2 ${slot.vehicle ? 'border-green-400 bg-green-500/10' : 'border-dashed border-slate-400/50 dark:border-white/20 bg-slate-100/50 dark:bg-white/5'} flex flex-col items-center justify-center relative group transition-colors`}>
                       <span className="absolute top-1 left-1.5 text-[10px] font-black text-slate-400 dark:text-fleet-300/50">{slot.name}</span>
                       {slot.vehicle ? (
@@ -376,7 +379,7 @@ export default function Portaria() {
                   ))}
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  {patioSlots.slice(6, 12).map((slot, idx) => (
+                  {patioSlots.slice(Math.ceil(totalSlots / 2), totalSlots).map((slot, idx) => (
                     <div key={idx} className={`h-16 rounded-lg border-2 ${slot.vehicle ? 'border-green-400 bg-green-500/10' : 'border-dashed border-slate-400/50 dark:border-white/20 bg-slate-100/50 dark:bg-white/5'} flex flex-col items-center justify-center relative group transition-colors`}>
                       <span className="absolute top-1 left-1.5 text-[10px] font-black text-slate-400 dark:text-fleet-300/50">{slot.name}</span>
                       {slot.vehicle ? (
@@ -392,6 +395,13 @@ export default function Portaria() {
                 </div>
               </div>
             </div>
+            
+            <button 
+              onClick={() => setTotalSlots(prev => prev + 2)}
+              className="w-full mt-4 py-2 border-2 border-dashed border-gray-300 dark:border-white/20 text-slate-600 dark:text-fleet-200 font-bold rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 hover:border-gray-400 dark:hover:border-white/30 transition-all flex items-center justify-center gap-2"
+            >
+              <Map className="w-4 h-4" /> Expandir Setor (Adicionar Vagas)
+            </button>
           </div>
 
           {/* Controle de Visitantes */}
