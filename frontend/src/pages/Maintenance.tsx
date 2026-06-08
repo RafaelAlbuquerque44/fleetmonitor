@@ -10,8 +10,43 @@ const mockPredictiveAlerts = [
 ];
 
 export default function Maintenance() {
-  const { vehicles } = useVehicles();
+  const { vehicles, updateVehicle } = useVehicles();
   const [activeBoard, setActiveBoard] = useState<'preditiva' | 'ordens'>('preditiva');
+  const [predictiveAlerts, setPredictiveAlerts] = useState(mockPredictiveAlerts);
+
+  const handleAgendar = (alert: typeof mockPredictiveAlerts[0]) => {
+    const vehicle = vehicles.find(v => v.plate === alert.plate);
+    if (vehicle) {
+      updateVehicle(vehicle.id, { 
+        status: 'maintenance_queue', 
+        maintenanceDetails: alert.issue 
+      });
+      setPredictiveAlerts(prev => prev.filter(a => a.id !== alert.id));
+    } else {
+      window.alert("Veículo não encontrado na base de dados (Placa: " + alert.plate + ")");
+    }
+  };
+
+  const handleDragStart = (e: React.DragEvent, vehicleId: number) => {
+    e.dataTransfer.setData('vehicleId', vehicleId.toString());
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent, newStatus: string) => {
+    e.preventDefault();
+    const vehicleIdStr = e.dataTransfer.getData('vehicleId');
+    if (!vehicleIdStr) return;
+    const vehicleId = parseInt(vehicleIdStr, 10);
+    
+    if (newStatus === 'active') {
+      updateVehicle(vehicleId, { status: 'active', maintenanceDetails: '' });
+    } else {
+      updateVehicle(vehicleId, { status: newStatus });
+    }
+  };
 
   return (
     <motion.div 
@@ -89,7 +124,7 @@ export default function Maintenance() {
             </div>
 
              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {mockPredictiveAlerts.map((alert, index) => (
+              {predictiveAlerts.map((alert, index) => (
                 <motion.div 
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -140,7 +175,7 @@ export default function Maintenance() {
                     </div>
 
                     <button 
-                      onClick={() => window.alert(`Ordem de Serviço (O.S.) gerada e agendada para ${alert.plate}:\nFalha Prevista: ${alert.issue}\nEconomia Estimada: R$ ${alert.costCorrective - alert.costPrevention}`)}
+                      onClick={() => handleAgendar(alert)}
                       className="w-full mt-6 bg-fleet-500 text-slate-800 dark:text-white py-3.5 rounded-xl text-sm font-bold shadow-md shadow-fleet-500/20 hover:bg-fleet-400 transition-all"
                     >
                       Agendar Oficina Agora
@@ -148,6 +183,12 @@ export default function Maintenance() {
                   </div>
                 </motion.div>
               ))}
+              {predictiveAlerts.length === 0 && (
+                <div className="col-span-1 md:col-span-3 text-center py-12">
+                  <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4 opacity-50" />
+                  <p className="text-xl font-bold text-slate-500 dark:text-fleet-200">Todos os alertas foram agendados ou resolvidos!</p>
+                </div>
+              )}
             </div>
           </motion.div>
         ) : (
@@ -169,53 +210,106 @@ export default function Maintenance() {
               </div>
               
               {/* Kanban layout mock */}
-              <div className="flex flex-col lg:flex-row gap-6 mx-auto w-full max-w-6xl text-left flex-1 min-h-0 overflow-y-auto lg:overflow-visible custom-scrollbar">
-                {/* Col 1 */}
-                <div className="flex-1 bg-gray-50 dark:bg-white/5 rounded-3xl p-5 border border-gray-200 dark:border-white/10 shadow-inner flex flex-col">
-                  <h4 className="font-black text-slate-800 dark:text-white flex justify-between items-center mb-5 text-lg">
-                    Fila de Oficina <span className="text-sm font-bold bg-[#f1f5f9] dark:bg-white/20 text-slate-800 dark:text-white w-8 h-8 rounded-full flex items-center justify-center border border-gray-200 dark:border-white/10 shadow-sm dark:shadow-none">1</span>
+              <div className="flex flex-col lg:flex-row gap-6 mx-auto w-full max-w-[1400px] text-left flex-1 min-h-0 overflow-x-auto custom-scrollbar">
+                
+                {/* Col 0: Frota Ativa */}
+                <div 
+                  className="flex-1 min-w-[280px] bg-slate-50 dark:bg-white/5 rounded-3xl p-5 border border-slate-200 dark:border-white/10 shadow-inner flex flex-col"
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, 'active')}
+                >
+                  <h4 className="font-black text-slate-600 dark:text-slate-300 flex justify-between items-center mb-5 text-lg">
+                    Frota Ativa <span className="text-sm font-bold bg-[#f1f5f9] dark:bg-white/10 text-slate-600 dark:text-white w-8 h-8 rounded-full flex items-center justify-center border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-none">{vehicles.filter(v => v.status === 'active').length}</span>
                   </h4>
-                  <div className="flex-1 space-y-4">
-                     <div className="bg-[#f1f5f9]  dark:bg-fleet-800/80  p-5 rounded-2xl shadow-[0_2px_6px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-200 dark:border-white/10 overflow-hidden relative cursor-grab hover:border-white/30 hover:shadow-lg transition-all group">
-                       <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-red-500"></div>
-                       <div className="flex justify-between items-start mb-3 pl-2">
-                         <span className="text-[10px] font-black px-2 py-1 bg-red-500/20 text-red-300 rounded uppercase tracking-widest border border-red-500/20">Urgente</span>
-                         <span className="text-xs font-bold text-slate-800 dark:text-white/50 bg-black/20 px-2 py-1 rounded shadow-inner">OS-1029</span>
-                       </div>
-                       <p className="font-black text-slate-800 dark:text-white text-2xl pl-2 group-hover:text-slate-600 dark:text-fleet-300 transition-colors">XYZ-9876</p>
-                       <p className="text-sm font-bold text-slate-500 dark:text-fleet-200/70 mt-1 pl-2">Aviso Pneu Dianteiro - IA</p>
-                     </div>
+                  <div className="flex-1 space-y-4 overflow-y-auto pr-2 custom-scrollbar">
+                    {vehicles.filter(v => v.status === 'active').map(v => (
+                      <div 
+                        key={v.id} 
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, v.id)}
+                        className="bg-white  dark:bg-slate-800/80 p-4 rounded-xl shadow-sm dark:shadow-none border border-gray-200 dark:border-white/10 overflow-hidden relative cursor-grab active:cursor-grabbing hover:border-slate-300 dark:hover:border-white/30 hover:shadow-md transition-all group"
+                      >
+                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-slate-300 dark:bg-slate-500"></div>
+                        <div className="pl-2">
+                          <p className="font-black text-slate-800 dark:text-white text-xl">{v.plate}</p>
+                          <p className="text-xs font-bold text-slate-500 dark:text-fleet-200/70 mt-1">{v.model}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
-                {/* Col 2 */}
-                <div className="flex-1 bg-yellow-50 dark:bg-yellow-500/10 rounded-3xl p-5 border border-yellow-200 dark:border-yellow-500/20 shadow-inner flex flex-col">
+                {/* Col 1: Fila de Oficina */}
+                <div 
+                  className="flex-1 min-w-[280px] bg-red-50 dark:bg-red-500/5 rounded-3xl p-5 border border-red-100 dark:border-red-500/10 shadow-inner flex flex-col"
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, 'maintenance_queue')}
+                >
+                  <h4 className="font-black text-red-600 dark:text-red-400 flex justify-between items-center mb-5 text-lg">
+                    Fila de Oficina <span className="text-sm font-bold bg-[#f1f5f9] dark:bg-red-500/20 text-red-600 dark:text-red-300 w-8 h-8 rounded-full flex items-center justify-center border border-red-200 dark:border-red-500/20 shadow-sm dark:shadow-none">{vehicles.filter(v => v.status === 'maintenance_queue').length}</span>
+                  </h4>
+                  <div className="flex-1 space-y-4 overflow-y-auto pr-2 custom-scrollbar">
+                     {vehicles.filter(v => v.status === 'maintenance_queue').map(v => (
+                       <div 
+                         key={v.id} 
+                         draggable
+                         onDragStart={(e) => handleDragStart(e, v.id)}
+                         className="bg-white dark:bg-fleet-800/80 p-5 rounded-2xl shadow-sm dark:shadow-none border border-red-200 dark:border-red-500/20 overflow-hidden relative cursor-grab active:cursor-grabbing hover:border-red-400 hover:shadow-md transition-all group"
+                       >
+                         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-red-500"></div>
+                         <div className="flex justify-between items-start mb-3 pl-2">
+                           <span className="text-[10px] font-black px-2 py-1 bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-300 rounded uppercase tracking-widest border border-red-200 dark:border-red-500/20">Aguardando</span>
+                           <span className="text-xs font-bold text-slate-500 dark:text-white/50 bg-gray-100 dark:bg-black/20 px-2 py-1 rounded shadow-inner">OS-{v.id + 2000}</span>
+                         </div>
+                         <p className="font-black text-slate-800 dark:text-white text-2xl pl-2 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors">{v.plate}</p>
+                         <p className="text-sm font-bold text-red-600/80 dark:text-red-300/80 mt-1 pl-2">{v.maintenanceDetails || 'Análise Pendente'}</p>
+                       </div>
+                     ))}
+                  </div>
+                </div>
+
+                {/* Col 2: Em Manutenção */}
+                <div 
+                  className="flex-1 min-w-[280px] bg-yellow-50 dark:bg-yellow-500/10 rounded-3xl p-5 border border-yellow-200 dark:border-yellow-500/20 shadow-inner flex flex-col"
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, 'maintenance')}
+                >
                   <h4 className="font-black text-yellow-600 dark:text-yellow-500 flex justify-between items-center mb-5 text-lg drop-shadow-sm">
                     Em Manutenção <span className="text-sm font-bold bg-[#f1f5f9] dark:bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 w-8 h-8 rounded-full flex items-center justify-center border border-yellow-200 dark:border-yellow-500/20 shadow-sm dark:shadow-none">{vehicles.filter(v => v.status === 'maintenance').length}</span>
                   </h4>
-                  <div className="flex-1 space-y-4">
+                  <div className="flex-1 space-y-4 overflow-y-auto pr-2 custom-scrollbar">
                     {vehicles.filter(v => v.status === 'maintenance').map(v => (
-                      <div key={v.id} className="bg-[#f1f5f9]  dark:bg-fleet-800/80  p-5 rounded-2xl shadow-[0_2px_6px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-200 dark:border-white/10 overflow-hidden relative cursor-grab hover:border-yellow-400/50 hover:shadow-lg transition-all group">
+                      <div 
+                        key={v.id} 
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, v.id)}
+                        className="bg-white dark:bg-fleet-800/80 p-5 rounded-2xl shadow-sm dark:shadow-none border border-yellow-200 dark:border-yellow-500/30 overflow-hidden relative cursor-grab active:cursor-grabbing hover:border-yellow-400 hover:shadow-md transition-all group"
+                      >
                         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-yellow-500"></div>
                         <div className="flex justify-between items-start mb-3 pl-2">
-                          <span className="text-[10px] font-black px-2 py-1 bg-blue-500/20 text-blue-300 rounded uppercase tracking-widest border border-blue-500/20">Serviço Oficina</span>
-                          <span className="text-xs font-bold text-slate-800 dark:text-white/50 bg-black/20 px-2 py-1 rounded shadow-inner">OS-{v.id + 1000}</span>
+                          <span className="text-[10px] font-black px-2 py-1 bg-blue-50 dark:bg-blue-500/20 text-blue-600 dark:text-blue-300 rounded uppercase tracking-widest border border-blue-200 dark:border-blue-500/20">Em Serviço</span>
+                          <span className="text-xs font-bold text-slate-500 dark:text-white/50 bg-gray-100 dark:bg-black/20 px-2 py-1 rounded shadow-inner">OS-{v.id + 1000}</span>
                         </div>
-                        <p className="font-black text-slate-800 dark:text-white text-2xl pl-2 group-hover:text-yellow-400 transition-colors">{v.plate}</p>
+                        <p className="font-black text-slate-800 dark:text-white text-2xl pl-2 group-hover:text-yellow-600 dark:group-hover:text-yellow-400 transition-colors">{v.plate}</p>
                         <p className="text-sm font-bold text-slate-500 dark:text-fleet-200/70 mt-1 pl-2">{v.maintenanceDetails || 'Manutenção em andamento'}</p>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                {/* Col 3 */}
-                <div className="flex-1 bg-green-50 dark:bg-green-500/10 rounded-3xl p-5 border border-green-200 dark:border-green-500/20 shadow-inner flex flex-col">
+                {/* Col 3: Liberado */}
+                <div 
+                  className="flex-1 min-w-[280px] bg-green-50 dark:bg-green-500/10 rounded-3xl p-5 border border-green-200 dark:border-green-500/20 shadow-inner flex flex-col"
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, 'active')}
+                >
                   <h4 className="font-black text-green-600 dark:text-green-400 flex justify-between items-center mb-5 text-lg drop-shadow-sm">
-                    Liberado <span className="text-sm font-bold bg-[#f1f5f9] dark:bg-green-500/20 text-green-600 dark:text-green-400 w-8 h-8 rounded-full flex items-center justify-center border border-green-200 dark:border-green-500/20 shadow-sm dark:shadow-none">0</span>
+                    Liberar (Concluído) <span className="text-sm font-bold bg-[#f1f5f9] dark:bg-green-500/20 text-green-600 dark:text-green-400 w-8 h-8 rounded-full flex items-center justify-center border border-green-200 dark:border-green-500/20 shadow-sm dark:shadow-none"><CheckCircle2 className="w-4 h-4" /></span>
                   </h4>
-                  <div className="flex-1 border-2 border-dashed border-green-300 dark:border-green-500/30 rounded-2xl flex flex-col items-center justify-center text-sm font-bold text-green-500/50 dark:text-green-400/50 bg-green-100/30 dark:bg-green-500/5">
+                  <div className="flex-1 border-2 border-dashed border-green-300 dark:border-green-500/30 rounded-2xl flex flex-col items-center justify-center text-sm font-bold text-green-600/70 dark:text-green-400/50 bg-green-100/30 dark:bg-green-500/5 hover:bg-green-100 dark:hover:bg-green-500/10 transition-colors">
                      <CheckCircle2 className="w-10 h-10 mb-3 opacity-50" />
-                     Arraste cards para cá
+                     Arraste cards para cá<br/>
+                     <span className="text-xs font-normal mt-1 opacity-70">(O veículo voltará para a Frota Ativa)</span>
                   </div>
                 </div>
               </div>
