@@ -66,10 +66,16 @@ export default function Portaria() {
     { id: 3, type: 'saida', plate: 'DEF-5678', time: '08:00', details: 'Saída p/ Cliente X' }
   ]);
 
-  const [visitantes] = useState([
+  const [visitantes, setVisitantes] = useState([
     { id: 1, empresa: 'Transportes Alpha', placa: 'AAA-0001', entrada: '14:20', doca: 'Doca 02', status: 'Carregando' },
     { id: 2, empresa: 'Fornecedor Beta', placa: 'BBB-9999', entrada: '15:10', doca: 'Doca 05', status: 'Aguardando' }
   ]);
+
+  const [isVisitanteModalOpen, setIsVisitanteModalOpen] = useState(false);
+  const [novoVisitanteEmpresa, setNovoVisitanteEmpresa] = useState('');
+  const [novoVisitantePlaca, setNovoVisitantePlaca] = useState('');
+  const [novoVisitanteDoca, setNovoVisitanteDoca] = useState('');
+  const [novoVisitanteStatus, setNovoVisitanteStatus] = useState('Aguardando');
 
   const [totalSlots, setTotalSlots] = useState(12);
 
@@ -213,6 +219,24 @@ export default function Portaria() {
       time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), 
       details: 'Retornando p/ Central'
     }, ...prev].slice(0, 10));
+  };
+
+  const handleRegistrarVisitante = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newId = visitantes.length > 0 ? Math.max(...visitantes.map(v => v.id)) + 1 : 1;
+    setVisitantes([...visitantes, {
+      id: newId,
+      empresa: novoVisitanteEmpresa,
+      placa: novoVisitantePlaca,
+      entrada: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+      doca: novoVisitanteDoca,
+      status: novoVisitanteStatus
+    }]);
+    setIsVisitanteModalOpen(false);
+    setNovoVisitanteEmpresa('');
+    setNovoVisitantePlaca('');
+    setNovoVisitanteDoca('');
+    setNovoVisitanteStatus('Aguardando');
   };
 
   return (
@@ -501,7 +525,10 @@ export default function Portaria() {
                 </tbody>
               </table>
             </div>
-            <button className="w-full mt-4 py-2 border-2 border-dashed border-gray-300 dark:border-white/20 text-slate-600 dark:text-fleet-200 font-bold rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 hover:border-gray-400 dark:hover:border-white/30 transition-all flex items-center justify-center gap-2">
+            <button 
+              onClick={() => setIsVisitanteModalOpen(true)}
+              className="w-full mt-4 py-2 border-2 border-dashed border-gray-300 dark:border-white/20 text-slate-600 dark:text-fleet-200 font-bold rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 hover:border-gray-400 dark:hover:border-white/30 transition-all flex items-center justify-center gap-2"
+            >
               <Users className="w-4 h-4" /> Registrar Novo Visitante
             </button>
           </div>
@@ -665,6 +692,47 @@ export default function Portaria() {
         </div>
       </Transition>
 
+      {/* Modal de Registro de Visitante */}
+      <Dialog open={isVisitanteModalOpen} onClose={() => setIsVisitanteModalOpen(false)} className="relative z-50">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" aria-hidden="true" />
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          <DialogPanel className="w-full max-w-sm rounded-2xl bg-white dark:bg-fleet-800 p-6 shadow-2xl border border-gray-200 dark:border-white/10">
+            <DialogTitle className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2 mb-4">
+              <Users className="w-5 h-5 text-fleet-500" />
+              Novo Visitante/Doca
+            </DialogTitle>
+            <form onSubmit={handleRegistrarVisitante} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-fleet-200 mb-1">Empresa / Fornecedor</label>
+                <input type="text" required value={novoVisitanteEmpresa} onChange={e => setNovoVisitanteEmpresa(e.target.value)} placeholder="Ex: Transportes Alpha" className="w-full px-3 py-2 bg-white dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-lg text-slate-800 dark:text-white" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-fleet-200 mb-1">Placa do Veículo</label>
+                <input type="text" required value={novoVisitantePlaca} onChange={e => setNovoVisitantePlaca(e.target.value)} placeholder="Ex: ABC-1234" className="w-full px-3 py-2 bg-white dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-lg text-slate-800 dark:text-white uppercase font-mono" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-fleet-200 mb-1">Local / Doca</label>
+                  <input type="text" required value={novoVisitanteDoca} onChange={e => setNovoVisitanteDoca(e.target.value)} placeholder="Ex: Doca 01" className="w-full px-3 py-2 bg-white dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-lg text-slate-800 dark:text-white" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-fleet-200 mb-1">Status Inicial</label>
+                  <select required value={novoVisitanteStatus} onChange={e => setNovoVisitanteStatus(e.target.value)} className="w-full px-3 py-2 bg-white dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-lg text-slate-800 dark:text-white">
+                    <option value="Aguardando">Aguardando</option>
+                    <option value="Carregando">Carregando</option>
+                    <option value="Descarregando">Descarregando</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div className="flex gap-3 mt-6">
+                <button type="button" onClick={() => setIsVisitanteModalOpen(false)} className="flex-1 py-2 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-slate-700 dark:text-white font-bold rounded-lg transition">Cancelar</button>
+                <button type="submit" className="flex-1 py-2 bg-fleet-600 hover:bg-fleet-700 text-white font-bold rounded-lg transition">Salvar Visitante</button>
+              </div>
+            </form>
+          </DialogPanel>
+        </div>
+      </Dialog>
     </motion.div>
   );
 }
