@@ -32,7 +32,7 @@ const itemVariants: Variants = {
 };
 
 export default function Portaria() {
-  const { vehicles, registrarSaida, registrarRetorno, registrarChegadaDestino, registrarSaidaDestino } = useVehicles();
+  const { vehicles, registrarSaida, registrarRetorno, registrarChegadaDestino, registrarSaidaDestino, updateVehicle } = useVehicles();
   const { drivers } = useDrivers();
   
   // Controle de Pátio States
@@ -44,6 +44,7 @@ export default function Portaria() {
   const [saidaMotorista, setSaidaMotorista] = useState('');
   const [saidaDestino, setSaidaDestino] = useState('');
   const [maintenanceAlert, setMaintenanceAlert] = useState<{ plate: string; tasks: string[] } | null>(null);
+  const [checklist, setChecklist] = useState({ pneus: true, lataria: true, farois: true, limpeza: true });
   
   const [portariaHistory, setPortariaHistory] = useState<{ id: number, type: 'saida' | 'retorno' | 'chegada' | 'saida_destino', plate: string, time: string, details: string }[]>([
     { id: 1, type: 'saida', plate: 'ABC-1234', time: '10:30', details: 'Saída p/ Rota Sul' },
@@ -79,14 +80,34 @@ export default function Portaria() {
       const parsedNovoKm = parseInt(novoKm);
       
       if (parsedNovoKm >= currentKm) {
+        // Verifica Checklist
+        const avarias: string[] = [];
+        if (!checklist.pneus) avarias.push('Pneus');
+        if (!checklist.lataria) avarias.push('Lataria/Vidros');
+        if (!checklist.farois) avarias.push('Faróis/Elétrica');
+        if (!checklist.limpeza) avarias.push('Necessita Lavagem');
+
         registrarRetorno(selectedVehicle.id, parsedNovoKm);
+        
+        // Se houver avarias críticas, envia para manutenção. Limpeza não bloqueia, mas as outras sim.
+        const avariasCriticas = avarias.filter(a => a !== 'Necessita Lavagem');
+        
+        if (avariasCriticas.length > 0) {
+          updateVehicle(selectedVehicle.id, { 
+            status: 'maintenance', 
+            maintenanceDetails: `Avaria apontada na Portaria: ${avariasCriticas.join(', ')}` 
+          });
+        } else {
+          // Se estava inativo ou algo assim, e voltou bem, garante que fica active
+          updateVehicle(selectedVehicle.id, { status: 'active', maintenanceDetails: undefined });
+        }
         
         setPortariaHistory(prev => [{
           id: Date.now(), 
           type: 'retorno' as const, 
           plate: selectedVehicle.plate, 
           time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), 
-          details: `Retornou c/ ${parsedNovoKm}km`
+          details: avariasCriticas.length > 0 ? `Retornou c/ Avaria: ${avariasCriticas[0]}` : `Retornou c/ ${parsedNovoKm}km (Ok)`
         }, ...prev].slice(0, 10));
         
         const crossed10k = Math.floor(parsedNovoKm / 10000) > Math.floor(currentKm / 10000);
@@ -95,6 +116,7 @@ export default function Portaria() {
         const tasks: string[] = [];
         if (crossed10k) tasks.push('Troca de Óleo e Filtros');
         if (crossed50k) tasks.push('Verificação de Discos e Pastilhas de Freio', 'Alinhamento e Balanceamento');
+        if (avariasCriticas.length > 0) tasks.push(`Inspeção de avaria: ${avariasCriticas.join(', ')}`);
         
         if (tasks.length > 0) {
           setMaintenanceAlert({ plate: selectedVehicle.plate, tasks });
@@ -102,6 +124,7 @@ export default function Portaria() {
         
         setIsRetornoModalOpen(false);
         setNovoKm('');
+        setChecklist({ pneus: true, lataria: true, farois: true, limpeza: true });
       } else {
         alert('O KM de retorno deve ser maior ou igual ao KM de saída.');
       }
@@ -206,7 +229,12 @@ export default function Portaria() {
                       </button>
                     ) : vehicle.statusPatio === 'retornando' ? (
                       <button 
-                        onClick={() => { setSelectedVehicle(vehicle); setIsRetornoModalOpen(true); }}
+                        key={`btn-${vehicle.id}`}
+                        onClick={() => { 
+                          setSelectedVehicle(vehicle); 
+                          setChecklist({ pneus: true, lataria: true, farois: true, limpeza: true });
+                          setIsRetornoModalOpen(true); 
+                        }}
                         className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition flex items-center justify-center gap-2"
                       >
                         <ArrowLeftCircle className="w-4 h-4" /> Retornou (Central)
@@ -316,6 +344,26 @@ export default function Portaria() {
                 <label className="block text-sm font-medium text-slate-700 dark:text-fleet-200 mb-1">Novo KM (Hodômetro Atual)</label>
                 <input type="number" required min={selectedVehicle?.kmAtual || 0} value={novoKm} onChange={e => setNovoKm(e.target.value)} placeholder="Ex: 15500" className="w-full px-3 py-2 bg-white dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-lg text-slate-800 dark:text-white font-mono" />
               </div>
+              
+              <div className="pt-2">
+                <label className="block text-sm font-bold text-slate-700 dark:text-fleet-200 mb-3">Checklist de Vistoria Rápida (Retorno)</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button type="button" onClick={() => setChecklist(p => ({ ...p, pneus: !p.pneus }))} className={`p-2 rounded-lg border text-sm font-semibold flex items-center gap-2 transition-colors ${checklist.pneus ? 'bg-green-50 dark:bg-green-500/10 border-green-200 dark:border-green-500/20 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-400'}`}>
+                    <div className={`w-3 h-3 rounded-full ${checklist.pneus ? 'bg-green-500' : 'bg-red-500'}`}></div> Pneus
+                  </button>
+                  <button type="button" onClick={() => setChecklist(p => ({ ...p, lataria: !p.lataria }))} className={`p-2 rounded-lg border text-sm font-semibold flex items-center gap-2 transition-colors ${checklist.lataria ? 'bg-green-50 dark:bg-green-500/10 border-green-200 dark:border-green-500/20 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-400'}`}>
+                    <div className={`w-3 h-3 rounded-full ${checklist.lataria ? 'bg-green-500' : 'bg-red-500'}`}></div> Lataria/Vidros
+                  </button>
+                  <button type="button" onClick={() => setChecklist(p => ({ ...p, farois: !p.farois }))} className={`p-2 rounded-lg border text-sm font-semibold flex items-center gap-2 transition-colors ${checklist.farois ? 'bg-green-50 dark:bg-green-500/10 border-green-200 dark:border-green-500/20 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-400'}`}>
+                    <div className={`w-3 h-3 rounded-full ${checklist.farois ? 'bg-green-500' : 'bg-red-500'}`}></div> Faróis
+                  </button>
+                  <button type="button" onClick={() => setChecklist(p => ({ ...p, limpeza: !p.limpeza }))} className={`p-2 rounded-lg border text-sm font-semibold flex items-center gap-2 transition-colors ${checklist.limpeza ? 'bg-green-50 dark:bg-green-500/10 border-green-200 dark:border-green-500/20 text-green-700 dark:text-green-400' : 'bg-yellow-50 dark:bg-yellow-500/10 border-yellow-200 dark:border-yellow-500/20 text-yellow-700 dark:text-yellow-400'}`}>
+                    <div className={`w-3 h-3 rounded-full ${checklist.limpeza ? 'bg-green-500' : 'bg-yellow-500'}`}></div> Limpo?
+                  </button>
+                </div>
+                <p className="text-xs text-slate-500 mt-2 italic">* Itens vermelhos enviam o veículo automaticamente para a Oficina.</p>
+              </div>
+
               <div className="flex gap-3 mt-6">
                 <button type="button" onClick={() => setIsRetornoModalOpen(false)} className="flex-1 py-2 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-slate-700 dark:text-white font-bold rounded-lg transition">Cancelar</button>
                 <button type="submit" className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition">Confirmar Retorno</button>
