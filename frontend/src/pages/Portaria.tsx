@@ -49,8 +49,10 @@ export default function Portaria() {
   const [saidaKm, setSaidaKm] = useState('');
   const [saidaMotorista, setSaidaMotorista] = useState('');
   const [saidaDestino, setSaidaDestino] = useState('');
+  const [saidaCombustivel, setSaidaCombustivel] = useState('Cheio');
   const [maintenanceAlert, setMaintenanceAlert] = useState<{ plate: string; tasks: string[] } | null>(null);
   const [checklist, setChecklist] = useState({ pneus: true, lataria: true, farois: true, limpeza: true });
+  const [checklistSaida, setChecklistSaida] = useState({ pneus: true, lataria: true, farois: true, limpeza: true });
   
   const [portariaHistory, setPortariaHistory] = useState<{ id: number, type: 'saida' | 'retorno' | 'chegada' | 'saida_destino', plate: string, time: string, details: string }[]>([
     { id: 1, type: 'saida', plate: 'ABC-1234', time: '10:30', details: 'Saída p/ Rota Sul' },
@@ -78,20 +80,50 @@ export default function Portaria() {
     e.preventDefault();
     if (selectedVehicle && saidaKm) {
       const parsedSaidaKm = parseInt(saidaKm);
-      registrarSaida(selectedVehicle.id, parsedSaidaKm);
       
-      setPortariaHistory(prev => [{
-        id: Date.now(), 
-        type: 'saida' as const, 
-        plate: selectedVehicle.plate, 
-        time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), 
-        details: `Saída p/ ${saidaDestino}`
-      }, ...prev].slice(0, 10));
+      const avarias: string[] = [];
+      if (!checklistSaida.pneus) avarias.push('Pneus');
+      if (!checklistSaida.lataria) avarias.push('Lataria/Vidros');
+      if (!checklistSaida.farois) avarias.push('Faróis/Elétrica');
+      if (!checklistSaida.limpeza) avarias.push('Necessita Lavagem');
+
+      const avariasCriticas = avarias.filter(a => a !== 'Necessita Lavagem');
+
+      if (avariasCriticas.length > 0) {
+        // Bloqueia a saída e manda pra oficina
+        updateVehicle(selectedVehicle.id, { 
+          status: 'maintenance', 
+          maintenanceDetails: `Avaria apontada na SAÍDA: ${avariasCriticas.join(', ')}` 
+        });
+        
+        setPortariaHistory(prev => [{
+          id: Date.now(), 
+          type: 'saida' as const, 
+          plate: selectedVehicle.plate, 
+          time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), 
+          details: `Bloqueado na saída. Oficina: ${avariasCriticas[0]}`
+        }, ...prev].slice(0, 10));
+
+        setMaintenanceAlert({ plate: selectedVehicle.plate, tasks: [`Avaria impeditiva na saída: ${avariasCriticas.join(', ')}. Veículo bloqueado.`] });
+      } else {
+        // Saída normal
+        registrarSaida(selectedVehicle.id, parsedSaidaKm);
+        
+        setPortariaHistory(prev => [{
+          id: Date.now(), 
+          type: 'saida' as const, 
+          plate: selectedVehicle.plate, 
+          time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), 
+          details: `Saída p/ ${saidaDestino} (${saidaCombustivel})`
+        }, ...prev].slice(0, 10));
+      }
       
       setIsSaidaModalOpen(false);
       setSaidaMotorista('');
       setSaidaDestino('');
       setSaidaKm('');
+      setSaidaCombustivel('Cheio');
+      setChecklistSaida({ pneus: true, lataria: true, farois: true, limpeza: true });
     }
   };
 
@@ -263,7 +295,12 @@ export default function Portaria() {
                       </button>
                     ) : (
                       <button 
-                        onClick={() => { setSelectedVehicle(vehicle); setSaidaKm(vehicle.kmAtual?.toString() || ''); setIsSaidaModalOpen(true); }}
+                        onClick={() => { 
+                          setSelectedVehicle(vehicle); 
+                          setSaidaKm(vehicle.kmAtual?.toString() || ''); 
+                          setChecklistSaida({ pneus: true, lataria: true, farois: true, limpeza: true });
+                          setIsSaidaModalOpen(true); 
+                        }}
                         className="w-full py-2 bg-slate-800 dark:bg-white/10 hover:bg-slate-700 dark:hover:bg-white/20 text-white text-sm font-bold rounded-lg transition flex items-center justify-center gap-2"
                       >
                         <ArrowRightCircle className="w-4 h-4" /> Saiu p/ Destino
@@ -484,10 +521,42 @@ export default function Portaria() {
                   {drivers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                 </select>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-fleet-200 mb-1">Destino</label>
-                <input type="text" required value={saidaDestino} onChange={e => setSaidaDestino(e.target.value)} placeholder="Ex: Rota Sul / Cliente X" className="w-full px-3 py-2 bg-white dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-lg text-slate-800 dark:text-white" />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-fleet-200 mb-1">Destino</label>
+                  <input type="text" required value={saidaDestino} onChange={e => setSaidaDestino(e.target.value)} placeholder="Ex: Cliente X" className="w-full px-3 py-2 bg-white dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-lg text-slate-800 dark:text-white" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-fleet-200 mb-1">Combustível</label>
+                  <select required value={saidaCombustivel} onChange={e => setSaidaCombustivel(e.target.value)} className="w-full px-3 py-2 bg-white dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-lg text-slate-800 dark:text-white">
+                    <option value="Reserva">Reserva</option>
+                    <option value="1/4">1/4 Tanque</option>
+                    <option value="Meio Tanque">Meio Tanque</option>
+                    <option value="3/4">3/4 Tanque</option>
+                    <option value="Cheio">Cheio</option>
+                  </select>
+                </div>
               </div>
+              
+              <div className="pt-2 border-t border-gray-200 dark:border-white/10 mt-4">
+                <label className="block text-sm font-bold text-slate-700 dark:text-fleet-200 mb-3 pt-2">Checklist de Vistoria de Saída</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button type="button" onClick={() => setChecklistSaida(p => ({ ...p, pneus: !p.pneus }))} className={`p-2 rounded-lg border text-sm font-semibold flex items-center gap-2 transition-colors ${checklistSaida.pneus ? 'bg-green-50 dark:bg-green-500/10 border-green-200 dark:border-green-500/20 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-400'}`}>
+                    <div className={`w-3 h-3 rounded-full ${checklistSaida.pneus ? 'bg-green-500' : 'bg-red-500'}`}></div> Pneus
+                  </button>
+                  <button type="button" onClick={() => setChecklistSaida(p => ({ ...p, lataria: !p.lataria }))} className={`p-2 rounded-lg border text-sm font-semibold flex items-center gap-2 transition-colors ${checklistSaida.lataria ? 'bg-green-50 dark:bg-green-500/10 border-green-200 dark:border-green-500/20 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-400'}`}>
+                    <div className={`w-3 h-3 rounded-full ${checklistSaida.lataria ? 'bg-green-500' : 'bg-red-500'}`}></div> Lataria/Vidros
+                  </button>
+                  <button type="button" onClick={() => setChecklistSaida(p => ({ ...p, farois: !p.farois }))} className={`p-2 rounded-lg border text-sm font-semibold flex items-center gap-2 transition-colors ${checklistSaida.farois ? 'bg-green-50 dark:bg-green-500/10 border-green-200 dark:border-green-500/20 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-400'}`}>
+                    <div className={`w-3 h-3 rounded-full ${checklistSaida.farois ? 'bg-green-500' : 'bg-red-500'}`}></div> Faróis
+                  </button>
+                  <button type="button" onClick={() => setChecklistSaida(p => ({ ...p, limpeza: !p.limpeza }))} className={`p-2 rounded-lg border text-sm font-semibold flex items-center gap-2 transition-colors ${checklistSaida.limpeza ? 'bg-green-50 dark:bg-green-500/10 border-green-200 dark:border-green-500/20 text-green-700 dark:text-green-400' : 'bg-yellow-50 dark:bg-yellow-500/10 border-yellow-200 dark:border-yellow-500/20 text-yellow-700 dark:text-yellow-400'}`}>
+                    <div className={`w-3 h-3 rounded-full ${checklistSaida.limpeza ? 'bg-green-500' : 'bg-yellow-500'}`}></div> Limpo?
+                  </button>
+                </div>
+                <p className="text-[11px] text-red-600 dark:text-red-400 mt-2 font-semibold">* Avarias impeditivas cancelam a saída automaticamente.</p>
+              </div>
+
               <div className="flex gap-3 mt-6">
                 <button type="button" onClick={() => setIsSaidaModalOpen(false)} className="flex-1 py-2 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-slate-700 dark:text-white font-bold rounded-lg transition">Cancelar</button>
                 <button type="submit" className="flex-1 py-2 bg-fleet-600 hover:bg-fleet-700 text-white font-bold rounded-lg transition">Confirmar Saída</button>
