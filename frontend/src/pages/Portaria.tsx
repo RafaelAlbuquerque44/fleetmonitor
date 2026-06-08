@@ -8,7 +8,12 @@ import {
   Wrench, 
   X,
   History,
-  CarFront
+  CarFront,
+  Users,
+  Map,
+  BarChart2,
+  AlertTriangle,
+  Truck
 } from 'lucide-react';
 import { useVehicles } from '../lib/VehicleContext';
 import type { Vehicle } from '../lib/VehicleContext';
@@ -51,6 +56,19 @@ export default function Portaria() {
     { id: 2, type: 'retorno', plate: 'XYZ-9876', time: '09:15', details: 'Retornou c/ 198.000km' },
     { id: 3, type: 'saida', plate: 'DEF-5678', time: '08:00', details: 'Saída p/ Cliente X' }
   ]);
+
+  const [visitantes] = useState([
+    { id: 1, empresa: 'Transportes Alpha', placa: 'AAA-0001', entrada: '14:20', doca: 'Doca 02', status: 'Carregando' },
+    { id: 2, empresa: 'Fornecedor Beta', placa: 'BBB-9999', entrada: '15:10', doca: 'Doca 05', status: 'Aguardando' }
+  ]);
+
+  const patioSlots = Array.from({ length: 12 }, (_, i) => {
+    const isRowA = i < 6;
+    const slotName = `${isRowA ? 'A' : 'B'}${isRowA ? i + 1 : i - 5}`;
+    const vehiclesInPatio = vehicles.filter(v => v.statusPatio === 'no_patio');
+    const vehicleInPatio = vehiclesInPatio[i] || null;
+    return { name: slotName, vehicle: vehicleInPatio };
+  });
 
   const handleRegistrarSaida = (e: React.FormEvent) => {
     e.preventDefault();
@@ -291,6 +309,139 @@ export default function Portaria() {
           </motion.div>
         </div>
       </div>
+
+      <motion.div variants={itemVariants} className="space-y-6 pt-4 mt-8">
+        <h2 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2 mb-4">
+          <BarChart2 className="w-6 h-6 text-fleet-500" />
+          Visão Geral do Pátio e Terceiros
+        </h2>
+        
+        {/* Indicadores */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-[#f1f5f9] dark:bg-white/5 p-5 rounded-2xl border border-gray-200/60 dark:border-white/10 flex items-center justify-between shadow-sm">
+             <div>
+               <p className="text-sm font-bold text-slate-500 dark:text-fleet-200/70">No Pátio</p>
+               <p className="text-2xl font-black text-slate-800 dark:text-white">{vehicles.filter(v => v.statusPatio === 'no_patio').length}</p>
+             </div>
+             <div className="p-3 bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400 rounded-xl shadow-inner"><CarFront className="w-6 h-6" /></div>
+          </div>
+          <div className="bg-[#f1f5f9] dark:bg-white/5 p-5 rounded-2xl border border-gray-200/60 dark:border-white/10 flex items-center justify-between shadow-sm">
+             <div>
+               <p className="text-sm font-bold text-slate-500 dark:text-fleet-200/70">Em Rota</p>
+               <p className="text-2xl font-black text-slate-800 dark:text-white">{vehicles.filter(v => v.statusPatio !== 'no_patio').length}</p>
+             </div>
+             <div className="p-3 bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-xl shadow-inner"><ArrowRightCircle className="w-6 h-6" /></div>
+          </div>
+          <div className="bg-[#f1f5f9] dark:bg-white/5 p-5 rounded-2xl border border-gray-200/60 dark:border-white/10 flex items-center justify-between shadow-sm">
+             <div>
+               <p className="text-sm font-bold text-slate-500 dark:text-fleet-200/70">Visitantes/Docas</p>
+               <p className="text-2xl font-black text-slate-800 dark:text-white">{visitantes.length}</p>
+             </div>
+             <div className="p-3 bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 rounded-xl shadow-inner"><Users className="w-6 h-6" /></div>
+          </div>
+          <div className="bg-[#f1f5f9] dark:bg-white/5 p-5 rounded-2xl border border-gray-200/60 dark:border-white/10 flex items-center justify-between shadow-sm">
+             <div>
+               <p className="text-sm font-bold text-slate-500 dark:text-fleet-200/70">Avarias (Hoje)</p>
+               <p className="text-2xl font-black text-slate-800 dark:text-white">{portariaHistory.filter(h => h.details.includes('Avaria')).length}</p>
+             </div>
+             <div className="p-3 bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400 rounded-xl shadow-inner"><AlertTriangle className="w-6 h-6" /></div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
+          {/* Mapa de Vagas do Pátio */}
+          <div className="bg-[#f1f5f9] dark:bg-white/5 p-6 rounded-2xl border border-gray-200/60 dark:border-white/10 shadow-[0_2px_6px_rgba(0,0,0,0.03)] dark:shadow-none">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+              <Map className="w-5 h-5 text-fleet-500" />
+              Mapa de Vagas (Setor Logístico)
+            </h3>
+            <div className="bg-slate-200 dark:bg-black/20 p-4 rounded-xl border border-slate-300 dark:border-white/5 relative overflow-hidden">
+              <div className="absolute top-0 bottom-0 left-1/2 w-8 bg-slate-300 dark:bg-white/5 transform -translate-x-1/2 flex items-center justify-center border-l border-r border-dashed border-slate-400 dark:border-white/10">
+                <span className="text-[10px] font-bold text-slate-500 dark:text-fleet-200/30 uppercase transform -rotate-90 tracking-[0.2em]">Corredor Central</span>
+              </div>
+              <div className="grid grid-cols-2 gap-12 relative z-10">
+                <div className="grid grid-cols-2 gap-2">
+                  {patioSlots.slice(0, 6).map((slot, idx) => (
+                    <div key={idx} className={`h-16 rounded-lg border-2 ${slot.vehicle ? 'border-green-400 bg-green-500/10' : 'border-dashed border-slate-400/50 dark:border-white/20 bg-slate-100/50 dark:bg-white/5'} flex flex-col items-center justify-center relative group transition-colors`}>
+                      <span className="absolute top-1 left-1.5 text-[10px] font-black text-slate-400 dark:text-fleet-300/50">{slot.name}</span>
+                      {slot.vehicle ? (
+                        <>
+                          <Truck className="w-5 h-5 text-green-600 dark:text-green-400 mb-0.5" />
+                          <span className="text-[10px] font-bold text-slate-700 dark:text-white px-1.5 bg-white/50 dark:bg-black/40 rounded">{slot.vehicle.plate}</span>
+                        </>
+                      ) : (
+                        <span className="text-xs font-medium text-slate-400 dark:text-fleet-200/30">Livre</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {patioSlots.slice(6, 12).map((slot, idx) => (
+                    <div key={idx} className={`h-16 rounded-lg border-2 ${slot.vehicle ? 'border-green-400 bg-green-500/10' : 'border-dashed border-slate-400/50 dark:border-white/20 bg-slate-100/50 dark:bg-white/5'} flex flex-col items-center justify-center relative group transition-colors`}>
+                      <span className="absolute top-1 left-1.5 text-[10px] font-black text-slate-400 dark:text-fleet-300/50">{slot.name}</span>
+                      {slot.vehicle ? (
+                        <>
+                          <Truck className="w-5 h-5 text-green-600 dark:text-green-400 mb-0.5" />
+                          <span className="text-[10px] font-bold text-slate-700 dark:text-white px-1.5 bg-white/50 dark:bg-black/40 rounded">{slot.vehicle.plate}</span>
+                        </>
+                      ) : (
+                        <span className="text-xs font-medium text-slate-400 dark:text-fleet-200/30">Livre</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Controle de Visitantes */}
+          <div className="bg-[#f1f5f9] dark:bg-white/5 p-6 rounded-2xl border border-gray-200/60 dark:border-white/10 shadow-[0_2px_6px_rgba(0,0,0,0.03)] dark:shadow-none">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+              <Users className="w-5 h-5 text-fleet-500" />
+              Visitantes / Docas de Carga
+            </h3>
+            <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-white/10">
+              <table className="w-full text-left border-collapse bg-white dark:bg-white/5">
+                <thead>
+                  <tr className="bg-gray-50 dark:bg-white/5 border-b border-gray-200 dark:border-white/10">
+                    <th className="p-3 text-xs font-bold text-slate-500 dark:text-fleet-200/70 uppercase">Empresa / Placa</th>
+                    <th className="p-3 text-xs font-bold text-slate-500 dark:text-fleet-200/70 uppercase text-center">Local</th>
+                    <th className="p-3 text-xs font-bold text-slate-500 dark:text-fleet-200/70 uppercase text-center">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visitantes.map((visitante) => (
+                    <tr key={visitante.id} className="border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                      <td className="p-3">
+                        <p className="text-sm font-bold text-slate-800 dark:text-white">{visitante.empresa}</p>
+                        <p className="text-xs font-mono font-medium text-slate-500 dark:text-fleet-300 mt-0.5">{visitante.placa} • Ent: <span className="font-bold">{visitante.entrada}</span></p>
+                      </td>
+                      <td className="p-3 text-center">
+                        <span className="text-xs font-bold text-slate-700 dark:text-fleet-100 bg-slate-100 dark:bg-white/10 px-2 py-1 rounded">{visitante.doca}</span>
+                      </td>
+                      <td className="p-3 text-center">
+                        <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded ${
+                          visitante.status === 'Carregando' ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300'
+                        }`}>
+                          {visitante.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                  {visitantes.length === 0 && (
+                     <tr>
+                       <td colSpan={3} className="p-4 text-center text-sm text-slate-500 dark:text-fleet-300">Nenhum visitante ativo no pátio.</td>
+                     </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <button className="w-full mt-4 py-2 border-2 border-dashed border-gray-300 dark:border-white/20 text-slate-600 dark:text-fleet-200 font-bold rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 hover:border-gray-400 dark:hover:border-white/30 transition-all flex items-center justify-center gap-2">
+              <Users className="w-4 h-4" /> Registrar Novo Visitante
+            </button>
+          </div>
+        </div>
+      </motion.div>
 
       {/* Modal de Registro de Saída */}
       <Dialog open={isSaidaModalOpen} onClose={() => setIsSaidaModalOpen(false)} className="relative z-50">
