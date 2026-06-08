@@ -144,7 +144,7 @@ export default function Dashboard() {
       </div>
 
       {/* KPI Cards section - using premium glassmorphism logic */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl mx-auto mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full mb-8">
         <motion.div variants={itemVariants} whileHover={{ y: -4, transition: { duration: 0.2 } }} className="relative overflow-hidden bg-[#f1f5f9]  dark:bg-white/5  p-6 rounded-2xl shadow-[0_2px_6px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-200/60 dark:border-white/10 transition-all hover:shadow-lg dark:hover:shadow-xl hover:shadow-gray-200/50 dark:hover:shadow-white/5 group">
           <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-fleet-500/5 dark:bg-white/5 rounded-full blur-2xl group-hover:bg-fleet-500/10 dark:group-hover:bg-white/10 transition-colors"></div>
           <div className="relative flex items-center gap-4">
@@ -176,7 +176,7 @@ export default function Dashboard() {
       </div>
 
       {/* Main Charts area */}
-      <div className="w-full max-w-3xl mx-auto mb-8">
+      <div className="w-full mb-8">
 
         <motion.div variants={itemVariants} className="bg-[#f1f5f9]  dark:bg-white/5  p-6 rounded-2xl shadow-[0_2px_6px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-200/60 dark:border-white/10 flex flex-col">
           <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-1 flex items-center gap-2">
