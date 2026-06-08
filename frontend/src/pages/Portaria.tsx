@@ -50,9 +50,15 @@ export default function Portaria() {
   const [saidaMotorista, setSaidaMotorista] = useState('');
   const [saidaDestino, setSaidaDestino] = useState('');
   const [saidaCombustivel, setSaidaCombustivel] = useState('Cheio');
+  const [saidaMotivo, setSaidaMotivo] = useState('');
   const [maintenanceAlert, setMaintenanceAlert] = useState<{ plate: string; tasks: string[] } | null>(null);
+  const [checklistSaida, setChecklistSaida] = useState({
+    pneus: true,
+    lataria: true,
+    farois: true,
+    limpeza: true
+  });
   const [checklist, setChecklist] = useState({ pneus: true, lataria: true, farois: true, limpeza: true });
-  const [checklistSaida, setChecklistSaida] = useState({ pneus: true, lataria: true, farois: true, limpeza: true });
   
   const [portariaHistory, setPortariaHistory] = useState<{ id: number, type: 'saida' | 'retorno' | 'chegada' | 'saida_destino', plate: string, time: string, details: string }[]>([
     { id: 1, type: 'saida', plate: 'ABC-1234', time: '10:30', details: 'Saída p/ Rota Sul' },
@@ -91,9 +97,10 @@ export default function Portaria() {
 
       if (avariasCriticas.length > 0) {
         // Bloqueia a saída e manda pra oficina
+        const motivoText = saidaMotivo ? ` Motivo/Comentário: ${saidaMotivo}` : '';
         updateVehicle(selectedVehicle.id, { 
-          status: 'maintenance', 
-          maintenanceDetails: `Avaria apontada na SAÍDA: ${avariasCriticas.join(', ')}` 
+          status: 'maintenance_queue', // Alterado de 'maintenance' para 'maintenance_queue' para ir pra Fila de Oficina do Kanban
+          maintenanceDetails: `Avaria na SAÍDA: ${avariasCriticas.join(', ')}.${motivoText}` 
         });
         
         setPortariaHistory(prev => [{
@@ -123,6 +130,7 @@ export default function Portaria() {
       setSaidaDestino('');
       setSaidaKm('');
       setSaidaCombustivel('Cheio');
+      setSaidaMotivo('');
       setChecklistSaida({ pneus: true, lataria: true, farois: true, limpeza: true });
     }
   };
@@ -555,6 +563,17 @@ export default function Portaria() {
                   </button>
                 </div>
                 <p className="text-[11px] text-red-600 dark:text-red-400 mt-2 font-semibold">* Avarias impeditivas cancelam a saída automaticamente.</p>
+              </div>
+
+              <div className="pt-2 border-t border-gray-200 dark:border-white/10 mt-2">
+                <label className="block text-sm font-bold text-slate-700 dark:text-fleet-200 mb-1">Comentário / Motivo de Bloqueio</label>
+                <textarea 
+                  value={saidaMotivo} 
+                  onChange={e => setSaidaMotivo(e.target.value)} 
+                  placeholder="Se houver avaria, detalhe aqui o motivo ou observação..." 
+                  className="w-full px-3 py-2 bg-white dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-lg text-slate-800 dark:text-white text-sm resize-none"
+                  rows={2}
+                />
               </div>
 
               <div className="flex gap-3 mt-6">
