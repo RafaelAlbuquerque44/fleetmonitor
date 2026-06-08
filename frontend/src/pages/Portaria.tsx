@@ -13,7 +13,8 @@ import {
   Map,
   BarChart2,
   AlertTriangle,
-  Truck
+  Truck,
+  Trash2
 } from 'lucide-react';
 import { useVehicles } from '../lib/VehicleContext';
 import type { Vehicle } from '../lib/VehicleContext';
@@ -396,12 +397,21 @@ export default function Portaria() {
               </div>
             </div>
             
-            <button 
-              onClick={() => setTotalSlots(prev => prev + 2)}
-              className="w-full mt-4 py-2 border-2 border-dashed border-gray-300 dark:border-white/20 text-slate-600 dark:text-fleet-200 font-bold rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 hover:border-gray-400 dark:hover:border-white/30 transition-all flex items-center justify-center gap-2"
-            >
-              <Map className="w-4 h-4" /> Expandir Setor (Adicionar Vagas)
-            </button>
+            <div className="flex gap-3 mt-4">
+              <button 
+                onClick={() => setTotalSlots(prev => Math.max(2, prev - 2))}
+                className="flex-1 py-2 border-2 border-dashed border-red-300 dark:border-red-500/30 text-red-600 dark:text-red-400 font-bold rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10 hover:border-red-400 dark:hover:border-red-500/50 transition-all flex items-center justify-center gap-2"
+                title="Remover Vagas"
+              >
+                <Trash2 className="w-4 h-4" /> Reduzir
+              </button>
+              <button 
+                onClick={() => setTotalSlots(prev => prev + 2)}
+                className="flex-1 py-2 border-2 border-dashed border-gray-300 dark:border-white/20 text-slate-600 dark:text-fleet-200 font-bold rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 hover:border-gray-400 dark:hover:border-white/30 transition-all flex items-center justify-center gap-2"
+              >
+                <Map className="w-4 h-4" /> Expandir Setor
+              </button>
+            </div>
           </div>
 
           {/* Controle de Visitantes */}
