@@ -183,45 +183,51 @@ export default function Dashboard() {
             <Clock className="w-5 h-5 text-fleet-500 dark:text-fleet-300" />
             Análise de Tempo (Hoje)
           </h3>
-          <p className="text-sm font-medium text-slate-500 dark:text-fleet-200/70 mb-6">Proporção ociosa vs rodando</p>
-          <div className="flex-1 min-h-[300px] flex items-center justify-center">
-            {currentIdleData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={currentIdleData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={65}
-                    outerRadius={85}
-                    paddingAngle={5}
-                    dataKey="value"
-                    stroke="none"
-                  >
-                    {currentIdleData.map((entry: any, index: number) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{ borderRadius: '12px', border: 'none', background: theme === 'dark' ? '#172554' : '#ffffff', color: theme === 'dark' ? '#fff' : '#0f172a', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                    itemStyle={{ fontWeight: 600, color: theme === 'dark' ? '#fff' : '#0f172a' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-slate-400 dark:text-fleet-300 font-medium">Sem dados no momento.</p>
-            )}
-          </div>
-          <div className="mt-4 flex flex-col gap-3">
-            {currentIdleData.length > 0 && currentIdleData.map((item: any, index: number) => (
-              <div key={index} className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 rounded-full shadow-inner" style={{ backgroundColor: item.color }}></div>
-                  <span className="text-slate-600 dark:text-fleet-100 font-semibold">{item.name}</span>
+          <p className="text-sm font-medium text-slate-500 dark:text-fleet-200/70 mb-2">Proporção ociosa vs rodando</p>
+          
+          <div className="flex flex-col md:flex-row items-center gap-8 mt-4">
+            <div className="flex-1 w-full h-[300px]">
+              {currentIdleData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={currentIdleData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={90}
+                      outerRadius={120}
+                      paddingAngle={5}
+                      dataKey="value"
+                      stroke="none"
+                    >
+                      {currentIdleData.map((entry: any, index: number) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{ borderRadius: '12px', border: 'none', background: theme === 'dark' ? '#172554' : '#ffffff', color: theme === 'dark' ? '#fff' : '#0f172a', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                      itemStyle={{ fontWeight: 600, color: theme === 'dark' ? '#fff' : '#0f172a' }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <p className="text-slate-400 dark:text-fleet-300 font-medium">Sem dados no momento.</p>
                 </div>
-                <span className="font-bold text-slate-800 dark:text-white">{item.value}%</span>
-              </div>
-            ))}
+              )}
+            </div>
+            
+            <div className="flex-1 w-full flex flex-col justify-center gap-5 md:pr-8">
+              {currentIdleData.length > 0 && currentIdleData.map((item: any, index: number) => (
+                <div key={index} className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-4 h-4 rounded-full shadow-inner" style={{ backgroundColor: item.color }}></div>
+                    <span className="text-base text-slate-600 dark:text-fleet-100 font-semibold">{item.name}</span>
+                  </div>
+                  <span className="text-lg font-black text-slate-800 dark:text-white">{item.value}%</span>
+                </div>
+              ))}
+            </div>
           </div>
         </motion.div>
       </div>
