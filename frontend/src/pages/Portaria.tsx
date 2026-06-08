@@ -49,6 +49,8 @@ export default function Portaria() {
   const [saidaKm, setSaidaKm] = useState('');
   const [saidaMotorista, setSaidaMotorista] = useState('');
   const [saidaDestino, setSaidaDestino] = useState('');
+  const [saidaOrigem, setSaidaOrigem] = useState('');
+  const [routePlan, setRoutePlan] = useState<{distance: number, requiredFuel: number, isSufficient: boolean, message: string} | null>(null);
   const [saidaCombustivel, setSaidaCombustivel] = useState('Cheio');
   const [saidaMotivo, setSaidaMotivo] = useState('');
   const [maintenanceAlert, setMaintenanceAlert] = useState<{ plate: string; tasks: string[] } | null>(null);
@@ -133,12 +135,43 @@ export default function Portaria() {
       
       setIsSaidaModalOpen(false);
       setSaidaMotorista('');
+      setSaidaOrigem('');
       setSaidaDestino('');
       setSaidaKm('');
       setSaidaCombustivel('Cheio');
       setSaidaMotivo('');
+      setRoutePlan(null);
       setChecklistSaida({ pneus: true, lataria: true, farois: true, limpeza: true });
     }
+  };
+
+  const handleCalculateRoute = () => {
+    if (!saidaOrigem || !saidaDestino) {
+      alert('Preencha Origem e Destino para calcular a rota.');
+      return;
+    }
+    
+    // Distância simulada entre 100 e 1000km
+    const distance = Math.floor(Math.random() * 900) + 100; 
+    const requiredFuel = Math.ceil(distance / 2.8); // Média de 2.8 km/L para caminhão pesado
+    
+    let currentFuelLiters = 0;
+    if (saidaCombustivel === 'Cheio') currentFuelLiters = 400; // Tanque de 400L
+    if (saidaCombustivel === '3/4') currentFuelLiters = 300;
+    if (saidaCombustivel === 'Meio Tanque') currentFuelLiters = 200;
+    if (saidaCombustivel === '1/4') currentFuelLiters = 100;
+    if (saidaCombustivel === 'Reserva') currentFuelLiters = 40;
+
+    const isSufficient = currentFuelLiters >= requiredFuel;
+    
+    let message = '';
+    if (isSufficient) {
+      message = `Combustível suficiente. Consumo est.: ${requiredFuel}L. Sobrará aprox. ${currentFuelLiters - requiredFuel}L. Boa viagem!`;
+    } else {
+      message = `ATENÇÃO: Faltam ${requiredFuel - currentFuelLiters}L para chegar. A viagem exige ${requiredFuel}L. ABASTEÇA ANTES DE SAIR!`;
+    }
+
+    setRoutePlan({ distance, requiredFuel, isSufficient, message });
   };
 
   const handleRegistrarRetorno = (e: React.FormEvent) => {
@@ -558,20 +591,42 @@ export default function Portaria() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-fleet-200 mb-1">Destino</label>
-                  <input type="text" required value={saidaDestino} onChange={e => setSaidaDestino(e.target.value)} placeholder="Ex: Cliente X" className="w-full px-3 py-2 bg-white dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-lg text-slate-800 dark:text-white" />
+                  <label className="block text-sm font-medium text-slate-700 dark:text-fleet-200 mb-1">Origem</label>
+                  <input type="text" required value={saidaOrigem} onChange={e => {setSaidaOrigem(e.target.value); setRoutePlan(null);}} placeholder="Ex: Central SP" className="w-full px-3 py-2 bg-white dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-lg text-slate-800 dark:text-white" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-fleet-200 mb-1">Combustível</label>
-                  <select required value={saidaCombustivel} onChange={e => setSaidaCombustivel(e.target.value)} className="w-full px-3 py-2 bg-white dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-lg text-slate-800 dark:text-white">
-                    <option value="Reserva">Reserva</option>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-fleet-200 mb-1">Destino</label>
+                  <input type="text" required value={saidaDestino} onChange={e => {setSaidaDestino(e.target.value); setRoutePlan(null);}} placeholder="Ex: Cliente RJ" className="w-full px-3 py-2 bg-white dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-lg text-slate-800 dark:text-white" />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-fleet-200 mb-1">Nível de Combustível Atual</label>
+                <div className="flex gap-2">
+                  <select required value={saidaCombustivel} onChange={e => {setSaidaCombustivel(e.target.value); setRoutePlan(null);}} className="flex-1 px-3 py-2 bg-white dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-lg text-slate-800 dark:text-white">
+                    <option value="Reserva">Reserva (10%)</option>
                     <option value="1/4">1/4 Tanque</option>
                     <option value="Meio Tanque">Meio Tanque</option>
                     <option value="3/4">3/4 Tanque</option>
-                    <option value="Cheio">Cheio</option>
+                    <option value="Cheio">Cheio (100%)</option>
                   </select>
+                  <button type="button" onClick={handleCalculateRoute} className="px-4 py-2 bg-slate-800 dark:bg-white/10 hover:bg-slate-700 dark:hover:bg-white/20 text-white font-bold rounded-lg transition-colors whitespace-nowrap">
+                    Calcular Rota
+                  </button>
                 </div>
               </div>
+
+              {routePlan && (
+                <div className={`p-3 rounded-lg border-l-4 ${routePlan.isSufficient ? 'bg-green-50 border-green-500 dark:bg-green-500/10' : 'bg-orange-50 border-orange-500 dark:bg-orange-500/10'}`}>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-xs font-bold text-slate-500 dark:text-fleet-200">Distância Est: <span className="text-slate-800 dark:text-white">{routePlan.distance} km</span></span>
+                    <span className="text-xs font-bold text-slate-500 dark:text-fleet-200">Combustível Nec: <span className="text-slate-800 dark:text-white">{routePlan.requiredFuel} L</span></span>
+                  </div>
+                  <p className={`text-sm font-bold mt-2 ${routePlan.isSufficient ? 'text-green-700 dark:text-green-400' : 'text-orange-700 dark:text-orange-400'}`}>
+                    {routePlan.message}
+                  </p>
+                </div>
+              )}
               
               <div className="pt-2 border-t border-gray-200 dark:border-white/10 mt-4">
                 <label className="block text-sm font-bold text-slate-700 dark:text-fleet-200 mb-3 pt-2">Checklist de Vistoria de Saída</label>
