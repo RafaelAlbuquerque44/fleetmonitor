@@ -14,7 +14,7 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import { Car, Zap, AlertTriangle, TrendingDown, DollarSign, Trophy, BrainCircuit, BellRing, Clock, AlertOctagon, Target, X, CheckCircle2, Lock } from 'lucide-react';
+import { Car, Zap, AlertTriangle, TrendingDown, DollarSign, Trophy, BrainCircuit, BellRing, Clock, AlertOctagon, Target, X, CheckCircle2 } from 'lucide-react';
 import { useVehicles } from '../lib/VehicleContext';
 import { useDrivers } from '../lib/DriverContext';
 import { useAccount } from '../lib/AccountContext';
@@ -34,21 +34,6 @@ const idleTimeData = [
   { name: 'Em Rota', value: 65, color: '#3b82f6' }, // blue-500
   { name: 'Ocioso (Motor Ligado)', value: 25, color: '#facc15' }, // yellow-400
   { name: 'Desligado', value: 10, color: '#9ca3af' } // gray-400
-];
-
-const topDrivers = [
-  { id: 1, name: 'João Silva', score: 98, trend: '+2', badge: 'Ouro', color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
-  { id: 2, name: 'Maria Souza', score: 94, trend: '+1', badge: 'Prata', color: 'text-gray-300', bg: 'bg-gray-500/10' },
-  { id: 3, name: 'Carlos Pedroso', score: 89, trend: '-1', badge: 'Bronze', color: 'text-amber-500', bg: 'bg-amber-500/10' },
-];
-
-const extendedDrivers = [
-  ...topDrivers,
-  { id: 4, name: 'Ana Oliveira', score: 85, trend: '+4', badge: 'Prata', color: 'text-gray-300', bg: 'bg-gray-500/10' },
-  { id: 5, name: 'Marcos Santos', score: 82, trend: '-3', badge: 'Bronze', color: 'text-amber-500', bg: 'bg-amber-500/10' },
-  { id: 6, name: 'Luiza Mendes', score: 79, trend: '+1', badge: 'Bronze', color: 'text-amber-500', bg: 'bg-amber-500/10' },
-  { id: 7, name: 'Roberto Alves', score: 74, trend: '-5', badge: 'Atenção', color: 'text-red-400', bg: 'bg-red-500/10' },
-  { id: 8, name: 'Fernanda Costa', score: 71, trend: '-2', badge: 'Atenção', color: 'text-red-400', bg: 'bg-red-500/10' },
 ];
 
 const liveAlerts = [
