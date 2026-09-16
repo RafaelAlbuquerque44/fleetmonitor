@@ -1,13 +1,13 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Truck, ShieldCheck, TrendingUp, Zap, Target, CheckCircle2, ChevronDown, ArrowRight, Smartphone, MapPin } from 'lucide-react';
+import { Truck, ShieldCheck, TrendingUp, Zap, Target, CheckCircle2, ChevronDown, ArrowRight, Smartphone } from 'lucide-react';
 
 const features = [
   {
-    Icon: MapPin,
-    title: 'Gestão de Pátio e Portaria',
-    description: 'Controle exato de entrada e saída de veículos, acompanhando cada etapa da viagem em tempo real.'
+    Icon: TrendingUp,
+    title: 'Controle Financeiro Completo',
+    description: 'Painéis detalhados de lucros, custos operacionais e ROI por veículo.'
   },
   {
     Icon: ShieldCheck,
@@ -84,25 +84,8 @@ const AnimatedTruck = ({
 export default function Landing() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
-  useEffect(() => {
-    const root = document.documentElement;
-    const savedTheme = localStorage.getItem('fleetmonitor-theme');
-
-    root.classList.remove('light');
-    root.classList.add('dark');
-
-    return () => {
-      root.classList.remove('dark');
-      if (savedTheme === 'light') {
-        root.classList.add('light');
-      } else {
-        root.classList.add('dark');
-      }
-    };
-  }, []);
-
   return (
-    <div className="min-h-screen bg-[#020617] text-white font-sans overflow-x-hidden">
+    <div className="min-h-screen bg-white dark:bg-fleet-900 text-slate-800 dark:text-white font-sans overflow-x-hidden">
       
       {/* Navigation - Glassmorphism Style */}
       <nav className="fixed w-full z-50 top-0 bg-[#0a182e]/80 backdrop-blur-lg border-b border-white/5 transition-all duration-300">
@@ -345,7 +328,7 @@ export default function Landing() {
 
           <motion.div initial={{ opacity: 0, scale: 0.9, rotate: 2 }} whileInView={{ opacity: 1, scale: 1, rotate: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }} className="lg:col-span-7 relative group flex justify-end xl:pl-10">
              <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/20 to-transparent rounded-full blur-3xl group-hover:blur-2xl transition-all duration-700 opacity-50"></div>
-             <img src="/imac_mockup.png" alt="FleetMonitor Dashboard Screen" className="w-auto max-w-md h-auto object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.6)] relative z-10 group-hover:-translate-y-2 transition-transform duration-700" />
+             <img src="/imac_mockup.png" alt="FleetMonitor Dashboard Screen" className="w-full max-w-2xl h-auto object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.6)] relative z-10 group-hover:-translate-y-2 transition-transform duration-700" />
           </motion.div>
         </div>
       </section>

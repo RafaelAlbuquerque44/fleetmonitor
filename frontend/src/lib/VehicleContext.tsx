@@ -23,8 +23,6 @@ export interface Vehicle {
   monthlyRevenue?: number;
   monthlyMaintenance?: number;
   monthlyFuel?: number;
-  kmAtual?: number;
-  statusPatio?: 'no_patio' | 'em_rota' | 'no_destino' | 'retornando';
 }
 
 interface VehicleContextType {
@@ -33,18 +31,14 @@ interface VehicleContextType {
   removeVehicle: (id: number) => void;
   updateVehicle: (id: number, data: Partial<Vehicle>) => void;
   clearVehicles: () => void;
-  registrarSaida: (id: number, km: number) => void;
-  registrarRetorno: (id: number, km: number) => void;
-  registrarChegadaDestino: (id: number) => void;
-  registrarSaidaDestino: (id: number) => void;
 }
 
 const mockVehicles: Vehicle[] = [
-  { id: 1, plate: 'ABC-1234', model: 'Volvo FH 540', year: 2023, status: 'active', city: 'São Paulo', uf: 'SP', lat: -23.5505, lng: -46.6333, driverId: 1, fuelLevel: 85, tireHealth: 90, purchasePrice: 580000, monthlyRevenue: 45000, monthlyMaintenance: 2000, monthlyFuel: 15000, kmAtual: 145000, statusPatio: 'no_patio' },
-  { id: 2, plate: 'XYZ-9876', model: 'Scania R450', year: 2022, status: 'maintenance', city: 'Campinas', uf: 'SP', lat: -22.9099, lng: -47.0626, driverId: null, fuelLevel: 15, tireHealth: 30, sketchfabId: '891ee120d3734b439a9a5e63eaa10a4c', maintenanceDetails: 'Revisão de 50.000km', purchasePrice: 520000, monthlyRevenue: 28000, monthlyMaintenance: 14000, monthlyFuel: 9500, kmAtual: 198000, statusPatio: 'no_patio' },
-  { id: 3, plate: 'DEF-5678', model: 'Mercedes Actros', year: 2024, status: 'active', city: 'Rio de Janeiro', uf: 'RJ', lat: -22.9068, lng: -43.1729, driverId: 2, fuelLevel: 60, tireHealth: 75, purchasePrice: 620000, monthlyRevenue: 52000, monthlyMaintenance: 1500, monthlyFuel: 16000, kmAtual: 45000, statusPatio: 'em_rota' },
-  { id: 4, plate: 'GHI-9012', model: 'MAN TGX', year: 2021, status: 'active', city: 'Belo Horizonte', uf: 'MG', lat: -19.9167, lng: -43.9345, driverId: 3, fuelLevel: 45, tireHealth: 82, sketchfabId: '2f475fb13b1f40cdad1709135404a508', purchasePrice: 480000, monthlyRevenue: 38000, monthlyMaintenance: 4500, monthlyFuel: 13000, kmAtual: 280000, statusPatio: 'no_patio' },
-  { id: 5, plate: 'JKL-3456', model: 'DAF CF', year: 2023, status: 'inactive', city: 'Curitiba', uf: 'PR', lat: -25.4284, lng: -49.2733, driverId: null, fuelLevel: 95, tireHealth: 98, sketchfabId: '2f2ced3e54f24b4f8bee695e3261bd30', purchasePrice: 510000, monthlyRevenue: 0, monthlyMaintenance: 1200, monthlyFuel: 500, kmAtual: 85000, statusPatio: 'no_patio' },
+  { id: 1, plate: 'ABC-1234', model: 'Volvo FH 540', year: 2023, status: 'active', city: 'São Paulo', uf: 'SP', lat: -23.5505, lng: -46.6333, driverId: 1, fuelLevel: 85, tireHealth: 90, purchasePrice: 580000, monthlyRevenue: 45000, monthlyMaintenance: 2000, monthlyFuel: 15000 },
+  { id: 2, plate: 'XYZ-9876', model: 'Scania R450', year: 2022, status: 'maintenance', city: 'Campinas', uf: 'SP', lat: -22.9099, lng: -47.0626, driverId: null, fuelLevel: 15, tireHealth: 30, sketchfabId: '891ee120d3734b439a9a5e63eaa10a4c', maintenanceDetails: 'Revisão de 50.000km', purchasePrice: 520000, monthlyRevenue: 28000, monthlyMaintenance: 14000, monthlyFuel: 9500 },
+  { id: 3, plate: 'DEF-5678', model: 'Mercedes Actros', year: 2024, status: 'active', city: 'Rio de Janeiro', uf: 'RJ', lat: -22.9068, lng: -43.1729, driverId: 2, fuelLevel: 60, tireHealth: 75, purchasePrice: 620000, monthlyRevenue: 52000, monthlyMaintenance: 1500, monthlyFuel: 16000 },
+  { id: 4, plate: 'GHI-9012', model: 'MAN TGX', year: 2021, status: 'active', city: 'Belo Horizonte', uf: 'MG', lat: -19.9167, lng: -43.9345, driverId: 3, fuelLevel: 45, tireHealth: 82, sketchfabId: '2f475fb13b1f40cdad1709135404a508', purchasePrice: 480000, monthlyRevenue: 38000, monthlyMaintenance: 4500, monthlyFuel: 13000 },
+  { id: 5, plate: 'JKL-3456', model: 'DAF CF', year: 2023, status: 'inactive', city: 'Curitiba', uf: 'PR', lat: -25.4284, lng: -49.2733, driverId: null, fuelLevel: 95, tireHealth: 98, sketchfabId: '2f2ced3e54f24b4f8bee695e3261bd30', purchasePrice: 510000, monthlyRevenue: 0, monthlyMaintenance: 1200, monthlyFuel: 500 },
 ];
 
 const VehicleContext = createContext<VehicleContextType | undefined>(undefined);
@@ -125,32 +119,8 @@ export function VehicleProvider({ children }: { children: ReactNode }) {
     setVehicles([]);
   };
 
-  const registrarSaida = (id: number, km: number) => {
-    setVehicles(prev => prev.map(v => 
-      v.id === id ? { ...v, statusPatio: 'em_rota', kmAtual: km } : v
-    ));
-  };
-
-  const registrarRetorno = (id: number, km: number) => {
-    setVehicles(prev => prev.map(v => 
-      v.id === id ? { ...v, statusPatio: 'no_patio', kmAtual: km } : v
-    ));
-  };
-
-  const registrarChegadaDestino = (id: number) => {
-    setVehicles(prev => prev.map(v => 
-      v.id === id ? { ...v, statusPatio: 'no_destino' } : v
-    ));
-  };
-
-  const registrarSaidaDestino = (id: number) => {
-    setVehicles(prev => prev.map(v => 
-      v.id === id ? { ...v, statusPatio: 'retornando' } : v
-    ));
-  };
-
   return (
-    <VehicleContext.Provider value={{ vehicles, addVehicle, removeVehicle, updateVehicle, clearVehicles, registrarSaida, registrarRetorno, registrarChegadaDestino, registrarSaidaDestino }}>
+    <VehicleContext.Provider value={{ vehicles, addVehicle, removeVehicle, updateVehicle, clearVehicles }}>
       {children}
     </VehicleContext.Provider>
   );

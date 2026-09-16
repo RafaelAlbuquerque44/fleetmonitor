@@ -8,8 +8,8 @@ import {
   Wrench,
   ChevronRight,
   Activity,
-  ShoppingBag,
-  MapPin
+  Wallet,
+  ShoppingBag
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import TopBar from '../components/TopBar';
@@ -19,11 +19,11 @@ import { useAccount } from '../lib/AccountContext';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Portaria', href: '/portaria', icon: MapPin },
   { name: 'Veículos', href: '/vehicles', icon: CarFront },
   { name: 'Motoristas', href: '/drivers', icon: Users },
   { name: 'IA & Oficina', href: '/maintenance', icon: Wrench },
   { name: 'ESG & Relatórios', href: '/reports', icon: Leaf },
+  { name: 'Controle Financeiro', href: '/finance', icon: Wallet },
   { name: 'Marketplace', href: '/marketplace', icon: ShoppingBag },
 ];
 
@@ -40,9 +40,10 @@ export default function MainLayout() {
     // Se não há conta ativa (carregando) ou se for a conta de ID 999999 (mock Admin Global) que pode ter todos os módulos mockados
     if (!activeAccount || activeAccount.id === 999999) return true;
     
-    if (item.name === 'Dashboard' || item.name === 'Portaria' || item.name === 'Veículos' || item.name === 'Motoristas' || item.name === 'Marketplace') return true;
+    if (item.name === 'Dashboard' || item.name === 'Veículos' || item.name === 'Motoristas' || item.name === 'Marketplace') return true;
     if (item.name === 'IA & Oficina') return activeAccount.produto_manutencao;
     if (item.name === 'ESG & Relatórios') return activeAccount.produto_roteirizacao;
+    if (item.name === 'Controle Financeiro') return activeAccount.produto_financeiro;
     return false;
   });
 

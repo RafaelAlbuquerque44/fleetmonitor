@@ -7,7 +7,9 @@ export interface Conta {
   documento: string;
   email_contato: string;
   status: string;
+  produto_telemetria?: boolean;
   produto_manutencao?: boolean;
+  produto_financeiro?: boolean;
   produto_ia_assistente?: boolean;
   produto_roteirizacao?: boolean;
   criado_em?: string;
@@ -30,7 +32,9 @@ const ADMIN_GLOBAL_MOCK: Conta = {
   documento: "00.000.000/0001-00",
   email_contato: "admin@fleetmonitor.com",
   status: "ativo",
+  produto_telemetria: true,
   produto_manutencao: true,
+  produto_financeiro: true,
   produto_ia_assistente: true,
   produto_roteirizacao: true
 };

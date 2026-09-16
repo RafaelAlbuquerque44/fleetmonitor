@@ -1,36 +1,40 @@
-import { useState, Fragment, useMemo } from 'react';
+import { useState, Fragment } from 'react';
 import { motion } from 'framer-motion';
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
 import type { Variants } from 'framer-motion';
 import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
   ResponsiveContainer,
   PieChart,
   Pie,
-  Cell,
-  Tooltip,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid
+  Cell
 } from 'recharts';
-import { Car, AlertTriangle, Trophy, BrainCircuit, BellRing, Clock, AlertOctagon, Target, X, CheckCircle2, PieChart as PieChartIcon, BarChart3 } from 'lucide-react';
+import { Car, Zap, AlertTriangle, TrendingDown, DollarSign, Trophy, BrainCircuit, BellRing, Clock, AlertOctagon, Target, X, CheckCircle2 } from 'lucide-react';
 import { useVehicles } from '../lib/VehicleContext';
 import { useDrivers } from '../lib/DriverContext';
 import { useAccount } from '../lib/AccountContext';
 import { useTheme } from '../contexts/ThemeContext';
 
-
+const mockFuelData = [
+  { name: 'Seg', cons: 12 },
+  { name: 'Ter', cons: 15 },
+  { name: 'Qua', cons: 11 },
+  { name: 'Qui', cons: 14 },
+  { name: 'Sex', cons: 13 },
+  { name: 'Sab', cons: 9 },
+  { name: 'Dom', cons: 10 },
+];
 
 const idleTimeData = [
   { name: 'Em Rota', value: 65, color: '#3b82f6' }, // blue-500
   { name: 'Ocioso (Motor Ligado)', value: 25, color: '#facc15' }, // yellow-400
   { name: 'Desligado', value: 10, color: '#9ca3af' } // gray-400
 ];
-
-
-
-
 
 const liveAlerts = [
   { id: 1, time: 'Agora', title: 'Pressão dos Pneus Crítica', vehicle: 'KJH-5544', type: 'danger', icon: AlertOctagon, color: 'text-red-400', bg: 'bg-red-500/10' },
@@ -75,8 +79,6 @@ export default function Dashboard() {
   const { theme } = useTheme();
   const [isDriversModalOpen, setIsDriversModalOpen] = useState(false);
   const [isAlertsModalOpen, setIsAlertsModalOpen] = useState(false);
-  const [chartType, setChartType] = useState<'pie' | 'bar'>('pie');
-  
   
   const totalVehicles = vehicles.length;
   const activeVehicles = vehicles.filter(v => v.status === 'active').length;
@@ -98,7 +100,8 @@ export default function Dashboard() {
       bg: d.tier === 'Gold' ? 'bg-yellow-500/10' : d.tier === 'Silver' ? 'bg-gray-500/10' : d.tier === 'Bronze' ? 'bg-amber-500/10' : 'bg-red-500/10'
     }));
 
-  const currentIdleData = useMemo(() => idleTimeData, []);
+  const currentFuelData = isGlobalAdmin ? mockFuelData : [];
+  const currentIdleData = isGlobalAdmin ? idleTimeData : [];
   const currentTopDrivers = dynamicDrivers.slice(0, 5);
   const currentExtendedDrivers = dynamicDrivers;
   const currentLiveAlerts = isGlobalAdmin ? liveAlerts : [];
@@ -139,7 +142,6 @@ export default function Dashboard() {
             Exportar PDF
           </motion.button>
           <motion.button 
-            onClick={() => window.location.reload()}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className="px-4 py-2.5 bg-fleet-600 dark:bg-fleet-500 text-sm font-bold rounded-xl text-white hover:bg-fleet-700 dark:hover:bg-fleet-400 transition shadow-md shadow-fleet-500/20"
@@ -150,7 +152,7 @@ export default function Dashboard() {
       </div>
 
       {/* KPI Cards section - using premium glassmorphism logic */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <motion.div variants={itemVariants} whileHover={{ y: -4, transition: { duration: 0.2 } }} className="relative overflow-hidden bg-[#f1f5f9]  dark:bg-white/5  p-6 rounded-2xl shadow-[0_2px_6px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-200/60 dark:border-white/10 transition-all hover:shadow-lg dark:hover:shadow-xl hover:shadow-gray-200/50 dark:hover:shadow-white/5 group">
           <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-fleet-500/5 dark:bg-white/5 rounded-full blur-2xl group-hover:bg-fleet-500/10 dark:group-hover:bg-white/10 transition-colors"></div>
           <div className="relative flex items-center gap-4">
@@ -164,7 +166,24 @@ export default function Dashboard() {
           </div>
         </motion.div>
         
-
+        {/* Econ. Semanal - Requires Financeiro */}
+        {(activeAccount?.produto_financeiro || isGlobalAdmin) && (
+          <motion.div variants={itemVariants} whileHover={{ y: -4, transition: { duration: 0.2 } }} className="relative overflow-hidden bg-[#f1f5f9]  dark:bg-white/5  p-6 rounded-2xl shadow-[0_2px_6px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-200/60 dark:border-white/10 transition-all hover:shadow-lg dark:hover:shadow-xl hover:shadow-green-500/10 dark:hover:shadow-green-500/5 group">
+            <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-green-500/5 dark:bg-green-500/10 rounded-full blur-2xl group-hover:bg-green-500/10 dark:group-hover:bg-green-500/20 transition-colors"></div>
+            <div className="relative flex items-center gap-4">
+              <div className="p-3.5 bg-green-50 dark:bg-green-500/20 text-green-600 dark:text-green-400 rounded-xl shadow-sm dark:shadow-inner border border-green-100 dark:border-green-500/20">
+                <DollarSign className="w-7 h-7" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-slate-400 dark:text-fleet-200 uppercase tracking-widest mb-1">Econ. Semanal</p>
+                <h3 className="text-3xl font-black text-slate-800 dark:text-white tracking-tight flex items-baseline gap-2">
+                  {hasVehicles ? 'R$ 1.2k' : 'R$ 0,00'}
+                  {hasVehicles && <span className="text-sm font-bold text-green-700 dark:text-green-300 flex items-center bg-green-100 dark:bg-green-500/20 px-2 py-0.5 rounded-md border border-green-200 dark:border-green-500/20"><TrendingDown className="w-3 h-3 mr-1" strokeWidth={3}/>8%</span>}
+                </h3>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         <motion.div variants={itemVariants} whileHover={{ y: -4, transition: { duration: 0.2 } }} className="relative overflow-hidden bg-[#f1f5f9]  dark:bg-white/5  p-6 rounded-2xl shadow-[0_2px_6px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-200/60 dark:border-white/10 transition-all hover:shadow-lg dark:hover:shadow-xl hover:shadow-yellow-500/10 dark:hover:shadow-yellow-500/5 group">
           <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-yellow-500/5 dark:bg-alert/10 rounded-full blur-2xl group-hover:bg-yellow-500/10 dark:group-hover:bg-alert/20 transition-colors"></div>
@@ -179,101 +198,105 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
+        {/* Emissões - Requires Telemetria or Roteirizacao */}
+        {(activeAccount?.produto_telemetria || activeAccount?.produto_roteirizacao || isGlobalAdmin) && (
+          <motion.div variants={itemVariants} whileHover={{ y: -4, transition: { duration: 0.2 } }} className="relative overflow-hidden bg-[#f1f5f9]  dark:bg-white/5  p-6 rounded-2xl shadow-[0_2px_6px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-200/60 dark:border-white/10 transition-all hover:shadow-lg dark:hover:shadow-xl hover:shadow-cyan-500/10 dark:hover:shadow-cyan-500/5 group">
+            <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-cyan-500/5 dark:bg-cyan-500/10 rounded-full blur-2xl group-hover:bg-cyan-500/10 dark:group-hover:bg-cyan-500/20 transition-colors"></div>
+             <div className="relative flex items-center gap-4">
+              <div className="p-3.5 bg-cyan-50 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 rounded-xl shadow-sm dark:shadow-inner border border-cyan-100 dark:border-cyan-500/20">
+                <Zap className="w-7 h-7" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-slate-400 dark:text-fleet-200 uppercase tracking-widest mb-1">Emissões CO₂</p>
+                <h3 className="text-3xl font-black text-slate-800 dark:text-white tracking-tight flex items-baseline gap-2">
+                  {hasVehicles ? '-4.2%' : '0%'}
+                  {hasVehicles && <span className="text-xs font-bold text-slate-600 dark:text-fleet-100 bg-slate-100 dark:bg-white/10 px-2 py-0.5 rounded-md border border-slate-200 dark:border-white/5">Mês</span>}
+                </h3>
+              </div>
+            </div>
+          </motion.div>
+        )}
       </div>
 
       {/* Main Charts area */}
-      <div className="w-full mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <motion.div variants={itemVariants} className="bg-[#f1f5f9]  dark:bg-white/5  p-6 rounded-2xl shadow-[0_2px_6px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-200/60 dark:border-white/10 lg:col-span-2">
+          <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2">
+             Consumo de Combustível 
+             <span className="text-xs px-2 py-1 bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/5 text-slate-600 dark:text-fleet-200 rounded-md font-semibold">Últimos 7 dias</span>
+          </h3>
+          <div className="h-72 flex items-center justify-center">
+            {currentFuelData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={currentFuelData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme === 'dark' ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: theme === 'dark' ? '#93c5fd' : '#64748b', fontWeight: 600, fontSize: 13}} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fill: theme === 'dark' ? '#93c5fd' : '#64748b', fontWeight: 600, fontSize: 13}} dx={-10} />
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '16px', border: theme === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)', background: theme === 'dark' ? '#1E3A8A' : '#ffffff', color: theme === 'dark' ? '#fff' : '#0f172a', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '12px' }}
+                    cursor={{stroke: theme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)', strokeWidth: 2}}
+                    itemStyle={{ color: theme === 'dark' ? '#fff' : '#020617' }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="cons" 
+                    stroke="#3b82f6" 
+                    strokeWidth={5}
+                    dot={{ r: 4, strokeWidth: 3, fill: theme === 'dark' ? '#1E3A8A' : '#ffffff' }}
+                    activeDot={{ r: 7, fill: '#3b82f6', stroke: theme === 'dark' ? '#fff' : '#1e293b', strokeWidth: 3 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-slate-400 dark:text-fleet-300 font-medium">Aguardando dados de telemetria da frota.</p>
+            )}
+          </div>
+        </motion.div>
 
         <motion.div variants={itemVariants} className="bg-[#f1f5f9]  dark:bg-white/5  p-6 rounded-2xl shadow-[0_2px_6px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-200/60 dark:border-white/10 flex flex-col">
-          <div className="flex justify-between items-start mb-1">
-            <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
-              <Clock className="w-5 h-5 text-fleet-500 dark:text-fleet-300" />
-              Análise de Tempo (Hoje)
-            </h3>
-            
-            <div className="flex bg-gray-100 dark:bg-black/30 p-1 rounded-lg border border-gray-200 dark:border-white/5">
-              <button 
-                onClick={() => setChartType('pie')}
-                className={`p-1.5 rounded-md flex items-center justify-center transition-all ${chartType === 'pie' ? 'bg-white dark:bg-white/10 shadow-sm text-fleet-600 dark:text-white' : 'text-slate-500 dark:text-fleet-300 hover:text-slate-800 dark:hover:text-white'}`}
-                title="Gráfico de Pizza"
-              >
-                <PieChartIcon className="w-4 h-4" />
-              </button>
-              <button 
-                onClick={() => setChartType('bar')}
-                className={`p-1.5 rounded-md flex items-center justify-center transition-all ${chartType === 'bar' ? 'bg-white dark:bg-white/10 shadow-sm text-fleet-600 dark:text-white' : 'text-slate-500 dark:text-fleet-300 hover:text-slate-800 dark:hover:text-white'}`}
-                title="Gráfico de Barras"
-              >
-                <BarChart3 className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-          <p className="text-sm font-medium text-slate-500 dark:text-fleet-200/70 mb-2">Proporção ociosa vs rodando</p>
-          
-          <div className={`flex ${chartType === 'pie' ? 'flex-col md:flex-row items-center' : 'flex-col'} gap-8 mt-4`}>
-            <div className={`flex-1 w-full ${chartType === 'pie' ? 'h-[300px]' : 'h-[350px]'}`}>
-              {currentIdleData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  {chartType === 'pie' ? (
-                    <PieChart>
-                      <Pie
-                        data={currentIdleData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={90}
-                        outerRadius={120}
-                        paddingAngle={5}
-                        dataKey="value"
-                        stroke="none"
-                      >
-                        {currentIdleData.map((entry: any, index: number) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip 
-                        contentStyle={{ borderRadius: '12px', border: 'none', background: theme === 'dark' ? '#172554' : '#ffffff', color: theme === 'dark' ? '#fff' : '#0f172a', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                        itemStyle={{ fontWeight: 600, color: theme === 'dark' ? '#fff' : '#0f172a' }}
-                      />
-                    </PieChart>
-                  ) : (
-                    <BarChart data={currentIdleData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? '#334155' : '#e2e8f0'} vertical={false} />
-                      <XAxis dataKey="name" stroke={theme === 'dark' ? '#94a3b8' : '#64748b'} tick={{ fill: theme === 'dark' ? '#94a3b8' : '#64748b', fontSize: 12 }} />
-                      <YAxis stroke={theme === 'dark' ? '#94a3b8' : '#64748b'} tick={{ fill: theme === 'dark' ? '#94a3b8' : '#64748b', fontSize: 12 }} />
-                      <Tooltip 
-                        contentStyle={{ borderRadius: '12px', border: 'none', background: theme === 'dark' ? '#172554' : '#ffffff', color: theme === 'dark' ? '#fff' : '#0f172a', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                        itemStyle={{ fontWeight: 600, color: theme === 'dark' ? '#fff' : '#0f172a' }}
-                        cursor={{ fill: theme === 'dark' ? '#1e293b' : '#f1f5f9' }}
-                      />
-                      <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                        {currentIdleData.map((entry: any, index: number) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  )}
-                </ResponsiveContainer>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <p className="text-slate-400 dark:text-fleet-300 font-medium">Sem dados no momento.</p>
-                </div>
-              )}
-            </div>
-            
-            
-            {chartType === 'pie' && (
-              <div className="flex-1 w-full flex flex-col justify-center gap-5 md:pr-8">
-                {currentIdleData.length > 0 && currentIdleData.map((item: any, index: number) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-4 h-4 rounded-full shadow-inner" style={{ backgroundColor: item.color }}></div>
-                      <span className="text-base text-slate-600 dark:text-fleet-100 font-semibold">{item.name}</span>
-                    </div>
-                    <span className="text-lg font-black text-slate-800 dark:text-white">{item.value}%</span>
-                  </div>
-                ))}
-              </div>
+          <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-1 flex items-center gap-2">
+            <Clock className="w-5 h-5 text-fleet-500 dark:text-fleet-300" />
+            Análise de Tempo (Hoje)
+          </h3>
+          <p className="text-sm font-medium text-slate-500 dark:text-fleet-200/70 mb-6">Proporção ociosa vs rodando</p>
+          <div className="flex-1 min-h-[200px] flex items-center justify-center">
+            {currentIdleData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={currentIdleData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={65}
+                    outerRadius={85}
+                    paddingAngle={5}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {currentIdleData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '12px', border: 'none', background: theme === 'dark' ? '#172554' : '#ffffff', color: theme === 'dark' ? '#fff' : '#0f172a', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                    itemStyle={{ fontWeight: 600, color: theme === 'dark' ? '#fff' : '#0f172a' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-slate-400 dark:text-fleet-300 font-medium">Sem dados no momento.</p>
             )}
+          </div>
+          <div className="mt-4 flex flex-col gap-3">
+            {currentIdleData.length > 0 && currentIdleData.map((item, index) => (
+              <div key={index} className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 rounded-full shadow-inner" style={{ backgroundColor: item.color }}></div>
+                  <span className="text-slate-600 dark:text-fleet-100 font-semibold">{item.name}</span>
+                </div>
+                <span className="font-bold text-slate-800 dark:text-white">{item.value}%</span>
+              </div>
+            ))}
           </div>
         </motion.div>
       </div>
@@ -348,10 +371,7 @@ export default function Dashboard() {
                   <p className="text-sm text-slate-800 dark:text-white font-semibold">{pred.component}</p>
                   <div className="mt-4 flex items-center justify-between">
                     <span className="text-xs font-medium text-slate-500 dark:text-fleet-300">Falha em {pred.daysLeft} dias</span>
-                    <button 
-                      onClick={() => alert(`Agendamento de oficina solicitado para o veículo ${pred.plate}`)}
-                      className="text-xs font-bold bg-[#f1f5f9] dark:bg-white/10 text-slate-700 dark:text-white border border-gray-200 dark:border-white/20 px-3 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-white hover:text-slate-800 dark:hover:text-gray-900 transition shadow-sm"
-                    >
+                    <button className="text-xs font-bold bg-[#f1f5f9] dark:bg-white/10 text-slate-700 dark:text-white border border-gray-200 dark:border-white/20 px-3 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-white hover:text-slate-800 dark:hover:text-gray-900 transition shadow-sm">
                       Agendar
                     </button>
                   </div>
@@ -546,18 +566,8 @@ export default function Dashboard() {
                                </div>
                                <p className="text-base font-bold text-slate-800 dark:text-white mt-2">{alert.title}</p>
                                <div className="mt-4 flex gap-3">
-                                <button 
-                                  onClick={(e) => { e.stopPropagation(); window.alert('Alerta ignorado e ocultado do painel principal.'); }}
-                                  className="text-xs font-bold px-4 py-2 bg-[#f1f5f9]  dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-white/10 transition text-slate-700 dark:text-white"
-                                >
-                                  Ignorar
-                                </button>
-                                <button 
-                                  onClick={(e) => { e.stopPropagation(); window.alert(`Detalhes completos do alerta:\n\nVeículo: ${alert.vehicle}\nEvento: ${alert.title}\nHorário: ${alert.time}`); }}
-                                  className="text-xs font-bold px-4 py-2 bg-fleet-600 dark:bg-fleet-500 text-white border border-transparent rounded-lg hover:bg-fleet-700 dark:hover:bg-fleet-400 transition shadow-sm"
-                                >
-                                  Ver Detalhes
-                                </button>
+                                <button className="text-xs font-bold px-4 py-2 bg-[#f1f5f9]  dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-white/10 transition text-slate-700 dark:text-white">Ignorar</button>
+                                <button className="text-xs font-bold px-4 py-2 bg-fleet-600 dark:bg-fleet-500 text-white border border-transparent rounded-lg hover:bg-fleet-700 dark:hover:bg-fleet-400 transition shadow-sm">Ver Detalhes</button>
                                </div>
                              </div>
                            </div>
@@ -575,8 +585,6 @@ export default function Dashboard() {
           </div>
         </Dialog>
       </Transition>
-
-
 
     </motion.div>
   );

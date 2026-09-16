@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Lock, User as UserIcon, LogIn, Compass, Zap, ShieldCheck, Truck } from 'lucide-react';
@@ -11,21 +11,6 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
-
-  useEffect(() => {
-    const root = document.documentElement;
-    const savedTheme = root.classList.contains('light') ? 'light' : root.classList.contains('dark') ? 'dark' : null;
-    root.classList.remove('light');
-    root.classList.add('dark');
-    return () => {
-      root.classList.remove('dark');
-      if (savedTheme === 'light') {
-        root.classList.add('light');
-      } else if (savedTheme === 'dark') {
-        root.classList.add('dark');
-      }
-    };
-  }, []);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,7 +30,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4 relative overflow-hidden transition-colors duration-500">
+    <div className="min-h-screen bg-[#f1f5f9] dark:bg-fleet-900 flex items-center justify-center p-4 relative overflow-hidden transition-colors duration-500">
       {/* Decorative Background Elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <motion.div 
@@ -165,22 +150,18 @@ export default function Login() {
 
         {/* Right Side: Login Form */}
         <div className="w-full md:w-1/2 p-8 md:p-12 lg:p-16 flex flex-col justify-center">
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="md:hidden flex items-center gap-3 mb-8 justify-between">
-             <div className="flex items-center gap-3">
-               <div className="bg-indigo-600 p-2 rounded-xl shadow-lg">
-                  <Compass className="w-6 h-6 text-white" />
-               </div>
-               <span className="text-2xl font-black tracking-tight text-slate-800 dark:text-white">
-                  FleetMonitor
-               </span>
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="md:hidden flex items-center gap-3 mb-8 justify-center">
+             <div className="bg-indigo-600 p-2 rounded-xl shadow-lg">
+                <Compass className="w-6 h-6 text-white" />
              </div>
+             <span className="text-2xl font-black tracking-tight text-slate-800 dark:text-white">
+                FleetMonitor
+             </span>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3, duration: 0.5, ease: 'easeOut' }} className="flex flex-col gap-4 justify-between md:flex-row md:items-center mb-8">
-            <div className="text-center md:text-left">
-              <h2 className="text-3xl font-black text-slate-800 dark:text-white tracking-tight">Bem-vindo de volta</h2>
-              <p className="text-slate-500 dark:text-fleet-200 mt-2 font-medium">Faça login para acessar o painel de comando.</p>
-            </div>
+          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3, duration: 0.5, ease: 'easeOut' }} className="text-center md:text-left mb-8">
+            <h2 className="text-3xl font-black text-slate-800 dark:text-white tracking-tight">Bem-vindo de volta</h2>
+            <p className="text-slate-500 dark:text-fleet-200 mt-2 font-medium">Faça login para acessar o painel de comando.</p>
           </motion.div>
 
           <form onSubmit={handleLogin} className="space-y-5">

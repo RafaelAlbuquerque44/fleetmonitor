@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
+  MapPin, 
   Leaf, 
   Wrench, 
+  Wallet, 
   Sparkles,
   Check,
   X,
@@ -22,7 +24,14 @@ interface ModuleConfig {
 }
 
 const MODULES: ModuleConfig[] = [
-
+  {
+    id: 'produto_telemetria',
+    name: 'Rastreamento',
+    description: 'Monitoramento em tempo real, velocidade, alertas e análise de tempo ocioso para toda a frota.',
+    icon: MapPin,
+    color: 'text-blue-500',
+    bgColor: 'bg-blue-500/10'
+  },
   {
     id: 'produto_roteirizacao',
     name: 'ESG & Relatórios',
@@ -39,7 +48,14 @@ const MODULES: ModuleConfig[] = [
     color: 'text-amber-500',
     bgColor: 'bg-amber-500/10'
   },
-
+  {
+    id: 'produto_financeiro',
+    name: 'Controle Financeiro',
+    description: 'Análise de receita vs despesa, cálculo de economia de combustível e retorno sobre investimento (ROI).',
+    icon: Wallet,
+    color: 'text-green-500',
+    bgColor: 'bg-green-500/10'
+  },
   {
     id: 'produto_ia_assistente',
     name: 'Widget FleetAI',

@@ -1,0 +1,26 @@
+### 1. Sobre o uso dos arquivos de vídeo
+
+| Arquivo | Localização | Status | Detalhes |
+| :--- | :--- | :--- | :--- |
+| **`bg-video.mp4`** | `frontend/public/bg-video.mp4` | **EM USO** | É utilizado diretamente como o vídeo de background da Landing Page em [index.tsx](/fleetmonitor/frontend/src/pages/Landing/index.tsx#L146) (`<source src="/bg-video.mp4" type="video/mp4" />`). |
+
+---
+
+### 2. Limpeza Realizada no Repositório
+
+Além da remoção do vídeo duplicado da raiz, foi feita uma varredura completa em busca de arquivos não utilizados ou redundantes:
+
+1. **`freepik_start-image-...0001.mp4`**: Removido da raiz (duplicata de 9,77 MB).
+2. **`trucks.json`**: Removido da raiz (arquivo vazio de 0 bytes, sem uso).
+3. **`frontend/public/dashboard_mockup.png` e `meu_dashboard_print.png`**: Removidos (~820 KB em mockups legados sem referência; a Landing Page usa `imac_mockup.png`).
+4. **`frontend/src/assets/react.svg` e `frontend/public/vite.svg`**: Removidos (ícones boilerplate padrão do Vite que não estavam em uso).
+5. **Arquivos `__pycache__/*.pyc`**: Removidos do rastreamento do Git (11 arquivos de bytecode compilado de Python que haviam sido commitados indevidamente).
+6. **Ajuste de compilação em [Dashboard.tsx](file:///c:/Users/pmart/fleetmonitor/frontend/src/pages/Dashboard.tsx)**: Remoção de variáveis não lidas (`Lock`, `topDrivers`, `extendedDrivers`) que estavam barrando o build de produção do TypeScript.
+
+---
+
+### 3. Validação e Commit
+
+- **Validação de Build**: `npm run build` executado com sucesso (`tsc -b && vite build` aprovado sem erros).
+- **Commit**: `e4e3c4a` (`"chore: limpar arquivos redundantes, duplicatas de video, mockups sem uso e pycache"`)
+- **Push**: Enviado para [RafaelAlbuquerque44/fleetmonitor (main)](https://github.com/RafaelAlbuquerque44/fleetmonitor).

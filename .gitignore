@@ -1,0 +1,50 @@
+# ==========================
+# Python / Django
+# ==========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.env
+.env
+*.log
+db.sqlite3
+*.sqlite3
+
+# Virtual Environments
+venv/
+venv_django/
+env/
+.venv/
+
+# Django
+*.pot
+local_settings.py
+media/
+staticfiles/
+
+# ==========================
+# Node / Frontend
+# ==========================
+node_modules/
+dist/
+.cache/
+*.local
+
+# Vite
+frontend/dist/
+frontend/.env
+frontend/.env.local
+frontend/.env.production
+
+# ==========================
+# OS / Editor
+# ==========================
+.DS_Store
+Thumbs.db
+.vscode/settings.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

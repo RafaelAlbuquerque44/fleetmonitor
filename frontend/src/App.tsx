@@ -5,10 +5,11 @@ import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Vehicles from './pages/Vehicles';
 import Drivers from './pages/Drivers';
+import Tracking from './pages/Tracking';
 import Reports from './pages/Reports';
+import Finance from './pages/Finance';
 import Maintenance from './pages/Maintenance';
 import Marketplace from './pages/Marketplace';
-import Portaria from './pages/Portaria';
 import NotFound from './pages/NotFound';
 import { VehicleProvider } from './lib/VehicleContext';
 import { DriverProvider } from './lib/DriverContext';
@@ -41,10 +42,11 @@ function App() {
               <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/vehicles" element={<Vehicles />} />
-                <Route path="/portaria" element={<Portaria />} />
                 <Route path="/drivers" element={<Drivers />} />
+                <Route path="/tracking" element={<Tracking />} />
                 <Route path="/maintenance" element={<Maintenance />} />
                 <Route path="/reports" element={<Reports />} />
+                <Route path="/finance" element={<Finance />} />
                 <Route path="/marketplace" element={<Marketplace />} />
               </Route>
               

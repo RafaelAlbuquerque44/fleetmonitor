@@ -113,6 +113,23 @@ export default function AnimatedBackground() {
           />
         );
       })}
+      
+      {/* Telemetry Radar Scanning Line */}
+      <motion.div
+        animate={{
+          top: ['-10%', '110%']
+        }}
+        transition={{
+          duration: 10,
+          repeat: Infinity,
+          ease: "linear",
+          delay: 2
+        }}
+        className="absolute left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-fleet-400/30 to-transparent"
+        style={{
+          boxShadow: '0 0 25px rgba(96, 165, 250, 0.5)'
+        }}
+      />
     </div>
   );
 }

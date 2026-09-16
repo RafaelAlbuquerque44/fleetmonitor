@@ -308,10 +308,7 @@ export default function Reports() {
                 <p className="text-sm font-medium text-blue-900/70 dark:text-blue-100/80 mb-6 max-w-sm leading-relaxed">
                   Cerca de 15% das emissões da frota vêm de veículos ociosos com o motor ligado. Considere implementar a ferramenta de <strong className="text-blue-950 dark:text-white">Desligamento Automático Inteligente</strong> através da configuração no painel do administrador.
                 </p>
-                <button 
-                  onClick={() => alert("Recomendações:\n1. Configurar desligamento automático após 10min de ociosidade.\n2. Monitorar motoristas com alto tempo ocioso no ranking.\n3. Implementar bônus para motoristas econômicos.")}
-                  className="text-sm font-black bg-blue-100 dark:bg-blue-500/20 text-blue-800 dark:text-blue-300 px-6 py-3 rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all border border-blue-300 dark:border-blue-500/30"
-                >
+                <button className="text-sm font-black bg-blue-100 dark:bg-blue-500/20 text-blue-800 dark:text-blue-300 px-6 py-3 rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all border border-blue-300 dark:border-blue-500/30">
                   Ver Recomendações
                 </button>
               </div>
@@ -322,10 +319,7 @@ export default function Reports() {
                 <p className="text-sm font-medium text-yellow-900/70 dark:text-yellow-100/80 mb-6 max-w-sm leading-relaxed">
                   Baseado nas rotas urbanas curtas (abaixo de 100km/dia) na região de SP, <strong className="text-yellow-950 dark:text-white">4 caminhões DAF XF</strong> podem ser substituídos por modelos elétricos com ROI em 24 meses corporativo.
                 </p>
-                <button 
-                  onClick={() => alert("Simulação:\nA substituição de 4 caminhões DAF XF por equivalentes elétricos (EV) reduzirá as emissões da frota em 35%.\nRetorno sobre investimento (ROI) estimado em 24 meses devido à economia de combustível em rotas urbanas.")}
-                  className="text-sm font-black bg-yellow-100 dark:bg-yellow-500/20 text-yellow-800 dark:text-yellow-300 px-6 py-3 rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all border border-yellow-300 dark:border-yellow-500/30"
-                >
+                <button className="text-sm font-black bg-yellow-100 dark:bg-yellow-500/20 text-yellow-800 dark:text-yellow-300 px-6 py-3 rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all border border-yellow-300 dark:border-yellow-500/30">
                   Simular Transição EV
                 </button>
               </div>
