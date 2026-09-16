@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Veiculo, Motorista, Manutencao, Conta
+from .models import Veiculo, Motorista, Manutencao, Conta, RegistroTelemetria, AlertaPreditivo, OrdemServico, RegistroEmissaoESG
 
 Usuario = get_user_model()
 
@@ -32,4 +32,24 @@ class ManutencaoSerializer(serializers.ModelSerializer):
 class ContaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Conta
+        fields = '__all__'
+
+class RegistroTelemetriaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RegistroTelemetria
+        fields = '__all__'
+
+class AlertaPreditivoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AlertaPreditivo
+        fields = '__all__'
+
+class OrdemServicoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrdemServico
+        fields = '__all__'
+
+class RegistroEmissaoESGSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RegistroEmissaoESG
         fields = '__all__'

@@ -74,3 +74,41 @@ class Conta(models.Model):
     
     def __str__(self):
         return self.nome_cliente
+
+class RegistroTelemetria(models.Model):
+    veiculo = models.ForeignKey(Veiculo, on_delete=models.CASCADE, related_name='telemetria')
+    data = models.DateField()
+    combustivel_gasto = models.FloatField(default=0)
+    distancia_percorrida = models.FloatField(default=0)
+    velocidade_media = models.FloatField(default=0)
+    
+    def __str__(self):
+        return f"Telemetria {self.veiculo.placa} - {self.data}"
+
+class AlertaPreditivo(models.Model):
+    veiculo = models.ForeignKey(Veiculo, on_delete=models.CASCADE, related_name='alertas_preditivos')
+    componente = models.CharField(max_length=100)
+    probabilidade = models.FloatField()
+    severidade = models.CharField(max_length=20) # alta, media, baixa
+    data_previsao = models.DateField()
+    
+    def __str__(self):
+        return f"Alerta {self.componente} - {self.veiculo.placa}"
+
+class OrdemServico(models.Model):
+    manutencao = models.OneToOneField(Manutencao, on_delete=models.CASCADE, related_name='ordem_servico')
+    status = models.CharField(max_length=20, default='pendente') # pendente, em_andamento, concluida
+    prazo = models.DateField(null=True, blank=True)
+    mecanico = models.CharField(max_length=100, null=True, blank=True)
+    
+    def __str__(self):
+        return f"OS {self.id} - {self.manutencao.veiculo.placa}"
+
+class RegistroEmissaoESG(models.Model):
+    conta = models.ForeignKey(Conta, on_delete=models.CASCADE, related_name='emissoes_esg')
+    mes = models.CharField(max_length=7) # YYYY-MM
+    co2_emitido = models.FloatField(default=0)
+    co2_compensado = models.FloatField(default=0)
+    
+    def __str__(self):
+        return f"ESG {self.conta.nome_cliente} - {self.mes}"

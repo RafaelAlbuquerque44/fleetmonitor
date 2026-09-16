@@ -1,10 +1,12 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from .models import Veiculo, Motorista, Manutencao, Conta
+from .models import Veiculo, Motorista, Manutencao, Conta, RegistroTelemetria, AlertaPreditivo, OrdemServico, RegistroEmissaoESG
 from .serializers import (
     VeiculoSerializer, MotoristaSerializer, 
-    ManutencaoSerializer, UsuarioSerializer, ContaSerializer
+    ManutencaoSerializer, UsuarioSerializer, ContaSerializer,
+    RegistroTelemetriaSerializer, AlertaPreditivoSerializer,
+    OrdemServicoSerializer, RegistroEmissaoESGSerializer
 )
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -27,6 +29,22 @@ class ManutencaoViewSet(viewsets.ModelViewSet):
 class ContaViewSet(viewsets.ModelViewSet):
     queryset = Conta.objects.all()
     serializer_class = ContaSerializer
+class RegistroTelemetriaViewSet(viewsets.ModelViewSet):
+    queryset = RegistroTelemetria.objects.all()
+    serializer_class = RegistroTelemetriaSerializer
+
+class AlertaPreditivoViewSet(viewsets.ModelViewSet):
+    queryset = AlertaPreditivo.objects.all()
+    serializer_class = AlertaPreditivoSerializer
+
+class OrdemServicoViewSet(viewsets.ModelViewSet):
+    queryset = OrdemServico.objects.all()
+    serializer_class = OrdemServicoSerializer
+
+class RegistroEmissaoESGViewSet(viewsets.ModelViewSet):
+    queryset = RegistroEmissaoESG.objects.all()
+    serializer_class = RegistroEmissaoESGSerializer
+
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def register(request):
