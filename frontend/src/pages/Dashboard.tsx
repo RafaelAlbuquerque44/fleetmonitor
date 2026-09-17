@@ -345,43 +345,6 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
-        {/* AI Predictive Maintenance */}
-        {(activeAccount?.produto_ia_assistente || isGlobalAdmin) && (
-          <motion.div variants={itemVariants} className="bg-[#f1f5f9]  dark:bg-white/5  p-6 rounded-2xl shadow-sm relative overflow-hidden border border-gray-200/60 dark:border-white/10">
-            <div className="absolute -top-24 -right-24 w-64 h-64 bg-fleet-500/5 dark:bg-white/5 rounded-full blur-3xl"></div>
-            <div className="flex justify-between items-center mb-6 relative z-10">
-              <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                <BrainCircuit className="w-5 h-5 text-fleet-500 dark:text-fleet-300" />
-                IA Preditiva
-              </h3>
-              {hasVehicles && (
-                <span className="text-xs font-black px-2 py-1 bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-fleet-200 rounded-md border border-slate-200 dark:border-white/10 backdrop-blur-sm animate-pulse">
-                  ANALISANDO
-                </span>
-              )}
-            </div>
-            <p className="text-sm font-medium text-slate-500 dark:text-fleet-200/70 mb-4 relative z-10">Alertas de Manutenção (Próx. 7 dias):</p>
-            <div className="space-y-3 relative z-10">
-              {currentAiPredictions.length > 0 ? currentAiPredictions.map((pred) => (
-                <div key={pred.id} className="p-4 rounded-xl border border-gray-200/60 dark:border-white/10 bg-gray-50 dark:bg-white/5  hover:bg-gray-100 dark:hover:bg-white/10 transition cursor-pointer">
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="font-mono text-sm font-bold text-slate-700 dark:text-white bg-slate-200 dark:bg-black/40 px-2 py-0.5 rounded border border-gray-300 dark:border-white/10 uppercase">{pred.plate}</span>
-                    <span className="text-xs font-black text-red-600 dark:text-red-300 bg-red-100 dark:bg-red-900/50 px-2 py-0.5 rounded border border-red-200 dark:border-red-500/20">{pred.probability}% risco</span>
-                  </div>
-                  <p className="text-sm text-slate-800 dark:text-white font-semibold">{pred.component}</p>
-                  <div className="mt-4 flex items-center justify-between">
-                    <span className="text-xs font-medium text-slate-500 dark:text-fleet-300">Falha em {pred.daysLeft} dias</span>
-                    <button className="text-xs font-bold bg-[#f1f5f9] dark:bg-white/10 text-slate-700 dark:text-white border border-gray-200 dark:border-white/20 px-3 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-white hover:text-slate-800 dark:hover:text-gray-900 transition shadow-sm">
-                      Agendar
-                    </button>
-                  </div>
-                </div>
-              )) : (
-                <p className="text-center text-sm text-slate-400 dark:text-fleet-300 py-4">Sua frota não apresenta anomalias ou falhas iminentes no momento.</p>
-              )}
-            </div>
-          </motion.div>
-        )}
 
         {/* Real-time Alerts Feed */}
         <motion.div variants={itemVariants} className="bg-[#f1f5f9]  dark:bg-white/5  p-6 rounded-2xl shadow-[0_2px_6px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-200/60 dark:border-white/10">

@@ -9,7 +9,9 @@ import {
   ChevronRight,
   Activity,
   Wallet,
-  ShoppingBag
+  ShoppingBag,
+  Map,
+  Truck
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import TopBar from '../components/TopBar';
@@ -21,6 +23,7 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Veículos', href: '/vehicles', icon: CarFront },
   { name: 'Motoristas', href: '/drivers', icon: Users },
+  { name: 'Roteirização', href: '/routing', icon: Map },
   { name: 'IA & Oficina', href: '/maintenance', icon: Wrench },
   { name: 'ESG & Relatórios', href: '/reports', icon: Leaf },
   { name: 'Controle Financeiro', href: '/finance', icon: Wallet },
@@ -41,8 +44,9 @@ export default function MainLayout() {
     if (!activeAccount || activeAccount.id === 999999) return true;
     
     if (item.name === 'Dashboard' || item.name === 'Veículos' || item.name === 'Motoristas' || item.name === 'Marketplace') return true;
+    if (item.name === 'Roteirização') return activeAccount.produto_roteirizacao;
     if (item.name === 'IA & Oficina') return activeAccount.produto_manutencao;
-    if (item.name === 'ESG & Relatórios') return activeAccount.produto_roteirizacao;
+    if (item.name === 'ESG & Relatórios') return activeAccount.produto_telemetria; // Using telemetria or any available prop for ESG
     if (item.name === 'Controle Financeiro') return activeAccount.produto_financeiro;
     return false;
   });
@@ -68,7 +72,7 @@ export default function MainLayout() {
               className="text-2xl font-black text-slate-800 dark:text-white flex items-center gap-3 tracking-tight z-10 antialiased"
             >
               <div className="w-10 h-10 rounded-xl bg-fleet-50 dark:bg-white/10 flex items-center justify-center border border-fleet-100 dark:border-white/20">
-                <Leaf className="w-6 h-6 text-fleet-600 dark:text-white" />
+                <Truck className="w-6 h-6 text-fleet-600 dark:text-white" />
               </div>
               FleetMonitor
             </motion.h1>

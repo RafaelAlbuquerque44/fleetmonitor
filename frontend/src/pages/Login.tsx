@@ -123,7 +123,7 @@ export default function Login() {
           <div className="relative z-10">
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2, duration: 0.6, ease: 'easeOut' }} className="flex items-center gap-3 mb-12">
               <div className="bg-white/10 p-2.5 rounded-xl  shadow-inner border border-white/20">
-                <Compass className="w-8 h-8 text-white drop-shadow-md" />
+                <Truck className="w-8 h-8 text-white drop-shadow-md" />
               </div>
               <span className="text-3xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
                 FleetMonitor
@@ -152,7 +152,7 @@ export default function Login() {
         <div className="w-full md:w-1/2 p-8 md:p-12 lg:p-16 flex flex-col justify-center">
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="md:hidden flex items-center gap-3 mb-8 justify-center">
              <div className="bg-indigo-600 p-2 rounded-xl shadow-lg">
-                <Compass className="w-6 h-6 text-white" />
+                <Truck className="w-6 h-6 text-white" />
              </div>
              <span className="text-2xl font-black tracking-tight text-slate-800 dark:text-white">
                 FleetMonitor

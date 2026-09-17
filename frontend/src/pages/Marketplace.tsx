@@ -55,14 +55,6 @@ const MODULES: ModuleConfig[] = [
     icon: Wallet,
     color: 'text-green-500',
     bgColor: 'bg-green-500/10'
-  },
-  {
-    id: 'produto_ia_assistente',
-    name: 'Widget FleetAI',
-    description: 'Sua inteligência artificial integrada para monitorar a frota e gerar predições ao vivo no canto do menu.',
-    icon: Sparkles,
-    color: 'text-indigo-500',
-    bgColor: 'bg-indigo-500/10'
   }
 ];
 

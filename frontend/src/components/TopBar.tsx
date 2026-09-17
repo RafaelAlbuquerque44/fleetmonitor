@@ -5,20 +5,12 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAccount } from '../lib/AccountContext';
-import AIChat from './AIChat';
 
 export default function TopBar() {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const { logout } = useAuth();
   const { contas, activeAccount, setActiveAccountId } = useAccount();
-  const [isChatOpen, setIsChatOpen] = useState(false);
-
-  useEffect(() => {
-    const handleOpenChat = () => setIsChatOpen(true);
-    window.addEventListener('open-fleet-ai', handleOpenChat);
-    return () => window.removeEventListener('open-fleet-ai', handleOpenChat);
-  }, []);
 
   const handleLogout = () => {
     logout();
@@ -33,15 +25,6 @@ export default function TopBar() {
     <div className="w-full h-20 flex items-center justify-end px-6 md:px-8 z-40 bg-transparent border-b border-gray-200/50 dark:border-white/5 backdrop-blur-sm relative transition-colors duration-500">
       
       <div className="flex items-center gap-2 md:gap-4">
-        {/* IA Assistant Chat Button */}
-        <button
-          onClick={() => setIsChatOpen(true)}
-          className="flex items-center gap-2 px-3 py-2 md:px-4 md:py-2.5 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold transition-all shadow-md shadow-indigo-500/20"
-          title="FleetMonitor AI Assistant"
-        >
-          <Sparkles className="w-5 h-5 animate-pulse" />
-          <span className="hidden md:inline text-sm">IA Assistente</span>
-        </button>
 
         {/* Theme Toggle Button */}
         <button
@@ -150,7 +133,6 @@ export default function TopBar() {
         </Menu>
       </div>
 
-      <AIChat isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </div>
   );
 }

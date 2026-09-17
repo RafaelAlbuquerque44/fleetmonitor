@@ -11,7 +11,6 @@ import type { Conta } from '../lib/AccountContext';
 const PRODUCTS = [
   { id: 'produto_manutencao', name: 'Gestão de Manutenção', icon: Wrench, desc: 'Controle de preventivas, corretivas e estoque de peças.', color: 'text-orange-500', bg: 'bg-orange-500/10' },
   { id: 'produto_financeiro', name: 'Módulo Financeiro', icon: DollarSign, desc: 'Controle de custos, receitas e relatórios de DRE da frota.', color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-  { id: 'produto_ia_assistente', name: 'IA Assistente Preditiva', icon: BrainCircuit, desc: 'Previsões de falhas e análise inteligente de dados da frota.', color: 'text-purple-500', bg: 'bg-purple-500/10' },
   { id: 'produto_roteirizacao', name: 'Roteirização Inteligente', icon: RouteIcon, desc: 'Otimização de rotas para economia de combustível e tempo.', color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
 ];
 
@@ -28,7 +27,6 @@ export default function CreateAccount() {
     telefone: '',
     produto_manutencao: false,
     produto_financeiro: false,
-    produto_ia_assistente: false,
     produto_roteirizacao: false,
   });
 
@@ -84,7 +82,6 @@ export default function CreateAccount() {
         produto_telemetria: false, // Default to false since removed from options
         produto_manutencao: formData.produto_manutencao,
         produto_financeiro: formData.produto_financeiro,
-        produto_ia_assistente: formData.produto_ia_assistente,
         produto_roteirizacao: formData.produto_roteirizacao,
         criado_em: new Date().toISOString(),
       };
@@ -332,7 +329,7 @@ export default function CreateAccount() {
                       setFormData({
                         nome_cliente: '', documento: '', email_contato: '', telefone: '',
                         produto_manutencao: false, produto_financeiro: false,
-                        produto_ia_assistente: false, produto_roteirizacao: false,
+                        produto_roteirizacao: false,
                       });
                       setStep(1);
                     }}

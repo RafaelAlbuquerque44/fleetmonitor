@@ -67,7 +67,7 @@ class Conta(models.Model):
     # Produtos/Módulos habilitados
     produto_manutencao = models.BooleanField(default=False)
     produto_financeiro = models.BooleanField(default=False)
-    produto_ia_assistente = models.BooleanField(default=False)
+
     produto_roteirizacao = models.BooleanField(default=False)
     
     criado_em = models.DateTimeField(auto_now_add=True)
