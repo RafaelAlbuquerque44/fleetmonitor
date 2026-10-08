@@ -1,8 +1,9 @@
 /* eslint-disable react-refresh/only-export-components */
-/* eslint-disable react-hooks/set-state-in-effect */
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { useAccount } from './AccountContext';
+import { DEMO_ACCOUNT_ID } from './constants';
+import { readStoredArray, writeStorage } from './storage';
 
 export interface Vehicle {
   id: number;
@@ -23,6 +24,7 @@ export interface Vehicle {
   monthlyRevenue?: number;
   monthlyMaintenance?: number;
   monthlyFuel?: number;
+  efficiency?: number; // km/l; routing uses 10 km/l when no estimate is available
 }
 
 interface VehicleContextType {
@@ -45,35 +47,33 @@ const VehicleContext = createContext<VehicleContextType | undefined>(undefined);
 
 export function VehicleProvider({ children }: { children: ReactNode }) {
   const { activeAccountId } = useAccount();
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
+  // Remount the account subtree so data and open forms cannot cross account boundaries.
+  return <AccountVehicles key={activeAccountId} accountId={activeAccountId}>{children}</AccountVehicles>;
+}
 
-  // Update vehicles when active account changes
-  useEffect(() => {
-    if (!activeAccountId) return;
-    setIsLoaded(false);
-    
-    const saved = localStorage.getItem(`ecoFleet_vehicles_${activeAccountId}`);
-    if (saved && saved !== '[]') {
-      setVehicles(JSON.parse(saved));
-    } else {
-      // Se for a conta mock Admin Global, carrega o mock de veículos
-      if (activeAccountId === 999999) {
-        setVehicles(mockVehicles);
-      } else {
-        setVehicles([]); // Outras contas (criadas pelo usuário) começam vazias
-      }
-    }
-    setIsLoaded(true);
-  }, [activeAccountId]);
+function isVehicle(value: unknown): value is Vehicle {
+  if (typeof value !== 'object' || value === null) return false;
+  const v = value as Record<string, unknown>;
+  return typeof v.id === 'number' && Number.isFinite(v.id)
+    && typeof v.year === 'number' && Number.isFinite(v.year)
+    && ['plate', 'model', 'status', 'city', 'uf'].every(key => typeof v[key] === 'string')
+    && ['lat', 'lng', 'fuelLevel', 'tireHealth', 'purchasePrice', 'monthlyRevenue', 'monthlyMaintenance', 'monthlyFuel', 'efficiency']
+      .every(key => v[key] === undefined || (typeof v[key] === 'number' && Number.isFinite(v[key])));
+}
 
-  // Salvar no localStorage sempre que mudar, garantindo que salva na conta correta!
-  useEffect(() => {
-    if (!isLoaded || !activeAccountId) return;
-    localStorage.setItem(`ecoFleet_vehicles_${activeAccountId}`, JSON.stringify(vehicles));
-  }, [vehicles, activeAccountId, isLoaded]);
+function AccountVehicles({ children, accountId }: { children: ReactNode; accountId: number | null }) {
+  const storageKey = `ecoFleet_vehicles_${accountId}`;
+  const [vehicles, setVehicles] = useState<Vehicle[]>(() => accountId === null ? [] : readStoredArray(
+    storageKey, accountId === DEMO_ACCOUNT_ID ? mockVehicles : [], isVehicle,
+  ));
 
   useEffect(() => {
+    if (accountId === null) return;
+    writeStorage(storageKey, JSON.stringify(vehicles));
+  }, [vehicles, storageKey, accountId]);
+
+  useEffect(() => {
+    if (accountId !== DEMO_ACCOUNT_ID) return;
     const interval = setInterval(() => {
       setVehicles(prevVehicles => 
         prevVehicles.map(v => {
@@ -101,7 +101,7 @@ export function VehicleProvider({ children }: { children: ReactNode }) {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [accountId]);
 
   const addVehicle = (newVehicle: Vehicle) => {
     setVehicles(prev => [...prev, newVehicle]);

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Lock, User as UserIcon, LogIn, Compass, Zap, ShieldCheck, Truck } from 'lucide-react';
+import { Lock, User as UserIcon, LogIn, Zap, ShieldCheck, Truck } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Login() {

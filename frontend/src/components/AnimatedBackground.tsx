@@ -1,17 +1,20 @@
 import { motion } from 'framer-motion';
 import { useTheme } from '../contexts/ThemeContext';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 export default function AnimatedBackground() {
   const { theme } = useTheme();
-  // Ensure we only render the random DOM elements after mounting to avoid hydration mismatch if SSR
-  const [mounted, setMounted] = useState(false);
-  
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) return null;
+  // Generate once per mount; changing theme must not move or restart the particles.
+  const [particles] = useState(() => Array.from({ length: 15 }, () => ({
+    size: 3 + Math.random() * 7,
+    duration: 15 + Math.random() * 15,
+    x: `${Math.random() * 100}vw`,
+    y: `${Math.random() * 100}vh`,
+    targetX: `${Math.random() * 100}vw`,
+    targetY: `${Math.random() * 100}vh`,
+    scale: 1 + Math.random(),
+    delay: Math.random() * 5,
+  })));
   
   const isDark = theme === 'dark';
   
@@ -20,10 +23,6 @@ export default function AnimatedBackground() {
   const glow1 = isDark ? 'from-fleet-600/30 to-fleet-900/0' : 'from-transparent to-transparent';
   const glow2 = isDark ? 'from-alert/10 to-fleet-900/0' : 'from-transparent to-transparent';
   const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'transparent';
-
-  // Generate 15 static random positions for the particles to start at, 
-  // so every re-render doesn't jump them (except when first mounting)
-  const getRandom = (min: number, max: number) => Math.random() * (max - min) + min;
 
   return (
     <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none transition-colors duration-700">
@@ -83,27 +82,26 @@ export default function AnimatedBackground() {
       />
 
       {/* Floating Sparkles/Nodes (Data Visualization Concept) */}
-      {[...Array(15)].map((_, i) => {
-        const size = getRandom(3, 10);
-        const duration = getRandom(15, 30);
+      {particles.map((particle, i) => {
+        const { size, duration } = particle;
         return (
           <motion.div
             key={i}
             initial={{
-              y: getRandom(0, window.innerHeight),
-              x: getRandom(0, window.innerWidth),
+              y: particle.y,
+              x: particle.x,
             }}
             animate={{
-              y: [null, getRandom(0, window.innerHeight)],
-              x: [null, getRandom(0, window.innerWidth)],
+              y: [null, particle.targetY],
+              x: [null, particle.targetX],
               opacity: [0, 0.6, 0],
-              scale: [0, getRandom(1, 2), 0]
+              scale: [0, particle.scale, 0]
             }}
             transition={{
               duration: duration,
               repeat: Infinity,
               ease: "linear",
-              delay: getRandom(0, 5),
+              delay: particle.delay,
             }}
             className={`absolute rounded-full ${particleColor} shadow-[0_0_15px_rgba(255,255,255,0.4)] backdrop-blur-sm`}
             style={{

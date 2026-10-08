@@ -22,15 +22,30 @@ echo                        Iniciando todos os servicos...
 echo ============================================================================
 echo.
 
+if not exist "%~dp0.env" (
+    echo [ERRO] Copie .env.example para .env na raiz e substitua os valores de exemplo.
+    echo [*] O exemplo usa um SQLite novo para preservar o banco legado.
+    pause
+    exit /b 1
+)
+
 echo [1/4] Verificando dependencias do Backend...
 if not exist "%~dp0backend\venv_django" (
     echo [*] Criando ambiente virtual do backend...
     cd /d "%~dp0backend"
     python -m venv venv_django
-    call venv_django\Scripts\activate.bat
-    pip install -r requirements.txt
     cd /d "%~dp0"
 )
+"%~dp0backend\venv_django\Scripts\python.exe" -m pip install -r "%~dp0backend\requirements.txt"
+if errorlevel 1 exit /b 1
+cd /d "%~dp0backend"
+venv_django\Scripts\python.exe manage.py migrate
+if errorlevel 1 (
+    echo [ERRO] Falha nas migracoes. Confira DATABASE_URL no arquivo .env.
+    pause
+    exit /b 1
+)
+cd /d "%~dp0"
 
 echo [2/4] Verificando dependencias do Frontend...
 if not exist "%~dp0frontend\node_modules" (

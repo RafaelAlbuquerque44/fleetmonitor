@@ -17,7 +17,8 @@ import {
   Landmark, 
   Banknote,
   AlertTriangle,
-  ArrowUpRight
+  ArrowUpRight,
+  Car
 } from 'lucide-react';
 import { useVehicles } from '../lib/VehicleContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -169,7 +170,7 @@ export default function Finance() {
               <Tooltip 
                 cursor={{fill: theme === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)'}}
                 contentStyle={{ borderRadius: '12px', border: theme === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)', background: theme === 'dark' ? '#1e293b' : '#ffffff', color: theme === 'dark' ? '#fff' : '#0f172a', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                formatter={(val: any) => formatCurrency(val)}
+                formatter={(val) => formatCurrency(Number(val))}
               />
               <Legend wrapperStyle={{ paddingTop: '20px' }} />
               <Bar dataKey="Receita" fill="#10b981" radius={[4, 4, 0, 0]} barSize={30} />
@@ -255,28 +256,5 @@ export default function Finance() {
         </div>
       </motion.div>
     </motion.div>
-  );
-}
-
-// Temporary icon to avoid importing issue since I didn't import Car at the top
-function Car(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" />
-      <circle cx="7" cy="17" r="2" />
-      <path d="M9 17h6" />
-      <circle cx="17" cy="17" r="2" />
-    </svg>
   );
 }

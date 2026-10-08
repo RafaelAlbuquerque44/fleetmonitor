@@ -5,7 +5,6 @@ import {
   Leaf, 
   Wrench, 
   Wallet, 
-  Sparkles,
   Check,
   X,
   Lock,
@@ -25,15 +24,15 @@ interface ModuleConfig {
 
 const MODULES: ModuleConfig[] = [
   {
-    id: 'produto_telemetria',
-    name: 'Rastreamento',
-    description: 'Monitoramento em tempo real, velocidade, alertas e análise de tempo ocioso para toda a frota.',
+    id: 'produto_roteirizacao',
+    name: 'Roteirização Inteligente',
+    description: 'Planejamento de trajetos e estimativa de tempo e combustível para toda a frota.',
     icon: MapPin,
     color: 'text-blue-500',
     bgColor: 'bg-blue-500/10'
   },
   {
-    id: 'produto_roteirizacao',
+    id: 'produto_telemetria',
     name: 'ESG & Relatórios',
     description: 'Relatórios avançados de emissão de CO₂, cálculo de rotas eficientes e metas de sustentabilidade.',
     icon: Leaf,
@@ -59,7 +58,7 @@ const MODULES: ModuleConfig[] = [
 ];
 
 export default function Marketplace() {
-  const { activeAccount, refreshContas, updateConta } = useAccount();
+  const { activeAccount, updateConta } = useAccount();
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
 
   // ID 999999 é a conta Admin Global (mock) que tem tudo fixo
@@ -70,10 +69,7 @@ export default function Marketplace() {
     
     setIsProcessing(moduleId);
     try {
-      // Update locally in context and persist to localStorage
       updateConta(activeAccount.id, { [moduleId]: !currentValue });
-      // refreshContas re-reads from localStorage so other consumers stay in sync
-      await refreshContas();
     } catch (error) {
       console.error("Erro ao atualizar módulo:", error);
     } finally {

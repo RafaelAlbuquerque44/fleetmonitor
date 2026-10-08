@@ -322,7 +322,7 @@ export default function Drivers() {
                               <label className="block text-sm font-bold leading-6 text-slate-800 dark:text-white">Status</label>
                               <select
                                 value={status}
-                                onChange={(e) => setStatus(e.target.value as any)}
+                                onChange={(e) => setStatus(e.target.value as Driver['status'])}
                                 className="mt-2 block w-full rounded-xl border border-gray-200 dark:border-white/10 py-2.5 text-slate-800 dark:text-white shadow-sm focus:ring-2 focus:ring-inset focus:ring-fleet-400 sm:text-sm sm:leading-6 px-4 font-medium bg-[#f1f5f9]  dark:bg-fleet-800"
                               >
                                 <option value="active">Ativo (Em Rota)</option>
@@ -334,7 +334,7 @@ export default function Drivers() {
                               <label className="block text-sm font-bold leading-6 text-slate-800 dark:text-white">Liga (Tier Inicial)</label>
                               <select
                                 value={tier}
-                                onChange={(e) => setTier(e.target.value as any)}
+                                onChange={(e) => setTier(e.target.value as Driver['tier'])}
                                 className="mt-2 block w-full rounded-xl border border-gray-200 dark:border-white/10 py-2.5 text-slate-800 dark:text-white shadow-sm focus:ring-2 focus:ring-inset focus:ring-fleet-400 sm:text-sm sm:leading-6 px-4 font-medium bg-[#f1f5f9]  dark:bg-fleet-800"
                               >
                                 <option value="Gold">Ouro</option>

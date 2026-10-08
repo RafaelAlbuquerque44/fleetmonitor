@@ -39,33 +39,36 @@ export default function Vehicles() {
 
   // Fetch cities when UF changes
   useEffect(() => {
+    const controller = new AbortController();
     async function fetchCities() {
       setIsLoadingCities(true);
       try {
-        const res = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${uf}/municipios`);
-        const data = await res.json();
-        const cityNames = data.map((c: any) => c.nome);
+        const res = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${uf}/municipios`, { signal: controller.signal });
+        if (!res.ok) throw new Error('Falha ao buscar municípios');
+        const data: { nome: string }[] = await res.json();
+        const cityNames = data.map(c => c.nome);
         setCities(cityNames);
-        if (cityNames.length > 0 && !cityNames.includes(city)) {
-          setCity(cityNames[0]); // Auto-select first city if current is invalid for new UF
-        }
+        setCity(current => cityNames.includes(current) ? current : cityNames[0] ?? '');
       } catch (err) {
+        if (controller.signal.aborted) return;
         console.error("Failed to load cities", err);
       } finally {
-        setIsLoadingCities(false);
+        if (!controller.signal.aborted) setIsLoadingCities(false);
       }
     }
     fetchCities();
-  }, [uf]); // eslint-disable-line react-hooks/exhaustive-deps
+    return () => controller.abort();
+  }, [uf]);
 
   const openNewVehicle = () => {
     setEditingId(null);
+    setPlate(''); setModel(''); setYear(''); setStatus('active');
     setDriverId(''); setFuelLevel(100); setTireHealth(100);
     setSketchfabId('314f957331344efcb574b35da7bba99f'); setIsCustomModel(false);
     setIsSlideOverOpen(true);
   };
 
-  const openEditVehicle = (vehicle: any) => {
+  const openEditVehicle = (vehicle: Vehicle) => {
     setEditingId(vehicle.id);
     setPlate(vehicle.plate);
     setModel(vehicle.model);
@@ -74,8 +77,8 @@ export default function Vehicles() {
     setCity(vehicle.city);
     setStatus(vehicle.status);
     setDriverId(vehicle.driverId || '');
-    setFuelLevel(vehicle.fuelLevel || 100);
-    setTireHealth(vehicle.tireHealth || 100);
+    setFuelLevel(vehicle.fuelLevel ?? 100);
+    setTireHealth(vehicle.tireHealth ?? 100);
     setSketchfabId(vehicle.sketchfabId || '314f957331344efcb574b35da7bba99f');
     setIsCustomModel(vehicle.sketchfabId && vehicle.sketchfabId !== '314f957331344efcb574b35da7bba99f' ? true : false);
     setIsSlideOverOpen(true);
@@ -117,7 +120,7 @@ export default function Vehicles() {
         });
       } else {
         const newVehicle = {
-          id: Math.max(...vehicles.map(v => v.id)) + 1,
+          id: Math.max(0, ...vehicles.map(v => v.id)) + 1,
           plate,
           model,
           year: parseInt(year) || new Date().getFullYear(),

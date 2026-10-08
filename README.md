@@ -1,10 +1,13 @@
-# FleetMonitor API
+# FleetMonitor
 
-Bem-vindo à documentação do **FleetMonitor API**. Esta aplicação foi feita em Django REST Framework, a fim de fornecer uma estrutura mais escalável acompanhada das ricas baterias inclusas do ecossistema Django.
+Gestão de frotas com frontend React/TypeScript e API Django REST Framework. A interface atual funciona como demonstração local (`admin / admin`), com cadastros em `localStorage` por conta; os cadastros ainda não estão integrados à API JWT. A conta **Admin Global (Demo)**, ID `999999`, funciona sem backend.
+
+Consulte a [revisão de arquitetura](docs/architecture-review.md) para correções, validações e pendências, especialmente o isolamento multi-tenant no servidor.
 
 ## Tecnologias Utilizadas
 
-- **Django**: Família 5.x
+- **React 19 / TypeScript / Vite 7 / Tailwind CSS v4**: SPA com temas claro e escuro.
+- **Django**: 5.2 LTS.
 - **Django REST Framework (DRF)**: Construção rápida de APIs.
 - **PostgreSQL**: Banco de dados relacional.
 - **Simple JWT**: Autenticação nativa baseada em Token JWT.
@@ -17,12 +20,53 @@ Bem-vindo à documentação do **FleetMonitor API**. Esta aplicação foi feita 
 ### Usando Docker (Recomendado)
 
 1. Certifique-se de que tenha o **Docker** e o **Docker Compose** instalados na sua máquina.
-2. Na raiz do repositório, rode:
+2. Copie `.env.example` para `.env` na raiz e substitua `SECRET_KEY` e `POSTGRES_PASSWORD` por valores próprios. No Compose, use senha compatível com URL ou faça o percent-encoding dos caracteres reservados na conexão.
+3. Na raiz do repositório, rode:
 ```bash
 docker-compose up -d --build
 ```
-3. O servidor backend iniciará automaticamente, as migrações serão refletidas no PostgreSQL e ele ficará acessível em:
-   `http://localhost:8000`
+4. Acesse o frontend em `http://localhost:5173` e a API em `http://localhost:8000`. O backend aguarda o PostgreSQL e aplica as migrações versionadas. Este Compose é para desenvolvimento; detalhes em [README.docker.md](README.docker.md).
+
+### Desenvolvimento local no Windows
+
+Use Python 3.12 e Node 22.12 ou posterior. Primeiro copie `.env.example` para `.env` e substitua os valores de exemplo. O exemplo utiliza um SQLite novo; o `backend/db.sqlite3` legado é preservado porque seu histórico de migrações está inconsistente.
+
+```powershell
+cd backend
+python -m venv venv_django
+.\venv_django\Scripts\python.exe -m pip install -r requirements.txt
+.\venv_django\Scripts\python.exe manage.py migrate
+.\venv_django\Scripts\python.exe manage.py runserver 8000
+```
+
+Em outro terminal:
+
+```powershell
+cd frontend
+npm ci
+npm run dev
+```
+
+O script `start_fleetmonitor.bat` também valida o `.env`, instala dependências Python e aplica as migrações antes de iniciar os serviços. O simulador só envia dados quando `API_TOKEN` ou `SIMULATOR_USERNAME` e `SIMULATOR_PASSWORD` estão configurados para um usuário real da API. Sem `SECRET_KEY` estável, o modo de desenvolvimento gera uma chave por processo e tokens antigos deixam de valer após reiniciar.
+
+### Validação
+
+```powershell
+cd frontend
+npm run build
+npm run lint
+npm test
+npm audit
+```
+
+```powershell
+cd backend
+.\venv_django\Scripts\python.exe manage.py check
+.\venv_django\Scripts\python.exe manage.py makemigrations --check --dry-run
+.\venv_django\Scripts\python.exe manage.py test core
+```
+
+Auditoria Python opcional: instale `pip-audit` no ambiente de desenvolvimento e execute `python -m pip_audit -r requirements.txt`.
 
 ---
 
@@ -43,7 +87,7 @@ Responsável pela gestão de tokens de acesso mediante criação de conta e logi
 | `POST` | `/auth/refresh/` | Atualiza o token expirado. | `{"refresh": "<refresh_token>"}` |
 
 
-Atenção as rotas abaixo podem requerer cabeçalho de Autenticação (`Authorization: Bearer <access_token>`).
+Todas as rotas de domínio abaixo exigem `Authorization: Bearer <access_token>`. O registro público valida a política de senha do Django e exige email; `cargo` e `is_active` são definidos pelo servidor. O login demo do frontend não emite JWT. A API ainda utiliza conjuntos globais de dados para usuários autenticados; não há autorização por conta implementada.
 
 ### 🚙 Veículos (`/veiculos/`)
 
@@ -69,15 +113,17 @@ Controle de condutores de veículos e score.
 | `PUT` | `/motoristas/<id>/` | Atualiza atributos ou CNH. |
 | `DELETE`| `/motoristas/<id>/` | Exclui um motorista. |
 
-### 🛰️ Telemetria (`/telemetria/`)
+### 🛰️ Posições IoT (`/posicoes/`)
 
 Dados de telemetria enviados pelos rastreadores embarcados.
 
 | Método | Endpoint | Descrição |
 | --- | --- | --- |
-| `GET` | `/telemetria/` | Lista posições e indicadores mecânicos extraídos. |
-| `POST` | `/telemetria/` | Registra metadados contendo `veiculo` (FK Id), `latitude/longitude`, `velocidade`, `consumo_combustivel` e `rpm`. |
-| `GET` | `/telemetria/<id>/` | Dados espaciais específicos de um payload. |
+| `GET` | `/posicoes/` | Lista posições e indicadores mecânicos extraídos. |
+| `POST` | `/posicoes/` | Registra `veiculo` (FK Id), `latitude`, `longitude`, `velocidade`, `consumo_combustivel` e `rpm`. |
+| `GET` | `/posicoes/<id>/` | Dados espaciais específicos de um payload. |
+
+O contrato existente de `/telemetria/` continua disponível para **consolidados diários**, com `veiculo`, `data` (`YYYY-MM-DD`), `combustivel_gasto`, `distancia_percorrida` e `velocidade_media`. Outros CRUDs disponíveis: `/contas/`, `/alertas-preditivos/`, `/ordens-servico/` e `/emissoes-esg/`.
 
 ### 🛠️ Manutenção (`/manutencoes/`)
 

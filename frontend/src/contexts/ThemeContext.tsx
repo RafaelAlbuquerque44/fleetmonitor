@@ -1,4 +1,6 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { readStorage, writeStorage } from '../lib/storage';
 
 type Theme = 'light' | 'dark';
 
@@ -16,7 +18,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // Default to dark mode as it was the original theme, 
     // but check local storage if user has toggled it.
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const saved = readStorage(STORAGE_KEY);
       if (saved === 'light' || saved === 'dark') {
         return saved;
       }
@@ -29,7 +31,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
     root.classList.add(theme);
-    localStorage.setItem(STORAGE_KEY, theme);
+    writeStorage(STORAGE_KEY, theme);
   }, [theme]);
 
   const toggleTheme = () => {

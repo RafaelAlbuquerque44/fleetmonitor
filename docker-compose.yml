@@ -1,18 +1,21 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:15
     container_name: fleetmonitor-db
     environment:
-      POSTGRES_USER: fleetmonitor_user
-      POSTGRES_PASSWORD: fleetmonitor_password
-      POSTGRES_DB: fleetmonitor
+      POSTGRES_USER: ${POSTGRES_USER:-fleetmonitor_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD no arquivo .env}
+      POSTGRES_DB: ${POSTGRES_DB:-fleetmonitor}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   backend:
     build:
@@ -22,15 +25,19 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://fleetmonitor_user:fleetmonitor_password@db:5432/fleetmonitor
+      DATABASE_URL: postgresql://${POSTGRES_USER:-fleetmonitor_user}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-fleetmonitor}
+      DEBUG: ${DEBUG:-True}
+      SECRET_KEY: ${SECRET_KEY:-}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,[::1]}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     volumes:
       - ./backend:/app
     restart: unless-stopped
     command: >
-      bash -c "python manage.py makemigrations core &&
-               python manage.py migrate &&
+      bash -c "python manage.py migrate &&
                python manage.py runserver 0.0.0.0:8000"
 
   frontend:
@@ -40,8 +47,6 @@ services:
     container_name: fleetmonitor-frontend
     ports:
       - "5173:5173"
-    environment:
-      - VITE_API_URL=http://localhost:8000
     depends_on:
       - backend
     volumes:

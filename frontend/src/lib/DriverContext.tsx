@@ -1,8 +1,9 @@
 /* eslint-disable react-refresh/only-export-components */
-/* eslint-disable react-hooks/set-state-in-effect */
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { useAccount } from './AccountContext';
+import { DEMO_ACCOUNT_ID } from './constants';
+import { readStoredArray, writeStorage } from './storage';
 
 export interface Driver {
   id: number;
@@ -38,30 +39,29 @@ const DriverContext = createContext<DriverContextType | undefined>(undefined);
 
 export const DriverProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   const { activeAccountId } = useAccount();
-  const [drivers, setDrivers] = useState<Driver[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
+  return <AccountDrivers key={activeAccountId} accountId={activeAccountId}>{children}</AccountDrivers>;
+};
+
+function isDriver(value: unknown): value is Driver {
+  if (typeof value !== 'object' || value === null) return false;
+  const d = value as Record<string, unknown>;
+  return typeof d.id === 'number' && Number.isFinite(d.id)
+    && typeof d.score === 'number' && Number.isFinite(d.score)
+    && ['name', 'cnh', 'category', 'phone'].every(key => typeof d[key] === 'string')
+    && ['active', 'vacation', 'inactive'].includes(String(d.status))
+    && ['Gold', 'Silver', 'Bronze', 'Atenção'].includes(String(d.tier));
+}
+
+function AccountDrivers({ children, accountId }: { children: ReactNode; accountId: number | null }) {
+  const storageKey = `ecoFleet_drivers_${accountId}`;
+  const [drivers, setDrivers] = useState<Driver[]>(() => accountId === null ? [] : readStoredArray(
+    storageKey, accountId === DEMO_ACCOUNT_ID ? mockDrivers : [], isDriver,
+  ));
 
   useEffect(() => {
-    if (!activeAccountId) return;
-    setIsLoaded(false);
-    
-    const saved = localStorage.getItem(`ecoFleet_drivers_${activeAccountId}`);
-    if (saved && saved !== '[]') {
-      setDrivers(JSON.parse(saved));
-    } else {
-      if (activeAccountId === 999999) {
-        setDrivers(mockDrivers);
-      } else {
-        setDrivers([]);
-      }
-    }
-    setIsLoaded(true);
-  }, [activeAccountId]);
-
-  useEffect(() => {
-    if (!isLoaded || !activeAccountId) return;
-    localStorage.setItem(`ecoFleet_drivers_${activeAccountId}`, JSON.stringify(drivers));
-  }, [drivers, activeAccountId, isLoaded]);
+    if (accountId === null) return;
+    writeStorage(storageKey, JSON.stringify(drivers));
+  }, [drivers, storageKey, accountId]);
 
   const addDriver = (newDriver: Driver) => {
     setDrivers(prev => [...prev, newDriver]);
@@ -84,7 +84,7 @@ export const DriverProvider: React.FC<{children: ReactNode}> = ({ children }) =>
       {children}
     </DriverContext.Provider>
   );
-};
+}
 
 export const useDrivers = () => {
   const context = useContext(DriverContext);

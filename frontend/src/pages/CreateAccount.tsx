@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Building2, Mail, Phone, FileText, CheckCircle2, 
   ChevronRight, ArrowLeft, ShieldCheck,
-  Wrench, DollarSign, BrainCircuit, Route as RouteIcon
+  Wrench, DollarSign, Leaf, Route as RouteIcon
 } from 'lucide-react';
 import { useAccount } from '../lib/AccountContext';
 import type { Conta } from '../lib/AccountContext';
@@ -12,6 +12,7 @@ const PRODUCTS = [
   { id: 'produto_manutencao', name: 'Gestão de Manutenção', icon: Wrench, desc: 'Controle de preventivas, corretivas e estoque de peças.', color: 'text-orange-500', bg: 'bg-orange-500/10' },
   { id: 'produto_financeiro', name: 'Módulo Financeiro', icon: DollarSign, desc: 'Controle de custos, receitas e relatórios de DRE da frota.', color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
   { id: 'produto_roteirizacao', name: 'Roteirização Inteligente', icon: RouteIcon, desc: 'Otimização de rotas para economia de combustível e tempo.', color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
+  { id: 'produto_telemetria', name: 'ESG & Relatórios', icon: Leaf, desc: 'Indicadores de emissões e eficiência da frota.', color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
 ];
 
 export default function CreateAccount() {
@@ -28,6 +29,7 @@ export default function CreateAccount() {
     produto_manutencao: false,
     produto_financeiro: false,
     produto_roteirizacao: false,
+    produto_telemetria: false,
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -78,8 +80,9 @@ export default function CreateAccount() {
         nome_cliente: formData.nome_cliente,
         documento: formData.documento,
         email_contato: formData.email_contato,
+        telefone: formData.telefone,
         status: 'ativo',
-        produto_telemetria: false, // Default to false since removed from options
+        produto_telemetria: formData.produto_telemetria,
         produto_manutencao: formData.produto_manutencao,
         produto_financeiro: formData.produto_financeiro,
         produto_roteirizacao: formData.produto_roteirizacao,
@@ -329,7 +332,7 @@ export default function CreateAccount() {
                       setFormData({
                         nome_cliente: '', documento: '', email_contato: '', telefone: '',
                         produto_manutencao: false, produto_financeiro: false,
-                        produto_roteirizacao: false,
+                        produto_roteirizacao: false, produto_telemetria: false,
                       });
                       setStep(1);
                     }}

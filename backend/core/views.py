@@ -1,22 +1,18 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from .models import Veiculo, Motorista, Manutencao, Conta, RegistroTelemetria, AlertaPreditivo, OrdemServico, RegistroEmissaoESG
+from .models import Veiculo, Motorista, Manutencao, Conta, Telemetria, RegistroTelemetria, AlertaPreditivo, OrdemServico, RegistroEmissaoESG
 from .serializers import (
     VeiculoSerializer, MotoristaSerializer, 
     ManutencaoSerializer, UsuarioSerializer, ContaSerializer,
     RegistroTelemetriaSerializer, AlertaPreditivoSerializer,
-    OrdemServicoSerializer, RegistroEmissaoESGSerializer
+    OrdemServicoSerializer, RegistroEmissaoESGSerializer, TelemetriaSerializer
 )
-from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
-
-Usuario = get_user_model()
 
 class VeiculoViewSet(viewsets.ModelViewSet):
     queryset = Veiculo.objects.all()
     serializer_class = VeiculoSerializer
-    # permission_classes = [permissions.IsAuthenticated]
 
 class MotoristaViewSet(viewsets.ModelViewSet):
     queryset = Motorista.objects.all()
@@ -32,6 +28,11 @@ class ContaViewSet(viewsets.ModelViewSet):
 class RegistroTelemetriaViewSet(viewsets.ModelViewSet):
     queryset = RegistroTelemetria.objects.all()
     serializer_class = RegistroTelemetriaSerializer
+
+
+class TelemetriaViewSet(viewsets.ModelViewSet):
+    queryset = Telemetria.objects.all()
+    serializer_class = TelemetriaSerializer
 
 class AlertaPreditivoViewSet(viewsets.ModelViewSet):
     queryset = AlertaPreditivo.objects.all()

@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     VeiculoViewSet, MotoristaViewSet, ManutencaoViewSet, ContaViewSet, register,
     RegistroTelemetriaViewSet, AlertaPreditivoViewSet, 
-    OrdemServicoViewSet, RegistroEmissaoESGViewSet
+    OrdemServicoViewSet, RegistroEmissaoESGViewSet, TelemetriaViewSet
 )
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -16,6 +16,7 @@ router.register(r'motoristas', MotoristaViewSet)
 router.register(r'manutencoes', ManutencaoViewSet)
 router.register(r'contas', ContaViewSet)
 router.register(r'telemetria', RegistroTelemetriaViewSet)
+router.register(r'posicoes', TelemetriaViewSet)
 router.register(r'alertas-preditivos', AlertaPreditivoViewSet)
 router.register(r'ordens-servico', OrdemServicoViewSet)
 router.register(r'emissoes-esg', RegistroEmissaoESGViewSet)

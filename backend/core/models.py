@@ -65,8 +65,10 @@ class Conta(models.Model):
     status = models.CharField(max_length=20, default='ativo') # ativo, inativo, pendente
     
     # Produtos/Módulos habilitados
+    produto_telemetria = models.BooleanField(default=False)
     produto_manutencao = models.BooleanField(default=False)
     produto_financeiro = models.BooleanField(default=False)
+    produto_ia_assistente = models.BooleanField(default=False)
 
     produto_roteirizacao = models.BooleanField(default=False)
     
@@ -75,8 +77,23 @@ class Conta(models.Model):
     def __str__(self):
         return self.nome_cliente
 
-class RegistroTelemetria(models.Model):
+class Telemetria(models.Model):
+    """Posições IoT; preserva a tabela e os dados da migração inicial."""
+
     veiculo = models.ForeignKey(Veiculo, on_delete=models.CASCADE, related_name='telemetria')
+    data_hora = models.DateTimeField(auto_now_add=True)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+    velocidade = models.FloatField(null=True, blank=True)
+    consumo_combustivel = models.FloatField(null=True, blank=True)
+    rpm = models.IntegerField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Posição {self.veiculo.placa} - {self.data_hora}"
+
+
+class RegistroTelemetria(models.Model):
+    veiculo = models.ForeignKey(Veiculo, on_delete=models.CASCADE, related_name='registros_telemetria')
     data = models.DateField()
     combustivel_gasto = models.FloatField(default=0)
     distancia_percorrida = models.FloatField(default=0)

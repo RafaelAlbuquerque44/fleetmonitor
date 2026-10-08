@@ -1,5 +1,7 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
+import { readStorage, writeStorage } from '../lib/storage';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -11,11 +13,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return localStorage.getItem('ecoFleet_auth') === 'true';
+    return readStorage('ecoFleet_auth') === 'true';
   });
 
   useEffect(() => {
-    localStorage.setItem('ecoFleet_auth', isAuthenticated.toString());
+    writeStorage('ecoFleet_auth', isAuthenticated.toString());
   }, [isAuthenticated]);
 
   const login = () => setIsAuthenticated(true);

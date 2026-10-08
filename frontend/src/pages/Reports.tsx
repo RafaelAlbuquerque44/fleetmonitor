@@ -287,7 +287,7 @@ export default function Reports() {
                        cursor={{fill: 'rgba(255,255,255,0.05)'}}
                        contentStyle={{ borderRadius: '12px', backgroundColor: '#1E3A8A', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.5)', fontWeight: 'bold', padding: '12px 16px' }}
                        itemStyle={{ color: '#fff' }}
-                       formatter={(value: any) => [`${value}% Eficiência Global`, 'Performance']}
+                       formatter={(value) => [`${value}% Eficiência Global`, 'Performance']}
                      />
                      <Bar dataKey="performance" radius={[0, 8, 8, 0]} barSize={40}>
                        {

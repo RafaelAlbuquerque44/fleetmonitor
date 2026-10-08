@@ -1,73 +1,25 @@
-# React + TypeScript + Vite
+# FleetMonitor frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React 19, TypeScript estrito, Vite 7 e Tailwind CSS v4. Temas claro e escuro, mapas Leaflet e gráficos Recharts.
 
-Currently, two official plugins are available:
+Use Node 22.12 ou posterior:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```powershell
+npm ci
+npm run dev
+npm run build
+npm run lint
+npm test
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Acesse `http://localhost:5173`. O login `admin / admin` habilita a demonstração local. A conta Admin Global (ID `999999`) recebe dados iniciais; outras contas começam vazias. Os dados são persistidos por conta no navegador e ainda não são integrados à API Django.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- `src/App.tsx`: rotas protegidas, imports sob demanda e providers operacionais.
+- `src/lib/`: contextos de contas, veículos e motoristas; persistência e regras de módulos.
+- `src/contexts/`: sessão demo e tema.
+- `src/index.css`: tokens Tailwind v4 e variante dark. Não há configuração Tailwind v3 ativa.
+- `src/pages/`: páginas e integrações públicas IBGE, Nominatim e OSRM.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Os testes usam Vitest/jsdom e React StrictMode para validar isolamento de contas, preservação da demo, exclusões, temporizadores e recuperação do armazenamento.
+
+Consulte [a documentação principal](../README.md) e [a revisão de arquitetura](../docs/architecture-review.md) para execução do backend e pendências de integração/autorização.

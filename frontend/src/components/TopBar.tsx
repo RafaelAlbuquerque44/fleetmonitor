@@ -1,6 +1,6 @@
-import { Fragment, useState, useEffect } from 'react';
+import { Fragment } from 'react';
 import { Menu, Transition } from '@headlessui/react';
-import { Sun, Moon, PlusCircle, Settings, LogOut, ChevronDown, Sparkles } from 'lucide-react';
+import { Sun, Moon, PlusCircle, Settings, LogOut, ChevronDown } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';

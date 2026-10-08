@@ -20,19 +20,15 @@ import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
+L.Marker.mergeOptions({ icon: new L.Icon({
   iconUrl: markerIcon,
   iconRetinaUrl: markerIcon2x,
   shadowUrl: markerShadow,
-});
-
-const gasStationIcon = new L.Icon({
-  iconUrl: 'https://cdn-icons-png.flaticon.com/512/481/481233.png',
-  iconSize: [28, 28],
-  iconAnchor: [14, 28],
-  popupAnchor: [0, -28],
-});
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+}) });
 // -----------------------------
 
 const FUEL_PRICE_BASE = 5.89;
@@ -42,7 +38,26 @@ const BRAZIL_BOUNDS: L.LatLngBoundsExpression = [
   [-33.75, -34.79]
 ];
 
-function MapViewUpdater({ routeData }: { routeData: any }) {
+interface RouteData {
+  distance: number;
+  time: number;
+  cost: number;
+  consumption: number;
+  originName: string;
+  destName: string;
+  geometry: [number, number][];
+  alternatives: { geometry: [number, number][]; distance: number; time: number }[];
+}
+
+interface OSRMRoute {
+  distance: number;
+  duration: number;
+  geometry: { coordinates: [number, number][] };
+}
+
+interface GeocodingResult { lat: string; lon: string }
+
+function MapViewUpdater({ routeData }: { routeData: RouteData | null }) {
   const map = useMap();
   useEffect(() => {
     if (routeData && routeData.geometry && routeData.geometry.length > 0) {
@@ -75,16 +90,7 @@ export default function Routing() {
   const [selectedVehicle, setSelectedVehicle] = useState<string>('');
   
   const [isLoading, setIsLoading] = useState(false);
-  const [routeData, setRouteData] = useState<{
-    distance: number;
-    time: number;
-    cost: number;
-    consumption: number;
-    originName: string;
-    destName: string;
-    geometry: [number, number][]; // Rota principal
-    alternatives: { geometry: [number, number][], distance: number, time: number }[]; // Rotas alternativas
-  } | null>(null);
+  const [routeData, setRouteData] = useState<RouteData | null>(null);
 
   // 1. Fetch States on Mount
   useEffect(() => {
@@ -127,10 +133,12 @@ export default function Routing() {
     try {
       // 1. Geocoding com Nominatim
       const originRes = await fetch(`https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(originCity)}&state=${encodeURIComponent(originUF)}&country=Brazil&format=json&limit=1`);
-      const originData = await originRes.json();
+      if (!originRes.ok) throw new Error('Falha ao localizar origem');
+      const originData: GeocodingResult[] = await originRes.json();
       
       const destRes = await fetch(`https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(destCity)}&state=${encodeURIComponent(destUF)}&country=Brazil&format=json&limit=1`);
-      const destData = await destRes.json();
+      if (!destRes.ok) throw new Error('Falha ao localizar destino');
+      const destData: GeocodingResult[] = await destRes.json();
 
       if (!originData.length || !destData.length) {
         alert("Não foi possível encontrar as coordenadas para uma das cidades no mapa.");
@@ -146,9 +154,10 @@ export default function Routing() {
       // 2. OSRM Routing com Alternativas
       const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${oLon},${oLat};${dLon},${dLat}?overview=full&geometries=geojson&alternatives=true`;
       const routeRes = await fetch(osrmUrl);
-      const routeJson = await routeRes.json();
+      if (!routeRes.ok) throw new Error('Falha ao calcular rota');
+      const routeJson: { code: string; routes?: OSRMRoute[] } = await routeRes.json();
 
-      if (routeJson.code !== 'Ok' || !routeJson.routes.length) {
+      if (routeJson.code !== 'Ok' || !routeJson.routes?.length) {
         alert("Não foi possível traçar uma rota por rodovia entre estas cidades.");
         setIsLoading(false);
         return;
@@ -161,7 +170,7 @@ export default function Routing() {
       const primaryLeafletCoords: [number, number][] = primaryRoute.geometry.coordinates.map((coord: number[]) => [coord[1], coord[0]]);
 
       // Rotas Alternativas (se existirem)
-      const alternatives = routeJson.routes.slice(1).map((alt: any) => ({
+      const alternatives = routeJson.routes.slice(1).map(alt => ({
         geometry: alt.geometry.coordinates.map((coord: number[]) => [coord[1], coord[0]]) as [number, number][],
         distance: alt.distance / 1000,
         time: alt.duration / 3600

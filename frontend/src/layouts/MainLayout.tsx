@@ -18,6 +18,7 @@ import TopBar from '../components/TopBar';
 import AnimatedBackground from '../components/AnimatedBackground';
 import { useVehicles } from '../lib/VehicleContext';
 import { useAccount } from '../lib/AccountContext';
+import { canAccessRoute } from '../lib/modules';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -39,17 +40,7 @@ export default function MainLayout() {
   const maintenanceVehicles = vehicles.filter(v => v.status === 'maintenance').length;
   const totalVehicles = Math.max(vehicles.length, 1); // Prevents division by zero
 
-  const filteredNavigation = navigation.filter(item => {
-    // Se não há conta ativa (carregando) ou se for a conta de ID 999999 (mock Admin Global) que pode ter todos os módulos mockados
-    if (!activeAccount || activeAccount.id === 999999) return true;
-    
-    if (item.name === 'Dashboard' || item.name === 'Veículos' || item.name === 'Motoristas' || item.name === 'Marketplace') return true;
-    if (item.name === 'Roteirização') return activeAccount.produto_roteirizacao;
-    if (item.name === 'IA & Oficina') return activeAccount.produto_manutencao;
-    if (item.name === 'ESG & Relatórios') return activeAccount.produto_telemetria; // Using telemetria or any available prop for ESG
-    if (item.name === 'Controle Financeiro') return activeAccount.produto_financeiro;
-    return false;
-  });
+  const filteredNavigation = navigation.filter(item => canAccessRoute(activeAccount, item.href));
 
   return (
     <div className="min-h-screen bg-[#e2e8f0] dark:bg-fleet-900 flex overflow-hidden transition-colors duration-500">

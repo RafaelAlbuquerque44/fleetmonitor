@@ -14,7 +14,7 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import { Car, Zap, AlertTriangle, TrendingDown, DollarSign, Trophy, BrainCircuit, BellRing, Clock, AlertOctagon, Target, X, CheckCircle2 } from 'lucide-react';
+import { Car, Zap, AlertTriangle, TrendingDown, DollarSign, Trophy, BellRing, Clock, AlertOctagon, Target, X, CheckCircle2 } from 'lucide-react';
 import { useVehicles } from '../lib/VehicleContext';
 import { useDrivers } from '../lib/DriverContext';
 import { useAccount } from '../lib/AccountContext';
@@ -48,11 +48,6 @@ const extendedAlerts = [
   { id: 5, time: 'Há 1 hora', title: 'Curva Brusca Detectada', vehicle: 'ABC-1234', type: 'warning', icon: AlertTriangle, color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
   { id: 6, time: 'Há 2 horas', title: 'Tempo Ocioso > 15min', vehicle: 'QWE-4455', type: 'warning', icon: Clock, color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
   { id: 7, time: 'Há 4 horas', title: 'Frenagem Rápida', vehicle: 'XYZ-9876', type: 'danger', icon: AlertOctagon, color: 'text-red-400', bg: 'bg-red-500/10' },
-];
-
-const aiPredictions = [
-  { id: 1, plate: 'ABC-1234', probability: 87, component: 'Bateria Tensão Baixa', daysLeft: 4 },
-  { id: 2, plate: 'XYZ-9876', probability: 62, component: 'Desgaste Pastilhas', daysLeft: 12 },
 ];
 
 const containerVariants: Variants = {
@@ -106,7 +101,6 @@ export default function Dashboard() {
   const currentExtendedDrivers = dynamicDrivers;
   const currentLiveAlerts = isGlobalAdmin ? liveAlerts : [];
   const currentExtendedAlerts = isGlobalAdmin ? extendedAlerts : [];
-  const currentAiPredictions = isGlobalAdmin ? aiPredictions : [];
 
   return (
     <motion.div 
