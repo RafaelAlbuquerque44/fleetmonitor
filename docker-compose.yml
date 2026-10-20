@@ -1,0 +1,46 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-fleetmonitor}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-fleetmonitor}
+      POSTGRES_DB: ${POSTGRES_DB:-fleetmonitor}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-fleetmonitor} -d ${POSTGRES_DB:-fleetmonitor}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: ./api
+    restart: unless-stopped
+    ports:
+      - "${API_PORT:-3000}:3000"
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-fleetmonitor}:${POSTGRES_PASSWORD:-fleetmonitor}@postgres:5432/${POSTGRES_DB:-fleetmonitor}
+      PORT: 3000
+      NODE_ENV: ${NODE_ENV:-development}
+      DEMO_ADMIN_EMAIL: ${DEMO_ADMIN_EMAIL:-admin@empresa.com}
+      DEMO_ADMIN_PASSWORD: ${DEMO_ADMIN_PASSWORD:-1234}
+      DEMO_COMPANY_NAME: ${DEMO_COMPANY_NAME:-Empresa Demo}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build: ./web
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-5173}:5173"
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
