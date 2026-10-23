@@ -1,6 +1,6 @@
 # FleetMonitor
 
-Plataforma SaaS B2B para gestão administrativa e financeira de frotas. Este branch (`feat/stack`) inicia pela stack e pelas convenções do repositório.
+Plataforma para gestão administrativa e financeira de frotas.
 
 ## Stack
 
@@ -22,7 +22,7 @@ openssl rand -hex 32
 openssl rand -hex 24
 ```
 
-Use o primeiro valor como `POSTGRES_PASSWORD` no `.env` da raiz e o segundo como `DEMO_ADMIN_PASSWORD` em `api/.env`. Preencha `DEMO_ADMIN_EMAIL` e `DEMO_COMPANY_NAME` somente em `api/.env`. Configure `DATABASE_URL` em `api/.env` como `postgres://fleetmonitor:<POSTGRES_PASSWORD>@localhost:5432/fleetmonitor`; mantenha os segredos somente nesses arquivos locais, nunca no Git. O formato hexadecimal gerado evita caracteres especiais na URL.
+Use o primeiro valor como `POSTGRES_PASSWORD` no `.env` da raiz e o segundo como `DEMO_ADMIN_PASSWORD` em `api/.env`. Preencha `DEMO_ADMIN_EMAIL` e `DEMO_COMPANY_NAME` somente em `api/.env`. Configure `DATABASE_URL` em `api/.env` como `postgres://fleetmonitor:<POSTGRES_PASSWORD>@localhost:5432/fleetmonitor`; **mantenha os segredos somente nesses arquivos locais, nunca no Git**. O formato hexadecimal gerado evita caracteres especiais na URL.
 
 2. Para desenvolvimento local, suba o Postgres com Compose:
 
@@ -53,7 +53,7 @@ cd web && bun install && bun run dev
 
 O proxy `/api` do Vite usa `http://localhost:3000` nesse modo local. No Compose, o Nginx encaminha `/api` para o serviço `api` na rede interna do Docker; o navegador acessa somente o endereço do frontend.
 
-A API permite chamadas cross-origin da origem `http://localhost:5173` por padrão no desenvolvimento. Para outros domínios, configure `CORS_ORIGINS` no ambiente da API como uma lista separada por vírgulas de origens exatas (protocolo, host e porta, sem caminhos). Não use `*`: as rotas de autenticação dependem de cookies e CORS permite credenciais.
+A API permite chamadas cross-origin da origem `http://localhost:5173` por padrão no desenvolvimento. Para outros domínios, configure `CORS_ORIGINS` (importante) no ambiente da API como uma lista separada por vírgulas de origens exatas (protocolo, host e porta, sem caminhos). Não use `*`: as rotas de autenticação dependem de cookies e CORS permite credenciais.
 
 ## Implantação com Docker Compose
 
@@ -88,7 +88,7 @@ O arquivo de backup contém dados sensíveis; armazene-o com acesso restrito. O 
 
 ### Conta pública de demonstração
 
-A conta pública de demonstração é isolada em uma empresa própria, contém somente veículos fictícios e permite demonstrar cadastro, edição e remoção. O e-mail padrão é `demo@fleetmonitor.invalid`; `admin@empresa.com` permanece reservado à conta existente e a senha `1234` não é aceita. Configure `PUBLIC_DEMO_PASSWORD` no `.env` com um segredo gerado (não o publique nem o coloque no Git):
+Configure `PUBLIC_DEMO_PASSWORD` no `.env` com um segredo gerado (não o publique nem o coloque no Git):
 
 ```bash
 openssl rand -hex 32
@@ -100,8 +100,6 @@ Depois de aplicar o schema, provisione a conta de forma explícita:
 docker compose run --rm api bun run db:push
 docker compose run --rm -e PUBLIC_DEMO_SEED_ENABLED=true public-demo-seed bun run db:seed:public-demo
 ```
-
-O seed público só executa em `NODE_ENV=production`, exige senha com pelo menos 32 caracteres e a opção explícita do comando acima. Ele não altera contas existentes fora da empresa de demonstração. Guarde a senha em um secret manager e compartilhe-a apenas pelo canal apropriado. Para trocar a senha, execute novamente o seed com o novo segredo. Os veículos criados ou editados na demo ficam persistidos; executar o seed novamente não desfaz essas alterações nem remove veículos cadastrados durante a demonstração.
 
 ### Dashboard de indicadores
 
@@ -118,14 +116,6 @@ bun run typecheck
 ```
 
 Os testes cobrem o health check, preflight CORS com `PUT`, bloqueio de origens não configuradas, autenticação das rotas protegidas, validação do login, entrada de veículos e parâmetros/paginação da listagem. Eles não precisam de conexão com o PostgreSQL.
-
-### Organização do frontend
-
-`web/src/App.tsx` seleciona a página pela rota. As telas ficam em `web/src/pages`, os componentes e tipos de veículos e o hook de estado/listagem ficam em `web/src/features/vehicles`, e as chamadas HTTP de autenticação e veículos ficam em suas respectivas pastas `api`. Ícones e utilitários de tema são compartilhados em `web/src/components` e `web/src/lib`.
-
-## Acesso de demonstração
-
-Depois de executar `db:push` e `db:seed`, entre com o e-mail e a senha configurados localmente. O seed exige credenciais explícitas, uma senha aleatória de pelo menos 20 caracteres e `NODE_ENV=development`; portanto, não pode ser executado em staging ou produção. Ao repetir o seed com o mesmo e-mail em desenvolvimento, a senha salva é substituída pelas credenciais configuradas. Se o banco local já contém uma conta criada com as credenciais de demonstração antigas, configure o mesmo `DEMO_ADMIN_EMAIL` e execute `db:seed` com uma nova senha para invalidar a senha antiga. Não promova para produção um banco que ainda permita autenticação com as credenciais antigas.
 
 ## Endpoints da API
 
