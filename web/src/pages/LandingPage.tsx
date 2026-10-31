@@ -1,7 +1,10 @@
-import { useState, type FormEvent } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { useEffect, useState, type FormEvent } from "react";
 import { Icon, type IconName } from "../components/Icon";
 import { submitContactRequest } from "../features/contact/api";
 import { getTheme } from "../lib/theme";
+
+const controlWords = ["controle", "comando"];
 
 const features = [
   {
@@ -38,6 +41,7 @@ const previewItems: { icon: IconName; label: string }[] = [
 
 export function LandingPage() {
   const [theme, setTheme] = useState<"light" | "dark">(getTheme);
+  const [controlWordIndex, setControlWordIndex] = useState(0);
   const [contactName, setContactName] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [contactCompany, setContactCompany] = useState("");
@@ -45,6 +49,19 @@ export function LandingPage() {
   const [contactError, setContactError] = useState<string | null>(null);
   const [contactSubmitted, setContactSubmitted] = useState(false);
   const [isContactSubmitting, setIsContactSubmitting] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (shouldReduceMotion) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      setControlWordIndex((currentIndex) => (currentIndex + 1) % controlWords.length);
+    }, 2400);
+
+    return () => window.clearInterval(intervalId);
+  }, [shouldReduceMotion]);
 
   function toggleTheme() {
     const next = theme === "dark" ? "light" : "dark";
@@ -115,7 +132,7 @@ export function LandingPage() {
             <Icon name={theme === "dark" ? "sun" : "moon"} className="size-[18px]" />
           </button>
           <a
-            href="/login"
+            href="/app/overview"
             className="inline-flex rounded-full bg-[#17221c] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#2b3b30] dark:bg-[#c4f36b] dark:text-[#17221c] dark:hover:bg-[#d2fb8d] sm:px-5 sm:py-2.5 sm:text-sm"
           >
             Acessar plataforma
@@ -128,14 +145,35 @@ export function LandingPage() {
         className="relative mx-auto grid max-w-7xl items-center gap-14 px-5 pb-20 pt-12 sm:px-8 sm:pb-28 sm:pt-16 lg:grid-cols-[0.92fr_1.08fr] lg:gap-12 lg:px-12 lg:pb-32 lg:pt-20"
       >
         <div className="relative z-[1]">
-          <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-[#dfe7d9] bg-white/70 px-3.5 py-2 text-xs font-semibold tracking-wide text-[#53644e] dark:border-[#354537] dark:bg-[#19211b] dark:text-[#c4f36b]">
-            <span className="size-2 rounded-full bg-[#8eb94b]" />
-            GESTÃO DE FROTAS, DE UM NOVO JEITO
-          </div>
           <h1 className="max-w-2xl text-[clamp(2.8rem,6vw,5.25rem)] font-semibold leading-[1.04] tracking-[-0.055em]">
             Sua frota em movimento.
             <span className="mt-1 block text-[#71963b] dark:text-[#c4f36b]">
-              Sua gestão no controle.
+              <span className="sr-only">Sua gestão no controle.</span>
+              <span aria-hidden="true">
+                Sua gestão no{" "}
+                <span className="inline-block min-w-[8ch]">
+                  <AnimatePresence mode="wait" initial={false}>
+                    <motion.span
+                      key={`${controlWords[controlWordIndex]}.`}
+                      initial={
+                        shouldReduceMotion
+                          ? { opacity: 0 }
+                          : { opacity: 0, x: -5, filter: "blur(2px)" }
+                      }
+                      animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                      exit={
+                        shouldReduceMotion
+                          ? { opacity: 0 }
+                          : { opacity: 0, x: 5, filter: "blur(2px)" }
+                      }
+                      transition={{ duration: shouldReduceMotion ? 0 : 0.24 }}
+                      className={shouldReduceMotion ? undefined : "hero-glitch"}
+                    >
+                      {controlWords[controlWordIndex]}.
+                    </motion.span>
+                  </AnimatePresence>
+                </span>
+              </span>
             </span>
           </h1>
           <p className="mt-7 max-w-xl text-base leading-7 text-[#66736a] sm:text-lg sm:leading-8 dark:text-[#abb5ad]">
@@ -326,7 +364,7 @@ export function LandingPage() {
               </p>
             </div>
             <a
-              href="/login"
+              href="/app/overview"
               className="inline-flex shrink-0 items-center gap-3 rounded-full bg-[#c4f36b] px-6 py-3.5 text-sm font-semibold text-[#17221c] transition hover:bg-[#d2fb8d] dark:bg-[#17221c] dark:text-white dark:hover:bg-[#2b3b30]"
             >
               Começar agora

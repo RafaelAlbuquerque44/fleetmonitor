@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "./index";
 import { authUsers, companies, vehicles } from "./schema";
 
@@ -27,16 +27,28 @@ if (!companyName) {
 
 const passwordHash = await Bun.password.hash(password);
 const demoVehicles = [
-  { plate: "FMO1N01", make: "Fiat", model: "Ducato", year: 2024, status: "operational" as const },
-  { plate: "FMO1N02", make: "Volkswagen", model: "Delivery 11.180", year: 2023, status: "operational" as const },
-  { plate: "FMO1N03", make: "Mercedes-Benz", model: "Sprinter", year: 2025, status: "operational" as const },
-  { plate: "FMO1N04", make: "Iveco", model: "Daily", year: 2022, status: "operational" as const },
-  { plate: "FMO1N05", make: "Fiat", model: "Strada", year: 2024, status: "operational" as const },
-  { plate: "FMO1N06", make: "Renault", model: "Master", year: 2023, status: "operational" as const },
-  { plate: "FMO1N07", make: "Chevrolet", model: "S10", year: 2021, status: "operational" as const },
-  { plate: "FMO1N08", make: "Ford", model: "Transit", year: 2022, status: "maintenance" as const },
-  { plate: "FMO1N09", make: "Volkswagen", model: "Saveiro", year: 2021, status: "maintenance" as const },
-  { plate: "FMO1N10", make: "Toyota", model: "Hilux", year: 2020, status: "inactive" as const },
+  { plate: "TRK1A01", make: "Volkswagen", model: "Delivery 11.180", year: 2023, status: "operational" as const },
+  { plate: "TRK1A02", make: "Mercedes-Benz", model: "Atego 1719", year: 2022, status: "operational" as const },
+  { plate: "TRK1A03", make: "Volvo", model: "VM 270", year: 2021, status: "maintenance" as const },
+  { plate: "TRK1A04", make: "Scania", model: "P 280", year: 2020, status: "inactive" as const },
+  { plate: "DFM2B34", make: "Volkswagen", model: "Constellation 24.280", year: 2022, status: "operational" as const },
+  { plate: "FLE3C45", make: "Mercedes-Benz", model: "Actros 2651", year: 2023, status: "operational" as const },
+  { plate: "GHT4D56", make: "Volvo", model: "FH 540", year: 2021, status: "operational" as const },
+  { plate: "JKL5E67", make: "Scania", model: "R 450", year: 2024, status: "operational" as const },
+  { plate: "MNP6F78", make: "DAF", model: "XF 480", year: 2022, status: "maintenance" as const },
+  { plate: "QRS7G89", make: "Iveco", model: "Tector 24-280", year: 2020, status: "inactive" as const },
+];
+const legacyDemoPlates = [
+  "FMO1N01",
+  "FMO1N02",
+  "FMO1N03",
+  "FMO1N04",
+  "FMO1N05",
+  "FMO1N06",
+  "FMO1N07",
+  "FMO1N08",
+  "FMO1N09",
+  "FMO1N10",
 ];
 
 try {
@@ -70,10 +82,25 @@ try {
     }
 
     await tx
+      .delete(vehicles)
+      .where(
+        and(
+          eq(vehicles.companyId, company.id),
+          inArray(vehicles.plate, legacyDemoPlates),
+        ),
+      );
+
+    await tx
       .insert(vehicles)
       .values(demoVehicles.map((vehicle) => ({ ...vehicle, companyId: company.id })))
-      .onConflictDoNothing({
+      .onConflictDoUpdate({
         target: [vehicles.companyId, vehicles.plate],
+        set: {
+          make: sql`excluded.make`,
+          model: sql`excluded.model`,
+          year: sql`excluded.year`,
+          status: sql`excluded.status`,
+        },
       });
 
     if (existingUser) {

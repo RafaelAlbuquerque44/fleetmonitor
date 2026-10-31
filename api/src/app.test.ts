@@ -72,6 +72,22 @@ describe("API", () => {
     }
   });
 
+  test("requires authentication before accessing driver routes", async () => {
+    const requests = [
+      new Request("http://localhost/drivers"),
+      new Request("http://localhost/drivers/1"),
+      new Request("http://localhost/drivers", { method: "POST" }),
+      new Request("http://localhost/drivers/1", { method: "PUT" }),
+      new Request("http://localhost/drivers/1", { method: "DELETE" }),
+    ];
+
+    for (const request of requests) {
+      const response = await app.fetch(request);
+      expect(response.status).toBe(401);
+      expect(await response.json()).toEqual({ error: "Autenticação necessária." });
+    }
+  });
+
   test("rejects malformed and invalid login payloads without database access", async () => {
     const malformed = await app.fetch(
       new Request("http://localhost/auth/login", {

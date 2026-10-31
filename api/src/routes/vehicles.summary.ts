@@ -1,7 +1,9 @@
-import type { vehicleStatusEnum } from "../db/schema";
+import type { driverStatusEnum, vehicleStatusEnum } from "../db/schema";
 
 type VehicleStatus = (typeof vehicleStatusEnum.enumValues)[number];
 type VehicleStatusCount = { status: VehicleStatus; total: number };
+type DriverStatus = (typeof driverStatusEnum.enumValues)[number];
+type DriverStatusCount = { status: DriverStatus; total: number };
 
 export function makeFleetSummary(
   statusRows: VehicleStatusCount[],
@@ -29,5 +31,23 @@ export function makeFleetSummary(
         ? 0
         : Math.round((statusCounts.operational / totalVehicles) * 100),
     refreshedAt: refreshedAt.toISOString(),
+  };
+}
+
+export function makeDriverSummary(statusRows: DriverStatusCount[]) {
+  const driverStatusCounts: Record<DriverStatus, number> = {
+    active: 0,
+    inactive: 0,
+  };
+  for (const row of statusRows) {
+    driverStatusCounts[row.status] = row.total;
+  }
+
+  return {
+    totalDrivers: Object.values(driverStatusCounts).reduce(
+      (total, statusCount) => total + statusCount,
+      0,
+    ),
+    driverStatusCounts,
   };
 }

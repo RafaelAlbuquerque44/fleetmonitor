@@ -11,3 +11,33 @@ body,
 #root {
   min-height: 100%;
 }
+
+@keyframes hero-glitch {
+  0%,
+  100% {
+    clip-path: inset(0);
+    text-shadow: none;
+  }
+  20% {
+    clip-path: inset(18% 0 62% 0);
+    text-shadow: 2px 0 #8eb94b, -2px 0 #17221c;
+  }
+  40% {
+    clip-path: inset(58% 0 18% 0);
+    text-shadow: -2px 0 #c4f36b, 2px 0 #71856a;
+  }
+  60% {
+    clip-path: inset(0);
+    text-shadow: 1px 0 #8eb94b, -1px 0 #17221c;
+  }
+}
+
+.hero-glitch {
+  animation: hero-glitch 420ms steps(2, end);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-glitch {
+    animation: none;
+  }
+}

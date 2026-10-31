@@ -121,7 +121,7 @@ export function FleetOverviewPage() {
                   Indicadores da frota
                 </h1>
                 <p className="mt-2 text-sm text-[#748078] dark:text-[#a7b2a9]">
-                  Acompanhe a disponibilidade e a situação dos veículos da empresa.
+                  Acompanhe os veículos, motoristas e a situação atual da operação.
                 </p>
               </div>
               <div className="flex items-center gap-3">

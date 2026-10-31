@@ -8,6 +8,7 @@ export type IconName =
   | "eyeOff"
   | "fleet"
   | "fuel"
+  | "driver"
   | "logout"
   | "maintenance"
   | "moon"
@@ -22,6 +23,12 @@ const icons: Record<IconName, ReactNode> = {
     <>
       <path d="M3 3v18h18" />
       <path d="m19 9-5 5-4-4-5 5" />
+    </>
+  ),
+  driver: (
+    <>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M5 21a7 7 0 0 1 14 0" />
     </>
   ),
   check: <path d="m5 12 4 4L19 6" />,

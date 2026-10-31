@@ -12,11 +12,14 @@ export type Vehicle = {
 export type VehicleDraft = Omit<Vehicle, "id">;
 
 export type VehicleStatusCounts = Record<VehicleStatus, number>;
+export type DriverStatusCounts = Record<"active" | "inactive", number>;
 
 export type FleetSummary = {
   totalVehicles: number;
   statusCounts: VehicleStatusCounts;
   operationalRate: number;
+  totalDrivers: number;
+  driverStatusCounts: DriverStatusCounts;
   refreshedAt: string;
 };
 
@@ -132,6 +135,23 @@ export function isFleetSummary(value: unknown): value is FleetSummary {
     Number.isFinite(value.operationalRate) &&
     value.operationalRate >= 0 &&
     value.operationalRate <= 100 &&
+    "totalDrivers" in value &&
+    typeof value.totalDrivers === "number" &&
+    Number.isInteger(value.totalDrivers) &&
+    value.totalDrivers >= 0 &&
+    "driverStatusCounts" in value &&
+    typeof value.driverStatusCounts === "object" &&
+    value.driverStatusCounts !== null &&
+    "active" in value.driverStatusCounts &&
+    typeof value.driverStatusCounts.active === "number" &&
+    Number.isInteger(value.driverStatusCounts.active) &&
+    value.driverStatusCounts.active >= 0 &&
+    "inactive" in value.driverStatusCounts &&
+    typeof value.driverStatusCounts.inactive === "number" &&
+    Number.isInteger(value.driverStatusCounts.inactive) &&
+    value.driverStatusCounts.inactive >= 0 &&
+    value.totalDrivers ===
+      value.driverStatusCounts.active + value.driverStatusCounts.inactive &&
     "refreshedAt" in value &&
     typeof value.refreshedAt === "string" &&
     !Number.isNaN(Date.parse(value.refreshedAt))

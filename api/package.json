@@ -11,6 +11,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "bun run src/db/migrate-tenancy.ts && drizzle-kit push",
     "db:seed": "bun run src/db/seed.ts",
+    "db:seed:drivers": "bun run src/db/seed-drivers.ts",
     "db:seed:public-demo": "bun run src/db/seed-public-demo.ts",
     "db:studio": "drizzle-kit studio"
   },

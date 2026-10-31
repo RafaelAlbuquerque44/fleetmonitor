@@ -5,6 +5,7 @@ import { db } from "./db";
 import type { AppEnvironment } from "./middleware/auth";
 import authRoutes from "./routes/auth";
 import contactRoutes from "./routes/contact";
+import driverRoutes from "./routes/drivers";
 import vehicleRoutes from "./routes/vehicles";
 
 const app = new Hono<AppEnvironment>();
@@ -35,6 +36,7 @@ app.get("/ready", async (c) => {
 });
 app.route("/auth", authRoutes);
 app.route("/contact", contactRoutes);
+app.route("/drivers", driverRoutes);
 app.route("/vehicles", vehicleRoutes);
 
 export default app;

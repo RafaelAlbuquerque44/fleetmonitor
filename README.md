@@ -40,7 +40,7 @@ bun run db:seed
 bun run dev
 ```
 
-`db:push` executa a migração de isolamento antes de sincronizar o schema. Em bancos já existentes, os veículos sem empresa serão atribuídos à empresa definida por `DEMO_COMPANY_NAME`; usuários existentes serão vinculados à empresa correspondente ao `company_name` atual. Usuários da mesma empresa compartilham a frota, enquanto empresas diferentes ficam isoladas. A placa é única dentro de cada empresa.
+`db:push` executa a migração de isolamento antes de sincronizar o schema e cria a tabela `drivers`. Em bancos já existentes, os veículos sem empresa serão atribuídos à empresa definida por `DEMO_COMPANY_NAME`; usuários existentes serão vinculados à empresa correspondente ao `company_name` atual. Usuários da mesma empresa compartilham os veículos e motoristas, enquanto empresas diferentes ficam isoladas. A placa e o CPF são únicos dentro de cada empresa.
 
 Em outro terminal:
 
@@ -103,7 +103,7 @@ docker compose run --rm -e PUBLIC_DEMO_SEED_ENABLED=true public-demo-seed bun ru
 
 ### Dashboard de indicadores
 
-Após entrar, a navegação da frota oferece `Indicadores` (`/app/overview`), `Veículos` (`/app`) e `Manutenção` (`/app?status=maintenance`). A demo permite criar, editar e remover os veículos fictícios da própria empresa; não tem acesso aos dados de outras empresas. Os indicadores vêm de uma consulta agregada e isolada por empresa (`GET /vehicles/summary`) e são atualizados a cada 30 segundos enquanto a página está visível, além de permitir atualização manual. Não é streaming de eventos: a atualização pode levar até 30 segundos.
+Após entrar, a navegação da frota oferece `Indicadores` (`/app/overview`), `Veículos` (`/app`), `Motoristas` (`/app/drivers`) e `Manutenção` (`/app?status=maintenance`). Os cadastros de veículos e motoristas são isolados por empresa e persistidos no PostgreSQL. Motoristas podem ser pesquisados e filtrados, além de cadastrados, editados e removidos por contas com permissão de escrita. Os indicadores mostram totais, contagens por status e gráficos de composição para veículos e motoristas, atualizados juntos a cada 30 segundos.
 
 ### Verificação da API
 
@@ -115,7 +115,7 @@ bun run test
 bun run typecheck
 ```
 
-Os testes cobrem o health check, preflight CORS com `PUT`, bloqueio de origens não configuradas, autenticação das rotas protegidas, validação do login, entrada de veículos e parâmetros/paginação da listagem. Eles não precisam de conexão com o PostgreSQL.
+Os testes cobrem o health check, preflight CORS com `PUT`, bloqueio de origens não configuradas, autenticação das rotas protegidas, validação do login, entrada de veículos e motoristas e parâmetros/paginação das listagens. Eles não precisam de conexão com o PostgreSQL.
 
 ## Endpoints da API
 
@@ -129,14 +129,25 @@ As rotas de veículos exigem uma sessão iniciada. O endpoint de login cria um c
 | GET | `/auth/me` | Retorna a conta da sessão atual |
 | POST | `/auth/logout` | Encerra a sessão atual |
 | POST | `/contact` | Registra uma solicitação de contato na tabela `contact_requests` |
-| GET | `/vehicles/summary` | Retorna totais e disponibilidade da frota da empresa autenticada |
+| GET | `/vehicles/summary` | Retorna totais e contagens por status de veículos e motoristas da empresa autenticada |
 | GET | `/vehicles?page=1&pageSize=25&q=&status=all` | Lista veículos da empresa autenticada com paginação (máximo de 100 por página), busca por placa, marca, modelo ou ano e filtro opcional por status; exige sessão. Retorna `items`, `page`, `pageSize`, `totalItems`, `totalPages` e contagens por status. |
 | GET | `/vehicles/:id` | Consulta um veículo (exige sessão) |
 | POST | `/vehicles` | Cadastra veículo (placa, marca, modelo, ano e status; exige sessão) |
 | PUT | `/vehicles/:id` | Atualiza os dados de um veículo (exige sessão) |
 | DELETE | `/vehicles/:id` | Remove um veículo (exige sessão) |
+| GET | `/drivers?page=1&pageSize=25&q=&status=all` | Lista motoristas da empresa autenticada com paginação e busca por nome, CPF, CNH ou telefone; exige sessão |
+| GET | `/drivers/:id` | Consulta um motorista da empresa autenticada (exige sessão) |
+| POST | `/drivers` | Cadastra motorista (nome, CPF, CNH, categoria, validade, telefone opcional e status; exige sessão) |
+| PUT | `/drivers/:id` | Atualiza os dados de um motorista (exige sessão) |
+| DELETE | `/drivers/:id` | Remove um motorista (exige sessão) |
 
-`db:seed` cria somente o usuário de demonstração; não insere veículos fictícios. O painel mostra apenas os registros existentes em `vehicles`. Os botões de cadastro, edição e remoção escrevem diretamente no PostgreSQL pela API.
+`db:seed` cria somente o usuário de demonstração. Para popular uma empresa com os dez motoristas fictícios de exemplo, execute o seed indicando o nome exato da empresa existente:
+
+```bash
+docker compose run --rm -e "DRIVER_DEMO_COMPANY_NAME=FleetMonitor Demo" api bun run db:seed:drivers
+```
+
+O seed pode ser repetido com segurança: insere somente os CPFs de demonstração que ainda não existem para essa empresa e não sobrescreve cadastros existentes. Na página `Motoristas`, os cadastros ficam disponíveis para pesquisa, filtro, edição e remoção. Os botões de cadastro, edição e remoção escrevem diretamente no PostgreSQL pela API.
 
 O formulário “Fale com a gente” grava nome, e-mail, empresa opcional, mensagem e data de envio em `contact_requests`; ele não envia e-mail automaticamente. Consulte as solicitações no DBeaver:
 

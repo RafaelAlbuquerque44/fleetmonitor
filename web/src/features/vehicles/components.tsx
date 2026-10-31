@@ -55,13 +55,28 @@ export function VehicleActions({
   vehicle,
   onEdit,
   onDelete,
+  onSendToMaintenance,
+  isSendingToMaintenance,
 }: {
   vehicle: Vehicle;
   onEdit: (vehicle: Vehicle) => void;
   onDelete: (vehicle: Vehicle) => void;
+  onSendToMaintenance: (vehicle: Vehicle) => void;
+  isSendingToMaintenance: boolean;
 }) {
   return (
-    <div className="flex items-center justify-end gap-2">
+    <div className="flex flex-wrap items-center justify-end gap-2">
+      {vehicle.status === "operational" && (
+        <button
+          type="button"
+          onClick={() => onSendToMaintenance(vehicle)}
+          disabled={isSendingToMaintenance}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-[#eadcb8] px-3 py-1.5 text-xs font-medium text-[#98701f] transition hover:bg-[#fbf2df] disabled:cursor-wait disabled:opacity-60 dark:border-[#5a4825] dark:text-[#e5c16c] dark:hover:bg-[#3a3020]"
+        >
+          <Icon name="maintenance" className="size-3.5" />
+          {isSendingToMaintenance ? "Enviando..." : "Enviar para manutenção"}
+        </button>
+      )}
       <button
         type="button"
         onClick={() => onEdit(vehicle)}

@@ -1,16 +1,17 @@
 import { Icon } from "../../components/Icon";
 import type { VehicleStatusCounts } from "../vehicles/types";
 
-export type FleetNavigationSection = "overview" | "vehicles" | "maintenance";
+export type FleetNavigationSection = "overview" | "vehicles" | "drivers" | "maintenance";
 
 const sections: {
   id: FleetNavigationSection;
   label: string;
   href: string;
-  icon: "chart" | "fleet" | "maintenance";
+  icon: "chart" | "fleet" | "driver" | "maintenance";
 }[] = [
   { id: "overview", label: "Indicadores", href: "/app/overview", icon: "chart" },
   { id: "vehicles", label: "Veículos", href: "/app", icon: "fleet" },
+  { id: "drivers", label: "Motoristas", href: "/app/drivers", icon: "driver" },
   {
     id: "maintenance",
     label: "Manutenção",

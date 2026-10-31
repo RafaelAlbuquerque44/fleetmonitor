@@ -1,11 +1,11 @@
 import { and, count, eq, ilike, or, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { db } from "../db";
-import { vehicleStatusEnum, vehicles } from "../db/schema";
+import { driverStatusEnum, drivers, vehicleStatusEnum, vehicles } from "../db/schema";
 import { canWriteToFleet, requireAuthentication } from "../middleware/auth";
 import type { AppEnvironment } from "../middleware/auth";
 import { parseVehicleInput, parseVehicleListQuery } from "./vehicles.validation";
-import { makeFleetSummary } from "./vehicles.summary";
+import { makeDriverSummary, makeFleetSummary } from "./vehicles.summary";
 
 function isUniqueViolation(error: unknown): boolean {
   return (
@@ -22,13 +22,23 @@ vehicleRoutes.use("*", requireAuthentication);
 
 vehicleRoutes.get("/summary", async (c) => {
   const user = c.get("authenticatedUser");
-  const statusRows = await db
-    .select({ status: vehicles.status, total: count() })
-    .from(vehicles)
-    .where(eq(vehicles.companyId, user.companyId))
-    .groupBy(vehicles.status);
+  const [vehicleStatusRows, driverStatusRows] = await Promise.all([
+    db
+      .select({ status: vehicles.status, total: count() })
+      .from(vehicles)
+      .where(eq(vehicles.companyId, user.companyId))
+      .groupBy(vehicles.status),
+    db
+      .select({ status: drivers.status, total: count() })
+      .from(drivers)
+      .where(eq(drivers.companyId, user.companyId))
+      .groupBy(drivers.status),
+  ]);
 
-  return c.json(makeFleetSummary(statusRows));
+  return c.json({
+    ...makeFleetSummary(vehicleStatusRows),
+    ...makeDriverSummary(driverStatusRows),
+  });
 });
 
 vehicleRoutes.get("/", async (c) => {

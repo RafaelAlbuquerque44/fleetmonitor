@@ -1,5 +1,6 @@
 import {
   boolean,
+  date,
   index,
   integer,
   pgEnum,
@@ -14,6 +15,20 @@ export const vehicleStatusEnum = pgEnum("vehicle_status", [
   "operational",
   "maintenance",
   "inactive",
+]);
+
+export const driverStatusEnum = pgEnum("driver_status", ["active", "inactive"]);
+
+export const driverLicenseCategoryEnum = pgEnum("driver_license_category", [
+  "A",
+  "B",
+  "C",
+  "D",
+  "E",
+  "AB",
+  "AC",
+  "AD",
+  "AE",
 ]);
 
 export const companies = pgTable("companies", {
@@ -36,6 +51,24 @@ export const vehicles = pgTable("vehicles", {
 }, (table) => [
   index("vehicles_company_id_idx").on(table.companyId),
   uniqueIndex("vehicles_company_id_plate_unique").on(table.companyId, table.plate),
+]);
+
+export const drivers = pgTable("drivers", {
+  id: serial("id").primaryKey(),
+  companyId: integer("company_id")
+    .notNull()
+    .references(() => companies.id),
+  fullName: text("full_name").notNull(),
+  cpf: text("cpf").notNull(),
+  licenseNumber: text("license_number").notNull(),
+  licenseCategory: driverLicenseCategoryEnum("license_category").notNull(),
+  licenseExpiresAt: date("license_expires_at").notNull(),
+  phone: text("phone"),
+  status: driverStatusEnum("status").notNull().default("active"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index("drivers_company_id_idx").on(table.companyId),
+  uniqueIndex("drivers_company_id_cpf_unique").on(table.companyId, table.cpf),
 ]);
 
 export const authUsers = pgTable("auth_users", {

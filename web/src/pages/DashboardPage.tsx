@@ -28,6 +28,7 @@ export function DashboardPage() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
+  const [updatingVehicleId, setUpdatingVehicleId] = useState<number | null>(null);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | VehicleStatus>(() => {
     const status = new URLSearchParams(window.location.search).get("status");
@@ -51,8 +52,9 @@ export function DashboardPage() {
     isLoading: isVehiclesLoading,
   } = vehicleData;
   const error = actionError ?? vehicleData.error ?? userError;
+  const isMaintenanceView = statusFilter === "maintenance";
   const activeNavigation: FleetNavigationSection =
-    statusFilter === "maintenance" ? "maintenance" : "vehicles";
+    isMaintenanceView ? "maintenance" : "vehicles";
   const setError = (message: string | null) => {
     setActionError(message);
     vehicleData.setError(null);
@@ -129,6 +131,27 @@ export function DashboardPage() {
     }
   }
 
+  async function sendToMaintenance(vehicle: Vehicle) {
+    setUpdatingVehicleId(vehicle.id);
+    setError(null);
+    setNotice(null);
+
+    try {
+      await vehicleData.save({ ...vehicle, status: "maintenance" }, vehicle.id);
+      setNotice(`Veículo ${vehicle.plate} enviado para manutenção.`);
+    } catch (error) {
+      setError(
+        error instanceof TypeError
+          ? "Não foi possível conectar à API para atualizar o veículo."
+          : error instanceof Error
+            ? error.message
+            : "Não foi possível enviar o veículo para manutenção.",
+      );
+    } finally {
+      setUpdatingVehicleId(null);
+    }
+  }
+
   async function logout() {
     try {
       await logoutUser();
@@ -150,22 +173,14 @@ export function DashboardPage() {
             </span>
           </a>
           <FleetNavigation active={activeNavigation} statusCounts={statusCounts} />
-          <div className="mt-auto space-y-3">
-            <div className="rounded-2xl bg-[#f3f6ef] p-4 dark:bg-[#202a21]">
-              <p className="text-xs font-semibold">Gestão da operação</p>
+          {user?.readOnly && (
+            <div className="mt-auto rounded-2xl border border-[#e6ebe4] p-4 dark:border-[#303b33]">
+              <p className="text-xs font-semibold">Modo de demonstração</p>
               <p className="mt-1 text-xs leading-5 text-[#748078] dark:text-[#a7b2a9]">
-                Acompanhe cadastros e status em um só lugar.
+                Esta conta permite consultar os dados, mas não alterá-los.
               </p>
             </div>
-            {user?.readOnly && (
-              <div className="rounded-2xl border border-[#e6ebe4] p-4 dark:border-[#303b33]">
-                <p className="text-xs font-semibold">Modo de demonstração</p>
-                <p className="mt-1 text-xs leading-5 text-[#748078] dark:text-[#a7b2a9]">
-                  Esta conta permite consultar os dados, mas não alterá-los.
-                </p>
-              </div>
-            )}
-          </div>
+          )}
         </aside>
 
         <div className="min-w-0">
@@ -235,7 +250,7 @@ export function DashboardPage() {
                   Acompanhe os veículos e a situação atual da sua frota.
                 </p>
               </div>
-              {!user?.readOnly && <button
+              {!isMaintenanceView && !user?.readOnly && <button
                 type="button"
                 onClick={openCreateVehicle}
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#17221c] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#2b3b30] dark:bg-[#c4f36b] dark:text-[#17221c] dark:hover:bg-[#d2fb8d]"
@@ -256,20 +271,26 @@ export function DashboardPage() {
               </p>
             ) : (
               <>
-                <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div
+                  className={`mt-8 grid gap-4 sm:grid-cols-2 ${
+                    isMaintenanceView ? "xl:grid-cols-2" : "xl:grid-cols-4"
+                  }`}
+                >
                   <DashboardStat
                     label="Total de veículos"
                     value={Object.values(statusCounts).reduce((sum, count) => sum + count, 0)}
                     icon="fleet"
                     detail="Veículos cadastrados"
                   />
-                  <DashboardStat
-                    label="Operacionais"
-                    value={statusCounts.operational}
-                    icon="check"
-                    detail="Disponíveis para operação"
-                    tone="green"
-                  />
+                  {!isMaintenanceView && (
+                    <DashboardStat
+                      label="Operacionais"
+                      value={statusCounts.operational}
+                      icon="check"
+                      detail="Disponíveis para operação"
+                      tone="green"
+                    />
+                  )}
                   <DashboardStat
                     label="Em manutenção"
                     value={statusCounts.maintenance}
@@ -277,13 +298,15 @@ export function DashboardPage() {
                     detail="Precisam de acompanhamento"
                     tone="amber"
                   />
-                  <DashboardStat
-                    label="Inativos"
-                    value={statusCounts.inactive}
-                    icon="fuel"
-                    detail="Fora de operação"
-                    tone="slate"
-                  />
+                  {!isMaintenanceView && (
+                    <DashboardStat
+                      label="Inativos"
+                      value={statusCounts.inactive}
+                      icon="fuel"
+                      detail="Fora de operação"
+                      tone="slate"
+                    />
+                  )}
                 </div>
 
                 <div
@@ -313,30 +336,32 @@ export function DashboardPage() {
                           className="w-full rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] py-2.5 pl-9 pr-3 text-sm outline-none focus:border-[#8eb94b] focus:ring-4 focus:ring-[#c4f36b]/20 dark:border-[#3b473d] dark:bg-[#131a15] sm:w-56"
                         />
                       </label>
-                      <label>
-                        <span className="sr-only">Filtrar por status</span>
-                        <select
-                          value={statusFilter}
-                          onChange={(event) => {
-                            const value = event.target.value;
-                            if (
-                              value === "all" ||
-                              value === "operational" ||
-                              value === "maintenance" ||
-                              value === "inactive"
-                            ) {
-                              setStatusFilter(value);
-                              setPage(1);
-                            }
-                          }}
-                          className="w-full rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-3 py-2.5 text-sm outline-none focus:border-[#8eb94b] dark:border-[#3b473d] dark:bg-[#131a15] sm:w-44"
-                        >
-                          <option value="all">Todos os status</option>
-                          <option value="operational">Operacional</option>
-                          <option value="maintenance">Em manutenção</option>
-                          <option value="inactive">Inativo</option>
-                        </select>
-                      </label>
+                      {!isMaintenanceView && (
+                        <label>
+                          <span className="sr-only">Filtrar por status</span>
+                          <select
+                            value={statusFilter}
+                            onChange={(event) => {
+                              const value = event.target.value;
+                              if (
+                                value === "all" ||
+                                value === "operational" ||
+                                value === "maintenance" ||
+                                value === "inactive"
+                              ) {
+                                setStatusFilter(value);
+                                setPage(1);
+                              }
+                            }}
+                            className="w-full rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-3 py-2.5 text-sm outline-none focus:border-[#8eb94b] dark:border-[#3b473d] dark:bg-[#131a15] sm:w-44"
+                          >
+                            <option value="all">Todos os status</option>
+                            <option value="operational">Operacional</option>
+                            <option value="maintenance">Em manutenção</option>
+                            <option value="inactive">Inativo</option>
+                          </select>
+                        </label>
+                      )}
                     </div>
                   </div>
 
@@ -353,7 +378,9 @@ export function DashboardPage() {
                       <p className="mx-auto mt-1 max-w-sm text-sm text-[#748078] dark:text-[#a7b2a9]">
                         {totalItems === 0 && query.trim().length === 0 && statusFilter === "all"
                           ? "Cadastre o primeiro veículo para começar a acompanhar sua operação."
-                          : "Tente ajustar a busca ou selecionar outro status."}
+                          :                           isMaintenanceView
+                            ? "Ajuste a busca ou confira se há veículos em manutenção."
+                            : "Tente ajustar a busca ou selecionar outro status."}
                       </p>
                       {totalItems === 0 && query.trim().length === 0 && statusFilter === "all" && !user?.readOnly && (
                         <button
@@ -400,6 +427,8 @@ export function DashboardPage() {
                                     vehicle={vehicle}
                                     onEdit={openEditVehicle}
                                     onDelete={deleteVehicle}
+                                    onSendToMaintenance={sendToMaintenance}
+                                    isSendingToMaintenance={updatingVehicleId === vehicle.id}
                                   />
                                 </td>}
                               </tr>
@@ -427,6 +456,8 @@ export function DashboardPage() {
                                 vehicle={vehicle}
                                 onEdit={openEditVehicle}
                                 onDelete={deleteVehicle}
+                                onSendToMaintenance={sendToMaintenance}
+                                isSendingToMaintenance={updatingVehicleId === vehicle.id}
                               />
                             </div>}
                           </article>
