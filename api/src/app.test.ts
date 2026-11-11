@@ -18,6 +18,7 @@ describe("API", () => {
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ ok: true, service: "api" });
+    expect(response.headers.get("X-Request-ID")).toBeString();
   });
 
   test("allows credentialed PUT preflight from configured origins", async () => {
@@ -62,6 +63,10 @@ describe("API", () => {
       new Request("http://localhost/vehicles", { method: "POST" }),
       new Request("http://localhost/vehicles/1", { method: "PUT" }),
       new Request("http://localhost/vehicles/1", { method: "DELETE" }),
+      new Request("http://localhost/maintenance"),
+      new Request("http://localhost/maintenance", { method: "POST" }),
+      new Request("http://localhost/costs"),
+      new Request("http://localhost/costs", { method: "POST" }),
     ];
 
     for (const request of requests) {

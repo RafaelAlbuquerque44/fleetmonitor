@@ -1,15 +1,11 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Icon } from "../components/Icon";
-import { logout as logoutUser } from "../features/auth/api";
 import { useCurrentUser } from "../features/auth/useCurrentUser";
-import {
-  FleetNavigation,
-  type FleetNavigationSection,
-} from "../features/navigation/FleetNavigation";
+import { FleetAppShell } from "../features/navigation/FleetAppShell";
+import type { FleetNavigationSection } from "../features/navigation/FleetNavigation";
 import { DashboardStat, VehicleActions, VehicleStatusBadge } from "../features/vehicles/components";
 import { useVehicles } from "../features/vehicles/useVehicles";
 import { isVehicleStatus, vehiclePageSize, type Vehicle, type VehicleDraft, type VehicleStatus } from "../features/vehicles/types";
-import { getTheme } from "../lib/theme";
 
 function emptyVehicleDraft(): VehicleDraft {
   return {
@@ -22,7 +18,6 @@ function emptyVehicleDraft(): VehicleDraft {
 }
 
 export function DashboardPage() {
-  const [theme, setTheme] = useState<"light" | "dark">(getTheme);
   const { user, isLoading, error: userError } = useCurrentUser();
   const [notice, setNotice] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -59,13 +54,6 @@ export function DashboardPage() {
     setActionError(message);
     vehicleData.setError(null);
   };
-
-  function toggleTheme() {
-    const next = theme === "dark" ? "light" : "dark";
-    document.documentElement.classList.toggle("dark", next === "dark");
-    window.localStorage.setItem("theme", next);
-    setTheme(next);
-  }
 
   function openCreateVehicle() {
     setEditingVehicle(null);
@@ -152,80 +140,8 @@ export function DashboardPage() {
     }
   }
 
-  async function logout() {
-    try {
-      await logoutUser();
-    } catch {
-      setError("Não foi possível encerrar a sessão. Tente novamente.");
-    }
-  }
-
   return (
-    <main className="min-h-screen bg-[#f4f6f2] text-[#17221c] dark:bg-[#101612] dark:text-[#eff4ef]">
-      <div className="min-h-screen lg:grid lg:grid-cols-[250px_minmax(0,1fr)]">
-        <aside className="hidden border-r border-[#e6ebe4] bg-white px-5 py-7 dark:border-[#28332b] dark:bg-[#151c17] lg:flex lg:flex-col">
-          <a href="/" className="flex items-center gap-2.5 px-2" aria-label="FleetMonitor, início">
-            <span className="flex size-10 items-center justify-center rounded-xl bg-[#c4f36b] text-[#17221c]">
-              <Icon name="fleet" className="size-6" />
-            </span>
-            <span className="text-lg font-semibold tracking-tight">
-              fleet<span className="text-[#71963b] dark:text-[#c4f36b]">monitor</span>
-            </span>
-          </a>
-          <FleetNavigation active={activeNavigation} statusCounts={statusCounts} />
-          {user?.readOnly && (
-            <div className="mt-auto rounded-2xl border border-[#e6ebe4] p-4 dark:border-[#303b33]">
-              <p className="text-xs font-semibold">Modo de demonstração</p>
-              <p className="mt-1 text-xs leading-5 text-[#748078] dark:text-[#a7b2a9]">
-                Esta conta permite consultar os dados, mas não alterá-los.
-              </p>
-            </div>
-          )}
-        </aside>
-
-        <div className="min-w-0">
-          <header className="flex items-center justify-between border-b border-[#e6ebe4] bg-white px-5 py-4 dark:border-[#28332b] dark:bg-[#151c17] sm:px-8 lg:px-10">
-            <a href="/" className="flex items-center gap-2.5 lg:hidden" aria-label="FleetMonitor, início">
-              <span className="flex size-9 items-center justify-center rounded-xl bg-[#c4f36b] text-[#17221c]">
-                <Icon name="fleet" className="size-5" />
-              </span>
-              <span className="font-semibold tracking-tight">
-                fleet<span className="text-[#71963b] dark:text-[#c4f36b]">monitor</span>
-              </span>
-            </a>
-            <div className="hidden text-sm text-[#748078] dark:text-[#a7b2a9] lg:block">
-              Painel da empresa <span className="mx-2 text-[#cbd2ca]">/</span>{" "}
-              <span className="font-medium text-[#17221c] dark:text-[#eff4ef]">Veículos</span>
-            </div>
-            <div className="ml-auto flex items-center gap-3">
-              {user && (
-                <div className="hidden text-right sm:block">
-                  <p className="text-sm font-semibold">{user.companyName}</p>
-                  <p className="text-xs text-[#849087]">{user.email}</p>
-                </div>
-              )}
-              <span className="flex size-10 items-center justify-center rounded-full bg-[#e7efdf] text-sm font-semibold text-[#526f37] dark:bg-[#293627] dark:text-[#c4f36b]">
-                {user?.companyName.slice(0, 1).toUpperCase() ?? "F"}
-              </span>
-              <button
-                type="button"
-                onClick={toggleTheme}
-                aria-label={`Ativar tema ${theme === "dark" ? "claro" : "escuro"}`}
-                className="flex size-10 items-center justify-center rounded-xl border border-[#e1e7df] text-[#526056] transition hover:bg-[#f5f7f3] dark:border-[#303b33] dark:text-[#d9e1da] dark:hover:bg-[#1b241d]"
-              >
-                <Icon name={theme === "dark" ? "sun" : "moon"} className="size-[18px]" />
-              </button>
-              <button
-                type="button"
-                onClick={logout}
-                className="inline-flex items-center gap-2 rounded-xl border border-[#e1e7df] px-3 py-2 text-sm font-medium text-[#526056] transition hover:bg-[#f5f7f3] dark:border-[#303b33] dark:text-[#d9e1da] dark:hover:bg-[#1b241d]"
-              >
-                <Icon name="logout" className="size-4" />
-                <span className="hidden sm:inline">Sair</span>
-              </button>
-            </div>
-          </header>
-
+    <FleetAppShell active={activeNavigation} title="Veículos" statusCounts={statusCounts}>
           <section id="veiculos" className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10 lg:px-10">
             {error && !isVehicleFormOpen && (
               <p role="alert" className="mb-5 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
@@ -311,7 +227,7 @@ export function DashboardPage() {
 
                 <div
                   aria-busy={isVehiclesLoading}
-                  className="mt-8 overflow-hidden rounded-2xl border border-[#e5eae2] bg-white dark:border-[#303b33] dark:bg-[#19211b]"
+                  className="mt-8 overflow-hidden rounded-2xl border border-[#e5eae2] bg-white dark:border-[#303b33] dark:bg-fleet-raised"
                 >
                   <div className="flex flex-col gap-4 border-b border-[#edf0eb] p-5 dark:border-[#303b33] sm:flex-row sm:items-center sm:justify-between sm:px-6">
                     <div>
@@ -497,7 +413,6 @@ export function DashboardPage() {
               </>
             )}
           </section>
-        </div>
 
         {isVehicleFormOpen && (
           <div
@@ -629,7 +544,6 @@ export function DashboardPage() {
             </section>
           </div>
         )}
-      </div>
-    </main>
+    </FleetAppShell>
   );
 }

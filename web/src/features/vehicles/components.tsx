@@ -21,7 +21,7 @@ export function DashboardStat({
   }[tone];
 
   return (
-    <article className="rounded-2xl border border-[#e5eae2] bg-white p-5 dark:border-[#303b33] dark:bg-[#19211b]">
+    <article className="rounded-2xl border border-[#e5eae2] bg-white p-5 dark:border-fleet-border dark:bg-fleet-raised">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm text-[#748078] dark:text-[#a7b2a9]">{label}</p>

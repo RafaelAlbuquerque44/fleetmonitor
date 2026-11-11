@@ -2,7 +2,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useState, type FormEvent } from "react";
 import { Icon, type IconName } from "../components/Icon";
 import { submitContactRequest } from "../features/contact/api";
-import { getTheme } from "../lib/theme";
+import { useTheme } from "../lib/theme";
 
 const controlWords = ["controle", "comando"];
 
@@ -40,7 +40,7 @@ const previewItems: { icon: IconName; label: string }[] = [
 ];
 
 export function LandingPage() {
-  const [theme, setTheme] = useState<"light" | "dark">(getTheme);
+  const { theme, toggleTheme } = useTheme();
   const [controlWordIndex, setControlWordIndex] = useState(0);
   const [contactName, setContactName] = useState("");
   const [contactEmail, setContactEmail] = useState("");
@@ -62,13 +62,6 @@ export function LandingPage() {
 
     return () => window.clearInterval(intervalId);
   }, [shouldReduceMotion]);
-
-  function toggleTheme() {
-    const next = theme === "dark" ? "light" : "dark";
-    document.documentElement.classList.toggle("dark", next === "dark");
-    window.localStorage.setItem("theme", next);
-    setTheme(next);
-  }
 
   async function submitContact(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

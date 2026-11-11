@@ -1,9 +1,10 @@
 import postgres from "postgres";
 
-const databaseUrl = process.env.DATABASE_URL;
+const databaseUrl =
+  process.env.MIGRATION_DATABASE_URL ?? process.env.DATABASE_URL;
 
 if (!databaseUrl) {
-  throw new Error("DATABASE_URL is required");
+  throw new Error("MIGRATION_DATABASE_URL or DATABASE_URL is required");
 }
 
 const demoCompanyName = (process.env.DEMO_COMPANY_NAME ?? "Empresa Demo").trim();

@@ -1,23 +1,20 @@
 import { Icon } from "../../components/Icon";
+import { Link } from "react-router-dom";
 import type { VehicleStatusCounts } from "../vehicles/types";
 
-export type FleetNavigationSection = "overview" | "vehicles" | "drivers" | "maintenance";
+export type FleetNavigationSection = "overview" | "vehicles" | "drivers" | "maintenance" | "costs";
 
 const sections: {
   id: FleetNavigationSection;
   label: string;
   href: string;
-  icon: "chart" | "fleet" | "driver" | "maintenance";
+  icon: "chart" | "fleet" | "driver" | "maintenance" | "fuel";
 }[] = [
   { id: "overview", label: "Indicadores", href: "/app/overview", icon: "chart" },
   { id: "vehicles", label: "Veículos", href: "/app", icon: "fleet" },
   { id: "drivers", label: "Motoristas", href: "/app/drivers", icon: "driver" },
-  {
-    id: "maintenance",
-    label: "Manutenção",
-    href: "/app?status=maintenance",
-    icon: "maintenance",
-  },
+  { id: "maintenance", label: "Manutenção", href: "/app/maintenance", icon: "maintenance" },
+  { id: "costs", label: "Custos", href: "/app/costs", icon: "fuel" },
 ];
 
 export function FleetNavigation({
@@ -35,22 +32,20 @@ export function FleetNavigation({
       <div className="space-y-1">
         {sections.map((section) => {
           const count =
-            section.id === "maintenance"
-              ? statusCounts?.maintenance
-              : section.id === "vehicles" && statusCounts
-                ? Object.values(statusCounts).reduce((total, value) => total + value, 0)
-                : undefined;
+            section.id === "vehicles" && statusCounts
+              ? Object.values(statusCounts).reduce((total, value) => total + value, 0)
+              : undefined;
           const isActive = active === section.id;
 
           return (
-            <a
+            <Link
               key={section.id}
-              href={section.href}
+              to={section.href}
               aria-current={isActive ? "page" : undefined}
               className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition ${
                 isActive
                   ? "bg-[#edf4e6] font-semibold text-[#526f37] dark:bg-[#293627] dark:text-[#c4f36b]"
-                  : "font-medium text-[#66736a] hover:bg-[#f3f6ef] dark:text-[#a7b2a9] dark:hover:bg-[#202a21]"
+                  : "font-medium text-[#66736a] hover:bg-[#f3f6ef] dark:text-[#a7b2a9] dark:hover:bg-fleet-raised"
               }`}
             >
               <Icon name={section.icon} className="size-[18px] shrink-0" />
@@ -60,7 +55,7 @@ export function FleetNavigation({
                   {count}
                 </span>
               )}
-            </a>
+            </Link>
           );
         })}
       </div>

@@ -7,22 +7,7 @@ import {
   type VehicleListResponse,
   type VehicleStatus,
 } from "./types";
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-async function readError(response: Response, fallback: string): Promise<string> {
-  try {
-    const payload: unknown = await response.json();
-    if (isRecord(payload) && typeof payload.error === "string") {
-      return payload.error;
-    }
-  } catch {
-    return fallback;
-  }
-  return fallback;
-}
+import { readApiError, redirectOnUnauthorized } from "../../lib/api";
 
 export async function listVehicles(
   page: number,
@@ -39,10 +24,8 @@ export async function listVehicles(
   const response = await fetch(`/api/vehicles?${params}`);
 
   if (!response.ok) {
-    if (response.status === 401) {
-      window.location.replace("/login");
-    }
-    throw new Error(await readError(response, "Não foi possível carregar os veículos."));
+    redirectOnUnauthorized(response);
+    throw new Error(await readApiError(response, "Não foi possível carregar os veículos."));
   }
 
   const payload: unknown = await response.json();
@@ -56,10 +39,8 @@ export async function getFleetSummary(): Promise<FleetSummary> {
   const response = await fetch("/api/vehicles/summary");
 
   if (!response.ok) {
-    if (response.status === 401) {
-      window.location.replace("/login");
-    }
-    throw new Error(await readError(response, "Não foi possível carregar o resumo da frota."));
+    redirectOnUnauthorized(response);
+    throw new Error(await readApiError(response, "Não foi possível carregar o resumo da frota."));
   }
 
   const payload: unknown = await response.json();
@@ -83,7 +64,8 @@ export async function saveVehicle(
   );
 
   if (!response.ok) {
-    throw new Error(await readError(response, "Não foi possível salvar o veículo."));
+    redirectOnUnauthorized(response);
+    throw new Error(await readApiError(response, "Não foi possível salvar o veículo."));
   }
 
   const payload: unknown = await response.json();
@@ -95,6 +77,7 @@ export async function saveVehicle(
 export async function deleteVehicle(vehicleId: number): Promise<void> {
   const response = await fetch(`/api/vehicles/${vehicleId}`, { method: "DELETE" });
   if (!response.ok) {
-    throw new Error(await readError(response, "Não foi possível remover o veículo."));
+    redirectOnUnauthorized(response);
+    throw new Error(await readApiError(response, "Não foi possível remover o veículo."));
   }
 }

@@ -11,18 +11,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
-async function readError(response: Response, fallback: string): Promise<string> {
-  try {
-    const payload: unknown = await response.json();
-    if (isRecord(payload) && typeof payload.error === "string") {
-      return payload.error;
-    }
-  } catch {
-    return fallback;
-  }
-  return fallback;
-}
-
 export async function login(email: string, password: string): Promise<boolean> {
   const response = await fetch("/api/auth/login", {
     method: "POST",
@@ -32,7 +20,7 @@ export async function login(email: string, password: string): Promise<boolean> {
 
   if (!response.ok) {
     throw new AuthApiError(
-      await readError(response, "Não foi possível entrar. Tente novamente."),
+      await readApiError(response, "Não foi possível entrar. Tente novamente."),
     );
   }
 
@@ -46,9 +34,7 @@ export async function login(email: string, password: string): Promise<boolean> {
 export async function getCurrentUser(): Promise<AuthenticatedUser> {
   const response = await fetch("/api/auth/me");
   if (!response.ok) {
-    if (response.status === 401) {
-      window.location.replace("/login");
-    }
+    redirectOnUnauthorized(response);
     throw new AuthApiError("Não foi possível carregar a conta autenticada.");
   }
 
@@ -75,7 +61,9 @@ export async function getCurrentUser(): Promise<AuthenticatedUser> {
 export async function logout(): Promise<void> {
   const response = await fetch("/api/auth/logout", { method: "POST" });
   if (!response.ok) {
-    throw new Error("Não foi possível encerrar a sessão.");
+    redirectOnUnauthorized(response);
+    throw new Error(await readApiError(response, "Não foi possível encerrar a sessão."));
   }
   window.location.assign("/login");
 }
+import { readApiError, redirectOnUnauthorized } from "../../lib/api";

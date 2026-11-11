@@ -1,19 +1,24 @@
-import { and, count, eq, ilike, or, sql } from "drizzle-orm";
 import { Hono } from "hono";
-import { db } from "../db";
-import { driverStatusEnum, drivers, vehicleStatusEnum, vehicles } from "../db/schema";
+import {
+  createCompanyVehicle,
+  deleteCompanyVehicle,
+  getCompanyFleetStatusRows,
+  getCompanyVehicle,
+  listCompanyVehicles,
+  updateCompanyVehicle,
+} from "../db/vehicles";
+import { getDatabaseErrorCode } from "../db/errors";
 import { canWriteToFleet, requireAuthentication } from "../middleware/auth";
 import type { AppEnvironment } from "../middleware/auth";
 import { parseVehicleInput, parseVehicleListQuery } from "./vehicles.validation";
 import { makeDriverSummary, makeFleetSummary } from "./vehicles.summary";
 
 function isUniqueViolation(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    error.code === "23505"
-  );
+  return getDatabaseErrorCode(error) === "23505";
+}
+
+function isForeignKeyViolation(error: unknown): boolean {
+  return getDatabaseErrorCode(error) === "23503";
 }
 
 const vehicleRoutes = new Hono<AppEnvironment>();
@@ -22,18 +27,8 @@ vehicleRoutes.use("*", requireAuthentication);
 
 vehicleRoutes.get("/summary", async (c) => {
   const user = c.get("authenticatedUser");
-  const [vehicleStatusRows, driverStatusRows] = await Promise.all([
-    db
-      .select({ status: vehicles.status, total: count() })
-      .from(vehicles)
-      .where(eq(vehicles.companyId, user.companyId))
-      .groupBy(vehicles.status),
-    db
-      .select({ status: drivers.status, total: count() })
-      .from(drivers)
-      .where(eq(drivers.companyId, user.companyId))
-      .groupBy(drivers.status),
-  ]);
+  const { vehicleStatusRows, driverStatusRows } =
+    await getCompanyFleetStatusRows(user.companyId);
 
   return c.json({
     ...makeFleetSummary(vehicleStatusRows),
@@ -47,65 +42,15 @@ vehicleRoutes.get("/", async (c) => {
   if ("error" in parsedQuery) {
     return c.json({ error: parsedQuery.error }, 400);
   }
-  const { page, pageSize, offset, query, status } = parsedQuery.value;
-
-  const filters = [
-    eq(vehicles.companyId, user.companyId),
-    status ? eq(vehicles.status, status) : undefined,
-    query.length === 0
-      ? undefined
-      : or(
-          ilike(vehicles.plate, `%${query}%`),
-          ilike(vehicles.make, `%${query}%`),
-          ilike(vehicles.model, `%${query}%`),
-          sql`${vehicles.year}::text ILIKE ${`%${query}%`}`,
-        ),
-  ];
-  const filteredBy = and(...filters);
-
-  const [rows, [filteredCount], statusRows] = await Promise.all([
-    db
-      .select({
-        id: vehicles.id,
-        plate: vehicles.plate,
-        make: vehicles.make,
-        model: vehicles.model,
-        year: vehicles.year,
-        status: vehicles.status,
-      })
-      .from(vehicles)
-      .where(filteredBy)
-      .orderBy(vehicles.plate)
-      .limit(pageSize)
-      .offset(offset),
-    db
-      .select({ total: count() })
-      .from(vehicles)
-      .where(filteredBy),
-    db
-      .select({ status: vehicles.status, total: count() })
-      .from(vehicles)
-      .where(eq(vehicles.companyId, user.companyId))
-      .groupBy(vehicles.status),
-  ]);
-
-  const statusCounts = {
-    operational: 0,
-    maintenance: 0,
-    inactive: 0,
-  };
-  for (const row of statusRows) {
-    statusCounts[row.status] = row.total;
-  }
-
-  const totalItems = filteredCount?.total ?? 0;
+  const { page, pageSize } = parsedQuery.value;
+  const result = await listCompanyVehicles(user.companyId, parsedQuery.value);
   return c.json({
-    items: rows,
+    items: result.items,
     page,
     pageSize,
-    totalItems,
-    totalPages: Math.max(1, Math.ceil(totalItems / pageSize)),
-    statusCounts,
+    totalItems: result.totalItems,
+    totalPages: Math.max(1, Math.ceil(result.totalItems / pageSize)),
+    statusCounts: result.statusCounts,
   });
 });
 
@@ -116,19 +61,7 @@ vehicleRoutes.get("/:id", async (c) => {
     return c.json({ error: "Identificador de veículo inválido." }, 400);
   }
 
-  const [vehicle] = await db
-    .select({
-      id: vehicles.id,
-      plate: vehicles.plate,
-      make: vehicles.make,
-      model: vehicles.model,
-      year: vehicles.year,
-      status: vehicles.status,
-    })
-    .from(vehicles)
-    .where(and(eq(vehicles.id, id), eq(vehicles.companyId, user.companyId)))
-    .limit(1);
-
+  const vehicle = await getCompanyVehicle(user.companyId, id);
   if (!vehicle) {
     return c.json({ error: "Veículo não encontrado." }, 404);
   }
@@ -157,22 +90,7 @@ vehicleRoutes.post("/", async (c) => {
   }
 
   try {
-    const [vehicle] = await db
-      .insert(vehicles)
-      .values({ ...parsed.value, companyId: user.companyId })
-      .returning({
-        id: vehicles.id,
-        plate: vehicles.plate,
-        make: vehicles.make,
-        model: vehicles.model,
-        year: vehicles.year,
-        status: vehicles.status,
-      });
-
-    if (!vehicle) {
-      throw new Error("Vehicle insert returned no row");
-    }
-
+    const vehicle = await createCompanyVehicle(user.companyId, parsed.value);
     return c.json(vehicle, 201);
   } catch (error) {
     if (isUniqueViolation(error)) {
@@ -208,19 +126,7 @@ vehicleRoutes.put("/:id", async (c) => {
   }
 
   try {
-    const [vehicle] = await db
-      .update(vehicles)
-      .set(parsed.value)
-      .where(and(eq(vehicles.id, id), eq(vehicles.companyId, user.companyId)))
-      .returning({
-        id: vehicles.id,
-        plate: vehicles.plate,
-        make: vehicles.make,
-        model: vehicles.model,
-        year: vehicles.year,
-        status: vehicles.status,
-      });
-
+    const vehicle = await updateCompanyVehicle(user.companyId, id, parsed.value);
     if (!vehicle) {
       return c.json({ error: "Veículo não encontrado." }, 404);
     }
@@ -243,11 +149,18 @@ vehicleRoutes.delete("/:id", async (c) => {
     return c.json({ error: "Identificador de veículo inválido." }, 400);
   }
 
-  const [vehicle] = await db
-    .delete(vehicles)
-    .where(and(eq(vehicles.id, id), eq(vehicles.companyId, user.companyId)))
-    .returning({ id: vehicles.id });
-
+  let vehicle: { id: number } | null;
+  try {
+    vehicle = await deleteCompanyVehicle(user.companyId, id);
+  } catch (error) {
+    if (isForeignKeyViolation(error)) {
+      return c.json(
+        { error: "Não é possível remover um veículo com manutenção ou custos vinculados." },
+        409,
+      );
+    }
+    throw error;
+  }
   if (!vehicle) {
     return c.json({ error: "Veículo não encontrado." }, 404);
   }

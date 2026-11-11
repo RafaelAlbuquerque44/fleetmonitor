@@ -45,19 +45,19 @@ function CompositionChart({
     .join(", ");
 
   return (
-    <section className="rounded-2xl border border-[#e5eae2] bg-white p-5 sm:p-7 dark:border-[#303b33] dark:bg-[#19211b]">
+    <section className="rounded-2xl border border-[#e5eae2] bg-white p-5 sm:p-7 dark:border-fleet-border dark:bg-fleet-raised">
       <div>
         <h2 className="text-lg font-semibold">{title}</h2>
         <p className="mt-1 text-sm text-[#748078] dark:text-[#a7b2a9]">{description}</p>
       </div>
       <div className="mt-7 flex flex-col items-center gap-8 sm:flex-row sm:justify-center xl:justify-around">
         <div
-          className="relative flex size-52 shrink-0 items-center justify-center rounded-full bg-[#edf0eb] dark:bg-[#303b33]"
+          className="relative flex size-52 shrink-0 items-center justify-center rounded-full bg-[#edf0eb] dark:bg-fleet-border"
           style={total > 0 ? { background: distribution } : undefined}
           role="img"
           aria-label={`${title}: ${chartDescription}`}
         >
-          <div className="flex size-36 flex-col items-center justify-center rounded-full bg-white dark:bg-[#19211b]">
+          <div className="flex size-36 flex-col items-center justify-center rounded-full bg-white dark:bg-fleet-raised">
             <span className="text-3xl font-semibold">{total}</span>
             <span className="mt-1 text-xs text-[#748078] dark:text-[#a7b2a9]">{unit}</span>
           </div>
@@ -77,7 +77,7 @@ function CompositionChart({
                     <span className="font-normal text-[#879389]">({percent}%)</span>
                   </span>
                 </div>
-                <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#edf0eb] dark:bg-[#303b33]">
+                <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#edf0eb] dark:bg-fleet-border">
                   <div
                     className="h-full rounded-full transition-all"
                     style={{ width: `${percent}%`, backgroundColor: item.color }}
@@ -151,7 +151,7 @@ export function FleetOverviewMetrics({ summary }: { summary: FleetSummary }) {
           ]}
         />
 
-        <section className="rounded-2xl border border-[#e5eae2] bg-white p-5 sm:p-7 dark:border-[#303b33] dark:bg-[#19211b] xl:col-span-2">
+        <section className="rounded-2xl border border-[#e5eae2] bg-white p-5 sm:p-7 dark:border-fleet-border dark:bg-fleet-raised xl:col-span-2">
           <h2 className="text-lg font-semibold">Resumo operacional</h2>
           <p className="mt-1 text-sm text-[#748078] dark:text-[#a7b2a9]">
             Leitura rápida da disponibilidade da frota.
@@ -174,7 +174,7 @@ export function FleetOverviewMetrics({ summary }: { summary: FleetSummary }) {
                 </div>
               </div>
               <div>
-                <div className="h-3 overflow-hidden rounded-full bg-white dark:bg-[#151c17]">
+                <div className="h-3 overflow-hidden rounded-full bg-white dark:bg-fleet-surface">
                   <div
                     className="h-full rounded-full bg-[#84ad45] transition-all"
                     style={{ width: `${summary.operationalRate}%` }}

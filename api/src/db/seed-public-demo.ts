@@ -66,6 +66,10 @@ try {
       throw new Error("Public demo company upsert returned no row");
     }
 
+    await tx.execute(
+      sql`select set_config('app.company_id', ${String(company.id)}, true)`,
+    );
+
     const [existingUser] = await tx
       .select({
         id: authUsers.id,

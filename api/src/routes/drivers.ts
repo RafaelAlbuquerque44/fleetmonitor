@@ -1,18 +1,18 @@
-import { and, count, eq, ilike, or } from "drizzle-orm";
 import { Hono } from "hono";
-import { db } from "../db";
-import { drivers } from "../db/schema";
+import {
+  createCompanyDriver,
+  deleteCompanyDriver,
+  getCompanyDriver,
+  listCompanyDrivers,
+  updateCompanyDriver,
+} from "../db/drivers";
+import { getDatabaseErrorCode } from "../db/errors";
 import { canWriteToFleet, requireAuthentication } from "../middleware/auth";
 import type { AppEnvironment } from "../middleware/auth";
 import { parseDriverInput, parseDriverListQuery } from "./drivers.validation";
 
 function isUniqueViolation(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    error.code === "23505"
-  );
+  return getDatabaseErrorCode(error) === "23505";
 }
 
 const driverRoutes = new Hono<AppEnvironment>();
@@ -25,58 +25,15 @@ driverRoutes.get("/", async (c) => {
   if ("error" in parsedQuery) {
     return c.json({ error: parsedQuery.error }, 400);
   }
-  const { page, pageSize, offset, query, status } = parsedQuery.value;
-  const filteredBy = and(
-    eq(drivers.companyId, user.companyId),
-    status ? eq(drivers.status, status) : undefined,
-    query.length === 0
-      ? undefined
-      : or(
-          ilike(drivers.fullName, `%${query}%`),
-          ilike(drivers.cpf, `%${query}%`),
-          ilike(drivers.licenseNumber, `%${query}%`),
-          ilike(drivers.phone, `%${query}%`),
-        ),
-  );
-
-  const [rows, [filteredCount], statusRows] = await Promise.all([
-    db
-      .select({
-        id: drivers.id,
-        fullName: drivers.fullName,
-        cpf: drivers.cpf,
-        licenseNumber: drivers.licenseNumber,
-        licenseCategory: drivers.licenseCategory,
-        licenseExpiresAt: drivers.licenseExpiresAt,
-        phone: drivers.phone,
-        status: drivers.status,
-      })
-      .from(drivers)
-      .where(filteredBy)
-      .orderBy(drivers.fullName)
-      .limit(pageSize)
-      .offset(offset),
-    db.select({ total: count() }).from(drivers).where(filteredBy),
-    db
-      .select({ status: drivers.status, total: count() })
-      .from(drivers)
-      .where(eq(drivers.companyId, user.companyId))
-      .groupBy(drivers.status),
-  ]);
-
-  const statusCounts = { active: 0, inactive: 0 };
-  for (const row of statusRows) {
-    statusCounts[row.status] = row.total;
-  }
-
-  const totalItems = filteredCount?.total ?? 0;
+  const { page, pageSize } = parsedQuery.value;
+  const result = await listCompanyDrivers(user.companyId, parsedQuery.value);
   return c.json({
-    items: rows,
+    items: result.items,
     page,
     pageSize,
-    totalItems,
-    totalPages: Math.max(1, Math.ceil(totalItems / pageSize)),
-    statusCounts,
+    totalItems: result.totalItems,
+    totalPages: Math.max(1, Math.ceil(result.totalItems / pageSize)),
+    statusCounts: result.statusCounts,
   });
 });
 
@@ -87,21 +44,7 @@ driverRoutes.get("/:id", async (c) => {
     return c.json({ error: "Identificador de motorista inválido." }, 400);
   }
 
-  const [driver] = await db
-    .select({
-      id: drivers.id,
-      fullName: drivers.fullName,
-      cpf: drivers.cpf,
-      licenseNumber: drivers.licenseNumber,
-      licenseCategory: drivers.licenseCategory,
-      licenseExpiresAt: drivers.licenseExpiresAt,
-      phone: drivers.phone,
-      status: drivers.status,
-    })
-    .from(drivers)
-    .where(and(eq(drivers.id, id), eq(drivers.companyId, user.companyId)))
-    .limit(1);
-
+  const driver = await getCompanyDriver(user.companyId, id);
   if (!driver) {
     return c.json({ error: "Motorista não encontrado." }, 404);
   }
@@ -129,23 +72,7 @@ driverRoutes.post("/", async (c) => {
   }
 
   try {
-    const [driver] = await db
-      .insert(drivers)
-      .values({ ...parsed.value, companyId: user.companyId })
-      .returning({
-        id: drivers.id,
-        fullName: drivers.fullName,
-        cpf: drivers.cpf,
-        licenseNumber: drivers.licenseNumber,
-        licenseCategory: drivers.licenseCategory,
-        licenseExpiresAt: drivers.licenseExpiresAt,
-        phone: drivers.phone,
-        status: drivers.status,
-      });
-
-    if (!driver) {
-      throw new Error("Driver insert returned no row");
-    }
+    const driver = await createCompanyDriver(user.companyId, parsed.value);
     return c.json(driver, 201);
   } catch (error) {
     if (isUniqueViolation(error)) {
@@ -181,21 +108,7 @@ driverRoutes.put("/:id", async (c) => {
   }
 
   try {
-    const [driver] = await db
-      .update(drivers)
-      .set(parsed.value)
-      .where(and(eq(drivers.id, id), eq(drivers.companyId, user.companyId)))
-      .returning({
-        id: drivers.id,
-        fullName: drivers.fullName,
-        cpf: drivers.cpf,
-        licenseNumber: drivers.licenseNumber,
-        licenseCategory: drivers.licenseCategory,
-        licenseExpiresAt: drivers.licenseExpiresAt,
-        phone: drivers.phone,
-        status: drivers.status,
-      });
-
+    const driver = await updateCompanyDriver(user.companyId, id, parsed.value);
     if (!driver) {
       return c.json({ error: "Motorista não encontrado." }, 404);
     }
@@ -218,11 +131,7 @@ driverRoutes.delete("/:id", async (c) => {
     return c.json({ error: "Identificador de motorista inválido." }, 400);
   }
 
-  const [driver] = await db
-    .delete(drivers)
-    .where(and(eq(drivers.id, id), eq(drivers.companyId, user.companyId)))
-    .returning({ id: drivers.id });
-
+  const driver = await deleteCompanyDriver(user.companyId, id);
   if (!driver) {
     return c.json({ error: "Motorista não encontrado." }, 404);
   }

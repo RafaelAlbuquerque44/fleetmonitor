@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db } from "./index";
+import { withTenantTransaction } from "./tenant";
 import { demoDrivers } from "./demo-drivers";
 import { companies, drivers } from "./schema";
 
@@ -19,13 +20,15 @@ try {
     throw new Error(`Demo company "${companyName}" was not found`);
   }
 
-  const inserted = await db
-    .insert(drivers)
-    .values(demoDrivers.map((driver) => ({ ...driver, companyId: company.id })))
-    .onConflictDoNothing({
-      target: [drivers.companyId, drivers.cpf],
-    })
-    .returning({ id: drivers.id });
+  const inserted = await withTenantTransaction(company.id, (transaction) =>
+    transaction
+      .insert(drivers)
+      .values(demoDrivers.map((driver) => ({ ...driver, companyId: company.id })))
+      .onConflictDoNothing({
+        target: [drivers.companyId, drivers.cpf],
+      })
+      .returning({ id: drivers.id }),
+  );
 
   console.log(
     `Demo drivers for "${companyName}": ${inserted.length} added, ${demoDrivers.length - inserted.length} already existed.`,

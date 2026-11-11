@@ -79,7 +79,10 @@ export function isVehicleListResponse(value: unknown): value is VehicleListRespo
     Number.isInteger(value.page) &&
     value.page > 0 &&
     "pageSize" in value &&
-    value.pageSize === vehiclePageSize &&
+    typeof value.pageSize === "number" &&
+    Number.isInteger(value.pageSize) &&
+    value.pageSize >= 1 &&
+    value.pageSize <= 100 &&
     "totalItems" in value &&
     typeof value.totalItems === "number" &&
     Number.isInteger(value.totalItems) &&

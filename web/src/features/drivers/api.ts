@@ -5,22 +5,7 @@ import {
   type DriverListResponse,
   type DriverStatus,
 } from "./types";
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-async function readError(response: Response, fallback: string): Promise<string> {
-  try {
-    const payload: unknown = await response.json();
-    if (isRecord(payload) && typeof payload.error === "string") {
-      return payload.error;
-    }
-  } catch {
-    return fallback;
-  }
-  return fallback;
-}
+import { readApiError, redirectOnUnauthorized } from "../../lib/api";
 
 export async function listDrivers(
   page: number,
@@ -36,10 +21,8 @@ export async function listDrivers(
   });
   const response = await fetch(`/api/drivers?${params}`);
   if (!response.ok) {
-    if (response.status === 401) {
-      window.location.replace("/login");
-    }
-    throw new Error(await readError(response, "Não foi possível carregar os motoristas."));
+    redirectOnUnauthorized(response);
+    throw new Error(await readApiError(response, "Não foi possível carregar os motoristas."));
   }
 
   const payload: unknown = await response.json();
@@ -59,7 +42,8 @@ export async function saveDriver(draft: DriverDraft, driverId?: number): Promise
     },
   );
   if (!response.ok) {
-    throw new Error(await readError(response, "Não foi possível salvar o motorista."));
+    redirectOnUnauthorized(response);
+    throw new Error(await readApiError(response, "Não foi possível salvar o motorista."));
   }
 
   const payload: unknown = await response.json();
@@ -71,6 +55,7 @@ export async function saveDriver(draft: DriverDraft, driverId?: number): Promise
 export async function deleteDriver(driverId: number): Promise<void> {
   const response = await fetch(`/api/drivers/${driverId}`, { method: "DELETE" });
   if (!response.ok) {
-    throw new Error(await readError(response, "Não foi possível remover o motorista."));
+    redirectOnUnauthorized(response);
+    throw new Error(await readApiError(response, "Não foi possível remover o motorista."));
   }
 }

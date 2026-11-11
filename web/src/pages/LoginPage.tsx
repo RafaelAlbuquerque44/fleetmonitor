@@ -1,10 +1,10 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Icon } from "../components/Icon";
 import { AuthApiError, login } from "../features/auth/api";
-import { getTheme } from "../lib/theme";
+import { useTheme } from "../lib/theme";
 
 export function LoginPage() {
-  const [theme, setTheme] = useState<"light" | "dark">(getTheme);
+  const { theme, toggleTheme } = useTheme();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,13 +19,6 @@ export function LoginPage() {
       document.title = "FleetMonitor — Gestão inteligente de frotas";
     };
   }, []);
-
-  function toggleTheme() {
-    const next = theme === "dark" ? "light" : "dark";
-    document.documentElement.classList.toggle("dark", next === "dark");
-    window.localStorage.setItem("theme", next);
-    setTheme(next);
-  }
 
   async function submitLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

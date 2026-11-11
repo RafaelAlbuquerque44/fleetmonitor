@@ -5,10 +5,6 @@ type ContactRequest = {
   message: string;
 };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
 export async function submitContactRequest(request: ContactRequest): Promise<void> {
   let response: Response;
   try {
@@ -25,15 +21,8 @@ export async function submitContactRequest(request: ContactRequest): Promise<voi
     return;
   }
 
-  let payload: unknown;
-  try {
-    payload = await response.json();
-  } catch {
-    throw new Error("Não foi possível enviar sua mensagem. Tente novamente.");
-  }
-
-  if (isRecord(payload) && typeof payload.error === "string") {
-    throw new Error(payload.error);
-  }
-  throw new Error("Não foi possível enviar sua mensagem. Tente novamente.");
+  throw new Error(
+    await readApiError(response, "Não foi possível enviar sua mensagem. Tente novamente."),
+  );
 }
+import { readApiError } from "../../lib/api";

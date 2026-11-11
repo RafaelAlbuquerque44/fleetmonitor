@@ -6,6 +6,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-fleetmonitor}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
       POSTGRES_DB: ${POSTGRES_DB:-fleetmonitor}
+      POSTGRES_APP_USER: ${POSTGRES_APP_USER:-fleetmonitor_app}
+      POSTGRES_APP_PASSWORD: ${POSTGRES_APP_PASSWORD:?Set POSTGRES_APP_PASSWORD in .env}
     ports:
       - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
@@ -22,7 +24,7 @@ services:
     expose:
       - "3000"
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-fleetmonitor}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/${POSTGRES_DB:-fleetmonitor}
+      DATABASE_URL: postgres://${POSTGRES_APP_USER:-fleetmonitor_app}:${POSTGRES_APP_PASSWORD:?Set POSTGRES_APP_PASSWORD in .env}@postgres:5432/${POSTGRES_DB:-fleetmonitor}
       PORT: 3000
       NODE_ENV: production
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080}
@@ -46,12 +48,25 @@ services:
     build: ./api
     profiles: ["tools"]
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-fleetmonitor}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/${POSTGRES_DB:-fleetmonitor}
+      DATABASE_URL: postgres://${POSTGRES_APP_USER:-fleetmonitor_app}:${POSTGRES_APP_PASSWORD:?Set POSTGRES_APP_PASSWORD in .env}@postgres:5432/${POSTGRES_DB:-fleetmonitor}
       NODE_ENV: production
       PUBLIC_DEMO_SEED_ENABLED: "false"
       PUBLIC_DEMO_EMAIL: ${PUBLIC_DEMO_EMAIL:-demo@fleetmonitor.invalid}
       PUBLIC_DEMO_PASSWORD: ${PUBLIC_DEMO_PASSWORD:-}
       PUBLIC_DEMO_COMPANY_NAME: ${PUBLIC_DEMO_COMPANY_NAME:-FleetMonitor Demo}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  migrator:
+    build: ./api
+    profiles: ["tools"]
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_APP_USER:-fleetmonitor_app}:${POSTGRES_APP_PASSWORD:?Set POSTGRES_APP_PASSWORD in .env}@postgres:5432/${POSTGRES_DB:-fleetmonitor}
+      MIGRATION_DATABASE_URL: postgres://${POSTGRES_USER:-fleetmonitor}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/${POSTGRES_DB:-fleetmonitor}
+      POSTGRES_APP_USER: ${POSTGRES_APP_USER:-fleetmonitor_app}
+      POSTGRES_APP_PASSWORD: ${POSTGRES_APP_PASSWORD:?Set POSTGRES_APP_PASSWORD in .env}
+      DEMO_COMPANY_NAME: ${DEMO_COMPANY_NAME:-FleetMonitor Demo}
     depends_on:
       postgres:
         condition: service_healthy

@@ -20,6 +20,7 @@ export function canWriteToFleet(user: Pick<AuthenticatedUser, "readOnly">): bool
 export type AppEnvironment = {
   Variables: {
     authenticatedUser: AuthenticatedUser;
+    requestId: string;
   };
 };
 
