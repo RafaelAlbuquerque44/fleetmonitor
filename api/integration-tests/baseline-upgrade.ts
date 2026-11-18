@@ -71,15 +71,55 @@ try {
       FROM pg_class
       WHERE relnamespace = 'public'::regnamespace
         AND relname = ANY(${appClient.array([
-          "vehicles",
-          "drivers",
-          "maintenance_orders",
-          "fleet_costs",
+          "veiculos",
+          "motoristas",
+          "ordens_manutencao",
+          "custos_frota",
+          "planos_manutencao",
+          "abastecimentos",
+          "registros_manutencao",
+          "pneus",
+          "eventos_pneus",
         ])})
         AND relrowsecurity
         AND relforcerowsecurity
     `;
-    assert.equal(rlsCount?.count, 4);
+    assert.equal(rlsCount?.count, 9);
+
+    const [chatRlsCount] = await verificationClient`
+      SELECT count(*)::integer AS count
+      FROM pg_class
+      WHERE relnamespace = 'public'::regnamespace
+        AND relname = ANY(${appClient.array(["conversas_ia", "mensagens_ia"])})
+        AND relrowsecurity
+        AND relforcerowsecurity
+    `;
+    assert.equal(chatRlsCount?.count, 2);
+
+    const [legacyTableCount] = await verificationClient`
+      SELECT count(*)::integer AS count
+      FROM pg_class
+      WHERE relnamespace = 'public'::regnamespace
+        AND relkind = 'r'
+        AND relname = ANY(${appClient.array([
+          "companies",
+          "vehicles",
+          "drivers",
+          "fuel_records",
+          "maintenance_records",
+          "tires",
+          "tire_events",
+          "maintenance_plans",
+          "maintenance_orders",
+          "fleet_costs",
+          "auth_users",
+          "auth_sessions",
+          "contact_requests",
+          "ai_chat_sessions",
+          "ai_chat_messages",
+        ])})
+    `;
+    assert.equal(legacyTableCount?.count, 0);
   } finally {
     await appClient.end();
     await verificationClient.end();

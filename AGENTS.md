@@ -56,7 +56,7 @@ fleetmonitor/
 
 ## 3. Convenções de Código
 
-- Código (arquivos, funções, tabelas, rotas técnicas): inglês.
+- Código, identificadores TypeScript e rotas técnicas: inglês. Os nomes físicos das tabelas PostgreSQL são pt-BR e ficam declarados em `api/src/db/schema.ts`.
 - Interface e copy visível: português (pt-BR).
 - TypeScript estrito (`strict`, `noUncheckedIndexedAccess`).
 - Schema e queries só em `api/src/db`.

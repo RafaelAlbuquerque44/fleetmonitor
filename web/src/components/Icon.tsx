@@ -4,8 +4,10 @@ export type IconName =
   | "arrow"
   | "check"
   | "chart"
+  | "chat"
   | "eye"
   | "eyeOff"
+  | "download"
   | "fleet"
   | "fuel"
   | "driver"
@@ -15,10 +17,17 @@ export type IconName =
   | "plus"
   | "refresh"
   | "search"
-  | "sun";
+  | "sun"
+  | "trash";
 
 const icons: Record<IconName, ReactNode> = {
   arrow: <path d="M7 17 17 7M7 7h10v10" />,
+  chat: (
+    <>
+      <path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H6l-3 2v-6.5a7.5 7.5 0 1 1 17-3Z" />
+      <path d="M8 11h8m-8 3h5" />
+    </>
+  ),
   chart: (
     <>
       <path d="M3 3v18h18" />
@@ -44,6 +53,7 @@ const icons: Record<IconName, ReactNode> = {
       <path d="M9.9 5.2A10.8 10.8 0 0 1 12 5c6.4 0 10 7 10 7a15 15 0 0 1-3.1 3.8M6.2 6.2C3.5 8 2 12 2 12s3.6 7 10 7a10 10 0 0 0 4-.8" />
     </>
   ),
+  download: <><path d="M12 3v12m-5-5 5 5 5-5" /><path d="M4 17v3h16v-3" /></>,
   fleet: (
     <>
       <path d="M3 7h11v10H3zM14 10h4l3 3v4h-7z" />
@@ -81,6 +91,12 @@ const icons: Record<IconName, ReactNode> = {
     <>
       <circle cx="12" cy="12" r="4" />
       <path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" />
+    </>
+  ),
+  trash: (
+    <>
+      <path d="M3 6h18m-2 0-.9 14H5.9L5 6" />
+      <path d="M9 6V4h6v2m-5 4v6m4-6v6" />
     </>
   ),
 };

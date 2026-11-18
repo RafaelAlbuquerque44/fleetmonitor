@@ -10,7 +10,12 @@ import {
 
 const emptyStatusCounts: VehicleStatusCounts = {
   operational: 0,
+  in_operation: 0,
+  stopped: 0,
   maintenance: 0,
+  waiting_part: 0,
+  waiting_service: 0,
+  maintenance_completed: 0,
   inactive: 0,
 };
 

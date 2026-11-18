@@ -1,4 +1,6 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useState, type FormEvent } from "react";
 import { Icon } from "../components/Icon";
 import { AuthApiError, login } from "../features/auth/api";
 import { useTheme } from "../lib/theme";
@@ -12,13 +14,6 @@ export function LoginPage() {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    document.title = "Acessar plataforma — FleetMonitor";
-    return () => {
-      document.title = "FleetMonitor — Gestão inteligente de frotas";
-    };
-  }, []);
 
   async function submitLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -57,7 +52,7 @@ export function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f7f8f5] text-[#17221c] transition-colors dark:bg-[#101612] dark:text-[#eff4ef]">
+    <main className="min-h-screen bg-[#f7f8f5] text-[#17221c] transition-colors dark:bg-fleet-canvas dark:text-[#eff4ef]">
       <header className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8 lg:px-12">
         <a href="/" className="flex items-center gap-2.5" aria-label="Voltar à página inicial">
           <span className="flex size-10 items-center justify-center rounded-xl bg-[#c4f36b] text-[#17221c]">
@@ -67,19 +62,19 @@ export function LoginPage() {
             fleet<span className="text-[#71963b] dark:text-[#c4f36b]">monitor</span>
           </span>
         </a>
-        <button
+        <Button variant="unstyled" size="auto"
           type="button"
           onClick={toggleTheme}
           aria-label={`Ativar tema ${theme === "dark" ? "claro" : "escuro"}`}
-          className="flex size-10 items-center justify-center rounded-full border border-[#e1e7df] text-[#4f5d53] transition hover:bg-white dark:border-[#303b33] dark:text-[#d6dfd7] dark:hover:bg-[#1b241d]"
+          className="flex size-10 items-center justify-center rounded-full border border-[#e1e7df] text-[#4f5d53] transition hover:bg-white dark:border-fleet-border dark:text-[#d6dfd7] dark:hover:bg-fleet-raised"
         >
           <Icon name={theme === "dark" ? "sun" : "moon"} className="size-[18px]" />
-        </button>
+        </Button>
       </header>
 
       <section className="mx-auto grid min-h-[calc(100vh-81px)] max-w-7xl items-center gap-12 px-5 pb-12 pt-8 sm:px-8 lg:grid-cols-[1fr_0.9fr] lg:gap-20 lg:px-12 lg:pb-20">
         <div className="hidden max-w-xl lg:block">
-          <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-[#dfe7d9] bg-white/70 px-3.5 py-2 text-xs font-semibold tracking-wide text-[#53644e] dark:border-[#354537] dark:bg-[#19211b] dark:text-[#c4f36b]">
+          <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-[#dfe7d9] bg-white/70 px-3.5 py-2 text-xs font-semibold tracking-wide text-[#53644e] dark:border-fleet-input-border dark:bg-fleet-raised dark:text-[#c4f36b]">
             <span className="size-2 rounded-full bg-[#8eb94b]" />
             SEU CENTRO DE OPERAÇÕES
           </div>
@@ -90,19 +85,19 @@ export function LoginPage() {
           <p className="mt-6 max-w-lg text-lg leading-8 text-[#66736a] dark:text-[#abb5ad]">
             Acesse sua área de gestão e mantenha sua operação em movimento.
           </p>
-          <div className="mt-12 max-w-md rounded-3xl border border-[#e5eae2] bg-white/70 p-6 dark:border-[#303b33] dark:bg-[#19211b]">
+          <div className="mt-12 max-w-md rounded-3xl border border-[#e5eae2] bg-white/70 p-6 dark:border-fleet-border dark:bg-fleet-raised">
             <div className="flex items-center gap-4">
-              <span className="flex size-12 items-center justify-center rounded-2xl bg-[#edf4e6] text-[#6d9144] dark:bg-[#293627] dark:text-[#c4f36b]">
+              <span className="flex size-12 items-center justify-center rounded-2xl bg-[#eeeeee] text-[#6d9144] dark:bg-fleet-highlight dark:text-[#c4f36b]">
                 <Icon name="fleet" className="size-6" />
               </span>
               <div>
                 <p className="font-semibold">Sua frota, em perspectiva</p>
                 <p className="mt-1 text-sm text-[#748078] dark:text-[#a7b2a9]">
-                  Veículos, manutenção e custos conectados.
+                  Veículos e motoristas conectados.
                 </p>
               </div>
             </div>
-            <div className="mt-6 flex items-center gap-2 border-t border-[#e8ece6] pt-5 text-xs text-[#748078] dark:border-[#303b33] dark:text-[#a7b2a9]">
+            <div className="mt-6 flex items-center gap-2 border-t border-[#e8ece6] pt-5 text-xs text-[#748078] dark:border-fleet-border dark:text-[#a7b2a9]">
               <span className="size-2 rounded-full bg-[#8eb94b]" />
               Gestão simples para operações que não param.
             </div>
@@ -110,7 +105,7 @@ export function LoginPage() {
         </div>
 
         <div className="mx-auto w-full max-w-md">
-          <div className="rounded-[1.75rem] border border-[#e7ebe5] bg-white p-6 shadow-[0_28px_80px_-44px_rgba(32,56,38,0.32)] sm:p-9 dark:border-[#303b33] dark:bg-[#19211b]">
+          <div className="rounded-[1.75rem] border border-[#e7ebe5] bg-white p-6 shadow-[0_28px_80px_-44px_rgba(32,56,38,0.32)] sm:p-9 dark:border-fleet-border dark:bg-fleet-raised">
             <a
               href="/"
               className="text-sm font-medium text-[#748078] transition hover:text-[#17221c] dark:text-[#a7b2a9] dark:hover:text-white"
@@ -130,7 +125,7 @@ export function LoginPage() {
                 <label htmlFor="login-email" className="text-sm font-medium">
                   E-mail
                 </label>
-                <input
+                <Input
                   id="login-email"
                   required
                   type="email"
@@ -144,10 +139,10 @@ export function LoginPage() {
                     setMessage(null);
                   }}
                   placeholder="seu@email.com"
-                  className={`w-full rounded-xl border bg-[#fcfdfb] px-4 py-3 text-sm outline-none transition placeholder:text-[#a0aaa1] focus:ring-4 focus:ring-[#c4f36b]/20 dark:bg-[#131a15] dark:placeholder:text-[#758178] ${
+                  className={`w-full rounded-xl border bg-[#fcfdfb] px-4 py-3 text-sm outline-none transition placeholder:text-[#a0aaa1] focus:ring-4 focus:ring-[#c4f36b]/20 dark:bg-fleet-input dark:placeholder:text-[#758178] ${
                     emailError
                       ? "border-red-400 focus:border-red-500 dark:border-red-500"
-                      : "border-[#dfe5dd] focus:border-[#8eb94b] dark:border-[#3b473d] dark:focus:border-[#9ecb5d]"
+                      : "border-[#dfe5dd] focus:border-[#8eb94b] dark:border-fleet-input-border dark:focus:border-[#9ecb5d]"
                   }`}
                 />
                 {emailError && (
@@ -161,7 +156,7 @@ export function LoginPage() {
                   Senha
                 </label>
                 <span className="relative">
-                  <input
+                  <Input
                     id="login-password"
                     required
                     minLength={1}
@@ -176,20 +171,20 @@ export function LoginPage() {
                       setMessage(null);
                     }}
                     placeholder="Digite sua senha"
-                    className={`w-full rounded-xl border bg-[#fcfdfb] px-4 py-3 pr-12 text-sm outline-none transition placeholder:text-[#a0aaa1] focus:ring-4 focus:ring-[#c4f36b]/20 dark:bg-[#131a15] dark:placeholder:text-[#758178] ${
+                    className={`w-full rounded-xl border bg-[#fcfdfb] px-4 py-3 pr-12 text-sm outline-none transition placeholder:text-[#a0aaa1] focus:ring-4 focus:ring-[#c4f36b]/20 dark:bg-fleet-input dark:placeholder:text-[#758178] ${
                       passwordError
                         ? "border-red-400 focus:border-red-500 dark:border-red-500"
-                        : "border-[#dfe5dd] focus:border-[#8eb94b] dark:border-[#3b473d] dark:focus:border-[#9ecb5d]"
+                        : "border-[#dfe5dd] focus:border-[#8eb94b] dark:border-fleet-input-border dark:focus:border-[#9ecb5d]"
                     }`}
                   />
-                  <button
+                  <Button variant="unstyled" size="auto"
                     type="button"
                     aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                     onClick={() => setShowPassword((visible) => !visible)}
                     className="absolute inset-y-0 right-0 flex items-center px-4 text-[#839087] transition hover:text-[#354238] dark:hover:text-white"
                   >
                     <Icon name={showPassword ? "eyeOff" : "eye"} className="size-[18px]" />
-                  </button>
+                  </Button>
                 </span>
                 {passwordError ? (
                   <span id="login-password-error" className="text-xs text-red-600 dark:text-red-400">
@@ -201,26 +196,26 @@ export function LoginPage() {
                   </span>
                 )}
               </div>
-              <button
+              <Button variant="unstyled" size="auto"
                 type="submit"
                 disabled={isSubmitting}
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#17221c] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-[#2b3b30] disabled:cursor-wait disabled:opacity-70 dark:bg-[#c4f36b] dark:text-[#17221c] dark:hover:bg-[#d2fb8d]"
               >
                 {isSubmitting ? "Verificando..." : "Entrar"}
                 <Icon name="arrow" className="size-4" />
-              </button>
+              </Button>
             </form>
 
             {message && (
               <p
                 role="status"
-                className="mt-5 rounded-xl border border-[#dce9ce] bg-[#f3f8ed] px-4 py-3 text-sm leading-5 text-[#526a3f] dark:border-[#43563a] dark:bg-[#222e1f] dark:text-[#d2e8bc]"
+                className="mt-5 rounded-xl border border-[#dce9ce] bg-[#f4f4f4] px-4 py-3 text-sm leading-5 text-[#526a3f] dark:border-fleet-input-border dark:bg-fleet-highlight dark:text-[#d2e8bc]"
               >
                 {message}
               </p>
             )}
 
-            <p className="mt-8 border-t border-[#e8ece6] pt-5 text-center text-xs leading-5 text-[#879188] dark:border-[#303b33] dark:text-[#94a096]">
+            <p className="mt-8 border-t border-[#e8ece6] pt-5 text-center text-xs leading-5 text-[#879188] dark:border-fleet-border dark:text-[#94a096]">
               Ainda não tem acesso?{" "}
               <a
                 href="/#contato"

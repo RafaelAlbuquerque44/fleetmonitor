@@ -8,9 +8,13 @@ import type { AppEnvironment } from "./middleware/auth";
 import authRoutes from "./routes/auth";
 import contactRoutes from "./routes/contact";
 import driverRoutes from "./routes/drivers";
-import costRoutes from "./routes/costs";
-import maintenanceRoutes from "./routes/maintenance";
 import vehicleRoutes from "./routes/vehicles";
+import exportRoutes from "./routes/exports";
+import fuelRecordRoutes from "./routes/fuel-records";
+import maintenanceRecordRoutes from "./routes/maintenance-records";
+import tireRoutes from "./routes/tires";
+import aiChatRoutes from "./routes/ai-chat";
+import preventiveMaintenanceRoutes from "./routes/maintenance-preventive";
 
 const app = new Hono<AppEnvironment>();
 const allowedOrigins = (
@@ -74,8 +78,12 @@ app.get("/ready", async (c) => {
 app.route("/auth", authRoutes);
 app.route("/contact", contactRoutes);
 app.route("/drivers", driverRoutes);
-app.route("/maintenance", maintenanceRoutes);
-app.route("/costs", costRoutes);
 app.route("/vehicles", vehicleRoutes);
+app.route("/exports", exportRoutes);
+app.route("/fuel-records", fuelRecordRoutes);
+app.route("/maintenance-records", maintenanceRecordRoutes);
+app.route("/tires", tireRoutes);
+app.route("/ai", aiChatRoutes);
+app.route("/maintenance-preventive", preventiveMaintenanceRoutes);
 
 export default app;

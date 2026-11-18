@@ -6,6 +6,7 @@ import { useCurrentUser } from "../auth/useCurrentUser";
 import type { VehicleStatusCounts } from "../vehicles/types";
 import { FleetNavigation, type FleetNavigationSection } from "./FleetNavigation";
 import { useTheme } from "../../lib/theme";
+import { Button } from "../../components/ui/button";
 
 export function FleetAppShell({
   active,
@@ -32,7 +33,7 @@ export function FleetAppShell({
   }
 
   return (
-    <main className="min-h-screen bg-[#f4f6f2] text-[#17221c] dark:bg-fleet-canvas dark:text-[#eff4ef]">
+    <main className="min-h-screen bg-[#f4f4f4] text-[#17221c] dark:bg-fleet-canvas dark:text-[#eff4ef]">
       <div className="min-h-screen lg:grid lg:grid-cols-[250px_minmax(0,1fr)]">
         <aside className="hidden border-r border-[#e6ebe4] bg-white px-5 py-7 dark:border-fleet-border dark:bg-fleet-surface lg:flex lg:flex-col">
           <Link to="/" className="flex items-center gap-2.5 px-2" aria-label="FleetMonitor, início">
@@ -78,27 +79,38 @@ export function FleetAppShell({
                   </p>
                 </div>
               )}
-              <span className="flex size-10 items-center justify-center rounded-full bg-[#e7efdf] text-sm font-semibold text-[#526f37] dark:bg-[#293627] dark:text-[#c4f36b]">
+              <span className="flex size-10 items-center justify-center rounded-full bg-[#eaeaea] text-sm font-semibold text-[#526f37] dark:bg-fleet-highlight dark:text-[#c4f36b]">
                 {user?.companyName.slice(0, 1).toUpperCase() ?? "F"}
               </span>
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="icon"
                 onClick={toggleTheme}
                 aria-label={`Ativar tema ${theme === "dark" ? "claro" : "escuro"}`}
-                className="flex size-10 items-center justify-center rounded-xl border border-[#e1e7df] text-[#526056] transition hover:bg-[#f5f7f3] dark:border-fleet-border dark:text-[#d9e1da] dark:hover:bg-fleet-raised"
+                className="text-[#526056] dark:text-[#d9e1da]"
               >
                 <Icon name={theme === "dark" ? "sun" : "moon"} className="size-[18px]" />
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={handleLogout}
-                className="inline-flex items-center gap-2 rounded-xl border border-[#e1e7df] px-3 py-2 text-sm font-medium text-[#526056] transition hover:bg-[#f5f7f3] dark:border-fleet-border dark:text-[#d9e1da] dark:hover:bg-fleet-raised"
+                aria-label="Sair"
+                className="font-medium text-[#526056] dark:text-[#d9e1da]"
               >
                 <Icon name="logout" className="size-4" />
                 <span className="hidden sm:inline">Sair</span>
-              </button>
+              </Button>
             </div>
           </header>
+          <div className="border-b border-[#e6ebe4] bg-white px-5 pb-3 dark:border-fleet-border dark:bg-fleet-surface lg:hidden">
+            <details className="group">
+              <summary className="cursor-pointer rounded-lg py-2 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-[#84ad45]">Menu da frota</summary>
+              <FleetNavigation active={active} statusCounts={statusCounts} />
+            </details>
+          </div>
           {logoutError && (
             <p role="alert" className="mx-5 mt-5 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300 sm:mx-8 lg:mx-10">
               {logoutError}

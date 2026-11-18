@@ -3,6 +3,7 @@ import {
   createCompanyDriver,
   deleteCompanyDriver,
   getCompanyDriver,
+  listCompanyLicenseAlerts,
   listCompanyDrivers,
   updateCompanyDriver,
 } from "../db/drivers";
@@ -35,6 +36,11 @@ driverRoutes.get("/", async (c) => {
     totalPages: Math.max(1, Math.ceil(result.totalItems / pageSize)),
     statusCounts: result.statusCounts,
   });
+});
+
+driverRoutes.get("/alerts", async (c) => {
+  const user = c.get("authenticatedUser");
+  return c.json(await listCompanyLicenseAlerts(user.companyId));
 });
 
 driverRoutes.get("/:id", async (c) => {
@@ -131,7 +137,15 @@ driverRoutes.delete("/:id", async (c) => {
     return c.json({ error: "Identificador de motorista inválido." }, 400);
   }
 
-  const driver = await deleteCompanyDriver(user.companyId, id);
+  let driver: { id: number } | null;
+  try {
+    driver = await deleteCompanyDriver(user.companyId, id);
+  } catch (error) {
+    if (getDatabaseErrorCode(error) === "23503") {
+      return c.json({ error: "Não é possível remover um motorista com dados vinculados." }, 409);
+    }
+    throw error;
+  }
   if (!driver) {
     return c.json({ error: "Motorista não encontrado." }, 404);
   }

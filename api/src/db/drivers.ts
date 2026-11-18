@@ -1,4 +1,4 @@
-import { and, count, eq, ilike, or } from "drizzle-orm";
+import { and, count, eq, ilike, lte, or, sql } from "drizzle-orm";
 import { drivers } from "./schema";
 import { withTenantTransaction } from "./tenant";
 import type { DriverInput, DriverListQuery } from "../routes/drivers.validation";
@@ -129,5 +129,25 @@ export async function deleteCompanyDriver(companyId: number, driverId: number) {
       .where(and(eq(drivers.id, driverId), eq(drivers.companyId, companyId)))
       .returning({ id: drivers.id });
     return driver ?? null;
+  });
+}
+
+export async function listCompanyLicenseAlerts(companyId: number) {
+  return withTenantTransaction(companyId, (transaction) => {
+    const threshold = sql<string>`(now() at time zone 'America/Sao_Paulo')::date + 30`;
+    return transaction
+      .select({
+        id: drivers.id,
+        name: drivers.fullName,
+        dueAt: drivers.licenseExpiresAt,
+      })
+      .from(drivers)
+      .where(
+        and(
+          eq(drivers.companyId, companyId),
+          eq(drivers.status, "active"),
+          lte(drivers.licenseExpiresAt, threshold),
+        ),
+      );
   });
 }

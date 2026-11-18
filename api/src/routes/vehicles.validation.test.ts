@@ -13,17 +13,32 @@ describe("parseVehicleInput", () => {
     ).toEqual({
       value: {
         plate: "ABC1D23",
+        chassisNumber: null,
         make: "Fiat",
         model: "Ducato",
         year: new Date().getFullYear(),
         status: "operational",
       },
     });
+
+  });
+
+  test("normalizes the optional chassis number", () => {
+    expect(
+      parseVehicleInput({
+        plate: "ABC1D23",
+        chassisNumber: " chassi-123 ",
+        make: "Fiat",
+        model: "Ducato",
+        year: 2024,
+      }),
+    ).toMatchObject({ value: { chassisNumber: "CHASSI-123" } });
   });
 
   test.each([
     ["non-object payload", null],
     ["invalid license plate", { plate: "invalid" }],
+    ["too-long chassis number", { plate: "ABC1D23", chassisNumber: "x".repeat(51), make: "Fiat", model: "Ducato", year: 2024 }],
     [
       "empty make",
       { plate: "ABC1D23", make: " ", model: "Ducato", year: 2024 },

@@ -1,0 +1,1 @@
+ALTER TABLE "maintenance_plans" ADD COLUMN "active" boolean DEFAULT true NOT NULL;

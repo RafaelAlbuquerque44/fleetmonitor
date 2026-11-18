@@ -1,3 +1,6 @@
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useState, type FormEvent } from "react";
 import { Icon, type IconName } from "../components/Icon";
@@ -17,26 +20,18 @@ const features = [
   },
   {
     number: "02",
-    icon: "maintenance" as const,
-    title: "Manutenção sem surpresas",
+    icon: "driver" as const,
+    title: "Motoristas organizados",
     description:
-      "Acompanhe o cuidado com cada veículo e prepare sua operação para rodar com mais previsibilidade.",
-    tag: "ROTINA EM DIA",
-  },
-  {
-    number: "03",
-    icon: "fuel" as const,
-    title: "Custos sob controle",
-    description:
-      "Organize os custos da frota para tomar decisões com mais clareza e menos improviso.",
-    tag: "VISÃO FINANCEIRA",
+      "Centralize os cadastros e consulte rapidamente as informações dos profissionais da sua frota.",
+    tag: "GESTÃO DE PESSOAS",
   },
 ];
 
 const previewItems: { icon: IconName; label: string }[] = [
   { icon: "fleet", label: "Veículos" },
-  { icon: "maintenance", label: "Manutenção" },
-  { icon: "fuel", label: "Custos" },
+  { icon: "driver", label: "Motoristas" },
+  { icon: "chart", label: "Indicadores" },
 ];
 
 export function LandingPage() {
@@ -92,7 +87,7 @@ export function LandingPage() {
   }
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#f7f8f5] text-[#17221c] transition-colors dark:bg-[#101612] dark:text-[#eff4ef]">
+    <main className="min-h-screen overflow-hidden bg-[#f7f8f5] text-[#17221c] transition-colors dark:bg-fleet-canvas dark:text-[#eff4ef]">
       <header className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8 lg:px-12">
         <a href="/" className="flex items-center gap-2.5" aria-label="FleetMonitor, início">
           <span className="flex size-10 items-center justify-center rounded-xl bg-[#c4f36b] text-[#17221c]">
@@ -116,14 +111,14 @@ export function LandingPage() {
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <button
+          <Button variant="unstyled" size="auto"
             type="button"
             onClick={toggleTheme}
             aria-label={`Ativar tema ${theme === "dark" ? "claro" : "escuro"}`}
-            className="flex size-10 items-center justify-center rounded-full border border-[#e1e7df] text-[#4f5d53] transition hover:bg-white dark:border-[#303b33] dark:text-[#d6dfd7] dark:hover:bg-[#1b241d]"
+            className="flex size-10 items-center justify-center rounded-full border border-[#e1e7df] text-[#4f5d53] transition hover:bg-white dark:border-fleet-border dark:text-[#d6dfd7] dark:hover:bg-fleet-raised"
           >
             <Icon name={theme === "dark" ? "sun" : "moon"} className="size-[18px]" />
-          </button>
+          </Button>
           <a
             href="/app/overview"
             className="inline-flex rounded-full bg-[#17221c] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#2b3b30] dark:bg-[#c4f36b] dark:text-[#17221c] dark:hover:bg-[#d2fb8d] sm:px-5 sm:py-2.5 sm:text-sm"
@@ -170,8 +165,8 @@ export function LandingPage() {
             </span>
           </h1>
           <p className="mt-7 max-w-xl text-base leading-7 text-[#66736a] sm:text-lg sm:leading-8 dark:text-[#abb5ad]">
-            Veículos, manutenção e custos conectados em uma plataforma feita para simplificar a
-            rotina e dar mais clareza à sua operação.
+            Veículos e motoristas conectados em uma plataforma feita para simplificar a rotina e
+            dar mais clareza à sua operação.
           </p>
           <div className="mt-9 flex flex-wrap items-center gap-3">
             <a
@@ -186,17 +181,17 @@ export function LandingPage() {
             </a>
             <a
               href="#contato"
-              className="rounded-full px-5 py-3.5 text-sm font-semibold text-[#536159] transition hover:bg-white dark:text-[#d6dfd7] dark:hover:bg-[#1b241d]"
+              className="rounded-full px-5 py-3.5 text-sm font-semibold text-[#536159] transition hover:bg-white dark:text-[#d6dfd7] dark:hover:bg-fleet-raised"
             >
               Fale com a gente
             </a>
           </div>
           <div className="mt-10 flex items-center gap-3 text-sm text-[#758078] dark:text-[#99a59b]">
             <span className="flex -space-x-2">
-              <span className="flex size-8 items-center justify-center rounded-full border-2 border-[#f7f8f5] bg-[#d8e7c5] text-[#506640] dark:border-[#101612]">
+              <span className="flex size-8 items-center justify-center rounded-full border-2 border-[#f7f8f5] bg-[#dedede] text-[#506640] dark:border-fleet-canvas dark:bg-[#d8e7c5]">
                 <Icon name="check" className="size-4" />
               </span>
-              <span className="flex size-8 items-center justify-center rounded-full border-2 border-[#f7f8f5] bg-[#e8e8d2] text-[#65704c] dark:border-[#101612]">
+              <span className="flex size-8 items-center justify-center rounded-full border-2 border-[#f7f8f5] bg-[#e8e8d2] text-[#65704c] dark:border-fleet-canvas">
                 <Icon name="fleet" className="size-4" />
               </span>
             </span>
@@ -205,10 +200,10 @@ export function LandingPage() {
         </div>
 
         <div className="relative mx-auto w-full max-w-[590px] lg:ml-auto">
-          <div className="absolute -right-10 -top-10 size-48 rounded-full bg-[#dff4c2] blur-3xl dark:bg-[#294127]" />
-          <div className="absolute -bottom-14 -left-10 size-52 rounded-full bg-[#e8e8ce] blur-3xl dark:bg-[#343b25]" />
-          <div className="relative rounded-[2rem] border border-white/80 bg-white/75 p-3 shadow-[0_32px_100px_-45px_rgba(32,56,38,0.34)] backdrop-blur dark:border-[#303b33] dark:bg-[#19211b]/90 sm:p-5">
-            <div className="rounded-[1.4rem] border border-[#edf0eb] bg-[#fbfcfa] p-5 dark:border-[#303b33] dark:bg-[#131a15] sm:p-6">
+          <div className="absolute -right-10 -top-10 size-48 rounded-full bg-[#e8e8e8] blur-3xl dark:bg-fleet-highlight" />
+          <div className="absolute -bottom-14 -left-10 size-52 rounded-full bg-[#e8e8ce] blur-3xl dark:bg-fleet-highlight" />
+          <div className="relative rounded-[2rem] border border-white/80 bg-white/75 p-3 shadow-[0_32px_100px_-45px_rgba(32,56,38,0.34)] backdrop-blur dark:border-fleet-border dark:bg-fleet-raised/90 sm:p-5">
+            <div className="rounded-[1.4rem] border border-[#edf0eb] bg-[#fbfcfa] p-5 dark:border-fleet-border dark:bg-fleet-input sm:p-6">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-xs font-medium text-[#849087] dark:text-[#9eaaa0]">
@@ -218,12 +213,12 @@ export function LandingPage() {
                     Sua operação, em perspectiva
                   </h2>
                 </div>
-                <span className="rounded-full bg-[#eff5e8] px-3 py-1.5 text-[10px] font-semibold tracking-wide text-[#648342] dark:bg-[#263522] dark:text-[#c4f36b]">
+                <span className="rounded-full bg-[#f1f1f1] px-3 py-1.5 text-[10px] font-semibold tracking-wide text-[#648342] dark:bg-fleet-highlight dark:text-[#c4f36b]">
                   VISÃO GERAL
                 </span>
               </div>
 
-              <div className="relative mt-6 overflow-hidden rounded-2xl bg-[#edf2e9] p-5 dark:bg-[#202b22] sm:p-7">
+              <div className="relative mt-6 overflow-hidden rounded-2xl bg-[#eeeeee] p-5 dark:bg-fleet-surface sm:p-7">
                 <div className="absolute inset-0 opacity-60">
                   <svg viewBox="0 0 500 210" className="size-full" preserveAspectRatio="none">
                     <path
@@ -244,21 +239,21 @@ export function LandingPage() {
                   </svg>
                 </div>
                 <div className="relative flex min-h-36 items-center justify-center sm:min-h-44">
-                  <div className="absolute left-[10%] top-[20%] flex size-9 items-center justify-center rounded-full border-4 border-white bg-[#c4f36b] text-[#24311f] shadow-md dark:border-[#263226]">
+                  <div className="absolute left-[10%] top-[20%] flex size-9 items-center justify-center rounded-full border-4 border-white bg-[#c4f36b] text-[#24311f] shadow-md dark:border-fleet-border">
                     <span className="size-2 rounded-full bg-[#587838]" />
                   </div>
-                  <div className="absolute right-[13%] top-[28%] flex size-8 items-center justify-center rounded-full border-4 border-white bg-white text-[#70856a] shadow-md dark:border-[#263226] dark:bg-[#344434]">
+                  <div className="absolute right-[13%] top-[28%] flex size-8 items-center justify-center rounded-full border-4 border-white bg-white text-[#70856a] shadow-md dark:border-fleet-border dark:bg-fleet-highlight">
                     <span className="size-2 rounded-full bg-[#8eb94b]" />
                   </div>
-                  <div className="absolute bottom-[12%] left-[37%] flex size-8 items-center justify-center rounded-full border-4 border-white bg-white text-[#70856a] shadow-md dark:border-[#263226] dark:bg-[#344434]">
+                  <div className="absolute bottom-[12%] left-[37%] flex size-8 items-center justify-center rounded-full border-4 border-white bg-white text-[#70856a] shadow-md dark:border-fleet-border dark:bg-fleet-highlight">
                     <span className="size-2 rounded-full bg-[#8eb94b]" />
                   </div>
                   <div className="relative flex size-20 items-center justify-center rounded-[1.7rem] bg-[#17221c] text-[#c4f36b] shadow-xl shadow-[#31422d]/20 sm:size-24 dark:bg-[#c4f36b] dark:text-[#17221c]">
                     <Icon name="fleet" className="size-10 sm:size-11" />
-                    <span className="absolute -bottom-2 -right-2 size-4 rounded-full border-[3px] border-[#edf2e9] bg-[#7ba648] dark:border-[#202b22]" />
+                    <span className="absolute -bottom-2 -right-2 size-4 rounded-full border-[3px] border-[#edf2e9] bg-[#7ba648] dark:border-fleet-surface" />
                   </div>
                 </div>
-                <div className="relative mt-4 flex items-center justify-between border-t border-[#dce5d5] pt-4 text-xs text-[#6f7c70] dark:border-[#384639] dark:text-[#aeb9ad]">
+                <div className="relative mt-4 flex items-center justify-between border-t border-[#dce5d5] pt-4 text-xs text-[#6f7c70] dark:border-fleet-input-border dark:text-[#aeb9ad]">
                   <span>Ativos conectados à sua gestão</span>
                   <span className="flex items-center gap-1.5 font-medium text-[#638340] dark:text-[#c4f36b]">
                     <span className="size-1.5 rounded-full bg-[#8eb94b]" />
@@ -271,7 +266,7 @@ export function LandingPage() {
                 {previewItems.map((item) => (
                   <div
                     key={item.label}
-                    className="rounded-xl border border-[#edf0eb] bg-white p-3 dark:border-[#303b33] dark:bg-[#19211b] sm:p-4"
+                    className="rounded-xl border border-[#edf0eb] bg-white p-3 dark:border-fleet-border dark:bg-fleet-raised sm:p-4"
                   >
                     <Icon
                       name={item.icon}
@@ -295,7 +290,7 @@ export function LandingPage() {
 
       <section
         id="recursos"
-        className="border-y border-[#e8ece6] bg-white/65 py-20 sm:py-24 dark:border-[#28332b] dark:bg-[#151c17]"
+        className="border-y border-[#e8ece6] bg-white/65 py-20 sm:py-24 dark:border-fleet-border dark:bg-fleet-surface"
       >
         <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-12">
           <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
@@ -312,14 +307,14 @@ export function LandingPage() {
             </p>
           </div>
 
-          <div className="mt-12 grid gap-4 md:grid-cols-3">
+          <div className="mt-12 grid gap-4 md:grid-cols-2">
             {features.map((feature) => (
               <article
                 key={feature.number}
-                className="group rounded-2xl border border-[#e8ece6] bg-[#fbfcfa] p-6 transition hover:-translate-y-1 hover:border-[#cbd9c0] hover:shadow-xl hover:shadow-[#35462c]/[0.06] sm:p-7 dark:border-[#303b33] dark:bg-[#19211b] dark:hover:border-[#506745]"
+                className="group rounded-2xl border border-[#e8ece6] bg-[#fbfcfa] p-6 transition hover:-translate-y-1 hover:border-[#cbd9c0] hover:shadow-xl hover:shadow-[#35462c]/[0.06] sm:p-7 dark:border-fleet-border dark:bg-fleet-raised dark:hover:border-[#555555]"
               >
                 <div className="flex items-center justify-between">
-                  <span className="flex size-12 items-center justify-center rounded-2xl bg-[#edf4e6] text-[#6d9144] transition group-hover:bg-[#c4f36b] group-hover:text-[#17221c] dark:bg-[#293627] dark:text-[#c4f36b]">
+                  <span className="flex size-12 items-center justify-center rounded-2xl bg-[#eeeeee] text-[#6d9144] transition group-hover:bg-[#c4f36b] group-hover:text-[#17221c] dark:bg-fleet-highlight dark:text-[#c4f36b]">
                     <Icon name={feature.icon} className="size-6" />
                   </span>
                   <span className="text-xs font-medium tracking-wide text-[#a2aaa3] dark:text-[#758178]">
@@ -341,8 +336,8 @@ export function LandingPage() {
 
       <section id="sobre" className="mx-auto max-w-7xl px-5 py-20 sm:px-8 sm:py-24 lg:px-12">
         <div className="relative overflow-hidden rounded-[2rem] bg-[#17221c] px-6 py-12 text-white sm:px-12 sm:py-16 dark:bg-[#c4f36b] dark:text-[#17221c]">
-          <div className="absolute -right-12 -top-32 size-80 rounded-full border border-white/10 dark:border-[#17221c]/10" />
-          <div className="absolute -right-2 -top-20 size-60 rounded-full border border-white/10 dark:border-[#17221c]/10" />
+          <div className="absolute -right-12 -top-32 size-80 rounded-full border border-white/10 dark:border-black/10" />
+          <div className="absolute -right-2 -top-20 size-60 rounded-full border border-white/10 dark:border-black/10" />
           <div className="relative flex flex-col items-start justify-between gap-8 md:flex-row md:items-center">
             <div className="max-w-2xl">
               <p className="text-xs font-semibold tracking-[0.18em] text-[#c4f36b] dark:text-[#496532]">
@@ -358,7 +353,7 @@ export function LandingPage() {
             </div>
             <a
               href="/app/overview"
-              className="inline-flex shrink-0 items-center gap-3 rounded-full bg-[#c4f36b] px-6 py-3.5 text-sm font-semibold text-[#17221c] transition hover:bg-[#d2fb8d] dark:bg-[#17221c] dark:text-white dark:hover:bg-[#2b3b30]"
+              className="inline-flex shrink-0 items-center gap-3 rounded-full bg-[#c4f36b] px-6 py-3.5 text-sm font-semibold text-[#17221c] transition hover:bg-[#d2fb8d] dark:bg-fleet-canvas dark:text-white dark:hover:bg-fleet-highlight"
             >
               Começar agora
               <Icon name="arrow" className="size-4" />
@@ -369,7 +364,7 @@ export function LandingPage() {
 
       <section
         id="contato"
-        className="border-t border-[#e8ece6] bg-white/65 py-20 dark:border-[#28332b] dark:bg-[#151c17] sm:py-24"
+        className="border-t border-[#e8ece6] bg-white/65 py-20 dark:border-fleet-border dark:bg-fleet-surface sm:py-24"
       >
         <div className="mx-auto grid max-w-7xl gap-10 px-5 sm:px-8 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16 lg:px-12">
           <div>
@@ -387,11 +382,11 @@ export function LandingPage() {
 
           <form
             onSubmit={submitContact}
-            className="grid gap-4 rounded-2xl border border-[#e5eae2] bg-white p-5 dark:border-[#303b33] dark:bg-[#19211b] sm:grid-cols-2 sm:p-7"
+            className="grid gap-4 bento-panel p-5 sm:grid-cols-2 sm:p-7"
           >
             <label className="flex flex-col gap-2">
               <span className="text-sm font-medium">Nome</span>
-              <input
+              <Input
                 required
                 maxLength={120}
                 autoComplete="name"
@@ -401,12 +396,12 @@ export function LandingPage() {
                   setContactSubmitted(false);
                   setContactError(null);
                 }}
-                className="rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-4 py-3 text-sm outline-none focus:border-[#8eb94b] focus:ring-4 focus:ring-[#c4f36b]/20 dark:border-[#3b473d] dark:bg-[#131a15]"
+                className="rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-4 py-3 text-sm outline-none focus:border-[#8eb94b] focus:ring-4 focus:ring-[#c4f36b]/20 dark:border-fleet-input-border dark:bg-fleet-input"
               />
             </label>
             <label className="flex flex-col gap-2">
               <span className="text-sm font-medium">E-mail</span>
-              <input
+              <Input
                 required
                 type="email"
                 maxLength={254}
@@ -417,12 +412,12 @@ export function LandingPage() {
                   setContactSubmitted(false);
                   setContactError(null);
                 }}
-                className="rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-4 py-3 text-sm outline-none focus:border-[#8eb94b] focus:ring-4 focus:ring-[#c4f36b]/20 dark:border-[#3b473d] dark:bg-[#131a15]"
+                className="rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-4 py-3 text-sm outline-none focus:border-[#8eb94b] focus:ring-4 focus:ring-[#c4f36b]/20 dark:border-fleet-input-border dark:bg-fleet-input"
               />
             </label>
             <label className="flex flex-col gap-2 sm:col-span-2">
               <span className="text-sm font-medium">Empresa <span className="font-normal text-[#849087]">(opcional)</span></span>
-              <input
+              <Input
                 maxLength={120}
                 autoComplete="organization"
                 value={contactCompany}
@@ -431,12 +426,12 @@ export function LandingPage() {
                   setContactSubmitted(false);
                   setContactError(null);
                 }}
-                className="rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-4 py-3 text-sm outline-none focus:border-[#8eb94b] focus:ring-4 focus:ring-[#c4f36b]/20 dark:border-[#3b473d] dark:bg-[#131a15]"
+                className="rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-4 py-3 text-sm outline-none focus:border-[#8eb94b] focus:ring-4 focus:ring-[#c4f36b]/20 dark:border-fleet-input-border dark:bg-fleet-input"
               />
             </label>
             <label className="flex flex-col gap-2 sm:col-span-2">
               <span className="text-sm font-medium">Como podemos ajudar?</span>
-              <textarea
+              <Textarea
                 required
                 maxLength={5000}
                 rows={5}
@@ -446,7 +441,7 @@ export function LandingPage() {
                   setContactSubmitted(false);
                   setContactError(null);
                 }}
-                className="resize-y rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-4 py-3 text-sm outline-none focus:border-[#8eb94b] focus:ring-4 focus:ring-[#c4f36b]/20 dark:border-[#3b473d] dark:bg-[#131a15]"
+                className="resize-y rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-4 py-3 text-sm outline-none focus:border-[#8eb94b] focus:ring-4 focus:ring-[#c4f36b]/20 dark:border-fleet-input-border dark:bg-fleet-input"
               />
             </label>
             {contactError && (
@@ -455,25 +450,25 @@ export function LandingPage() {
               </p>
             )}
             {contactSubmitted && (
-              <p role="status" className="sm:col-span-2 rounded-xl bg-[#edf4e6] px-4 py-3 text-sm text-[#526f37] dark:bg-[#293627] dark:text-[#c4f36b]">
+              <p role="status" className="sm:col-span-2 rounded-xl bg-[#eeeeee] px-4 py-3 text-sm text-[#526f37] dark:bg-fleet-highlight dark:text-[#c4f36b]">
                 Mensagem registrada. Nossa equipe poderá consultá-la e retornar pelo e-mail informado.
               </p>
             )}
             <div className="sm:col-span-2">
-              <button
+              <Button variant="unstyled" size="auto"
                 type="submit"
                 disabled={isContactSubmitting}
                 className="inline-flex items-center gap-2 rounded-xl bg-[#17221c] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#2b3b30] disabled:cursor-wait disabled:opacity-60 dark:bg-[#c4f36b] dark:text-[#17221c] dark:hover:bg-[#d2fb8d]"
               >
                 {isContactSubmitting ? "Enviando..." : "Enviar mensagem"}
                 <Icon name="arrow" className="size-4" />
-              </button>
+              </Button>
             </div>
           </form>
         </div>
       </section>
 
-      <footer className="border-t border-[#e8ece6] dark:border-[#28332b]">
+      <footer className="border-t border-[#e8ece6] dark:border-fleet-border">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-7 text-xs text-[#849087] sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-12 dark:text-[#96a197]">
           <a href="#inicio" className="flex items-center gap-2 font-semibold text-[#526056] dark:text-[#d9e1da]">
             <span className="flex size-7 items-center justify-center rounded-lg bg-[#c4f36b] text-[#17221c]">

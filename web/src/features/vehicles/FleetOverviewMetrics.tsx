@@ -1,16 +1,27 @@
 import { Icon } from "../../components/Icon";
 import type { IconName } from "../../components/Icon";
 import type { FleetSummary, VehicleStatus } from "./types";
+import { Card } from "../../components/ui/card";
 
 const statusLabels: Record<VehicleStatus, string> = {
-  operational: "Operacionais",
+  operational: "Disponíveis",
+  in_operation: "Em operação",
+  stopped: "Parados",
   maintenance: "Em manutenção",
+  waiting_part: "Aguardando peça",
+  waiting_service: "Aguardando serviço",
+  maintenance_completed: "Manutenção finalizada",
   inactive: "Inativos",
 };
 
 const statusColors: Record<VehicleStatus, string> = {
   operational: "#84ad45",
+  in_operation: "#5b9b76",
+  stopped: "#849087",
   maintenance: "#d4a23b",
+  waiting_part: "#c27b3a",
+  waiting_service: "#ad8541",
+  maintenance_completed: "#719d54",
   inactive: "#849087",
 };
 
@@ -99,9 +110,9 @@ export function FleetOverviewMetrics({ summary }: { summary: FleetSummary }) {
     <>
       <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard label="Veículos na frota" value={summary.totalVehicles} detail="Total cadastrado" color="green" />
-        <MetricCard label="Disponibilidade" value={`${summary.operationalRate}%`} detail="Percentual operacional" color="green" />
-        <MetricCard label="Em manutenção" value={counts.maintenance} detail="Requerem acompanhamento" color="amber" />
-        <MetricCard label="Inativos" value={counts.inactive} detail="Fora de operação" color="slate" />
+        <MetricCard label="Disponibilidade" value={`${summary.operationalRate}%`} detail={`${counts.operational + counts.in_operation + counts.maintenance_completed} disponíveis · ${summary.totalVehicles - (counts.operational + counts.in_operation + counts.maintenance_completed)} indisponíveis`} color="green" />
+        <MetricCard label="Em manutenção" value={counts.maintenance + counts.waiting_part + counts.waiting_service} detail="Em manutenção ou aguardando atendimento" color="amber" />
+        <MetricCard label="Tempo médio parado" value={`${summary.averageDowntimeHours} h`} detail="Média das ocorrências registradas" color="slate" />
       </div>
 
       <section className="mt-8" aria-labelledby="driver-indicators-title">
@@ -126,7 +137,7 @@ export function FleetOverviewMetrics({ summary }: { summary: FleetSummary }) {
           description="Veículos agrupados por status atual."
           total={summary.totalVehicles}
           unit="veículos"
-          items={(["operational", "maintenance", "inactive"] as const).map((status) => ({
+          items={(Object.keys(statusLabels) as VehicleStatus[]).map((status) => ({
             label: statusLabels[status],
             count: counts[status],
             color: statusColors[status],
@@ -156,7 +167,7 @@ export function FleetOverviewMetrics({ summary }: { summary: FleetSummary }) {
           <p className="mt-1 text-sm text-[#748078] dark:text-[#a7b2a9]">
             Leitura rápida da disponibilidade da frota.
           </p>
-          <div className="mt-7 rounded-2xl bg-[#f3f6ef] p-5 dark:bg-[#202a21]">
+          <div className="mt-7 rounded-2xl bg-[#f3f3f3] p-5 dark:bg-fleet-surface">
             <div className="grid gap-5 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] sm:items-center">
               <div>
                 <div className="flex items-center justify-between gap-4">
@@ -168,7 +179,7 @@ export function FleetOverviewMetrics({ summary }: { summary: FleetSummary }) {
                       {summary.operationalRate}%
                     </p>
                   </div>
-                  <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[#e3efd5] text-[#66883f] dark:bg-[#34452a] dark:text-[#c4f36b]">
+                  <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[#e3efd5] text-[#66883f] dark:bg-fleet-highlight dark:text-[#c4f36b]">
                     <Icon name="check" className="size-6" />
                   </span>
                 </div>
@@ -181,7 +192,7 @@ export function FleetOverviewMetrics({ summary }: { summary: FleetSummary }) {
                   />
                 </div>
                 <p className="mt-3 text-xs leading-5 text-[#748078] dark:text-[#a7b2a9]">
-                  {counts.operational} de {summary.totalVehicles} veículos estão marcados como operacionais.
+                  {counts.operational + counts.in_operation + counts.maintenance_completed} de {summary.totalVehicles} veículos estão disponíveis ou em operação.
                 </p>
               </div>
             </div>
@@ -197,22 +208,24 @@ function MetricCard({
   value,
   detail,
   color,
+  className,
 }: {
   label: string;
   value: number | string;
   detail: string;
   color: "green" | "amber" | "slate";
+  className?: string;
 }) {
   const iconColor = {
-    green: "bg-[#edf4e6] text-[#6d9144] dark:bg-[#293627] dark:text-[#c4f36b]",
+    green: "bg-[#eeeeee] text-[#6d9144] dark:bg-fleet-highlight dark:text-[#c4f36b]",
     amber: "bg-[#fbf2df] text-[#a77a25] dark:bg-[#3a3020] dark:text-[#e5c16c]",
-    slate: "bg-[#edf0ee] text-[#69776e] dark:bg-[#29312c] dark:text-[#b8c4bb]",
+    slate: "bg-[#edf0ee] text-[#69776e] dark:bg-fleet-highlight dark:text-[#b8c4bb]",
   }[color];
   const icon: IconName =
     color === "amber" ? "maintenance" : color === "slate" ? "fleet" : "chart";
 
   return (
-    <article className="rounded-2xl border border-[#e5eae2] bg-white p-5 dark:border-[#303b33] dark:bg-[#19211b]">
+    <Card className={`p-5 ${className ?? ""}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm text-[#748078] dark:text-[#a7b2a9]">{label}</p>
@@ -223,6 +236,6 @@ function MetricCard({
         </span>
       </div>
       <p className="mt-3 text-xs text-[#929c93] dark:text-[#879389]">{detail}</p>
-    </article>
+    </Card>
   );
 }

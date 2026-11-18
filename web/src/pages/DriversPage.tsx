@@ -1,5 +1,9 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
+import { useState, type FormEvent } from "react";
 import { Icon } from "../components/Icon";
+import { Card } from "../components/ui/card";
 import { useCurrentUser } from "../features/auth/useCurrentUser";
 import { FleetAppShell } from "../features/navigation/FleetAppShell";
 import {
@@ -32,7 +36,7 @@ function emptyDriverDraft(): DriverDraft {
 export function DriversPage() {
   const { user, isLoading: isUserLoading, error: userError } = useCurrentUser();
   const [page, setPage] = useState(1);
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(() => new URLSearchParams(window.location.search).get("q") ?? "");
   const [statusFilter, setStatusFilter] = useState<"all" | DriverStatus>("all");
   const [editingDriver, setEditingDriver] = useState<Driver | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -49,13 +53,6 @@ export function DriversPage() {
     isLoading,
   } = driverData;
   const error = actionError ?? driverData.error ?? userError;
-
-  useEffect(() => {
-    document.title = "Motoristas — FleetMonitor";
-    return () => {
-      document.title = "FleetMonitor — Gestão inteligente de frotas";
-    };
-  }, []);
 
   function setError(message: string | null) {
     setActionError(message);
@@ -133,7 +130,7 @@ export function DriversPage() {
               </p>
             )}
             {notice && (
-              <p role="status" className="mb-5 rounded-xl bg-[#edf4e6] px-4 py-3 text-sm text-[#526f37] dark:bg-[#293627] dark:text-[#c4f36b]">
+              <p role="status" className="mb-5 rounded-xl bg-[#eeeeee] px-4 py-3 text-sm text-[#526f37] dark:bg-fleet-highlight dark:text-[#c4f36b]">
                 {notice}
               </p>
             )}
@@ -147,19 +144,19 @@ export function DriversPage() {
                 </p>
               </div>
               {!user?.readOnly && (
-                <button
+                <Button variant="unstyled" size="auto"
                   type="button"
                   onClick={openCreateDriver}
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#17221c] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#2b3b30] dark:bg-[#c4f36b] dark:text-[#17221c] dark:hover:bg-[#d2fb8d]"
                 >
                   <Icon name="plus" className="size-[18px]" />
                   Cadastrar motorista
-                </button>
+                </Button>
               )}
             </div>
 
             {user?.readOnly && (
-              <p className="mt-6 rounded-xl border border-[#e5eae2] bg-white px-4 py-3 text-sm text-[#748078] dark:border-[#303b33] dark:bg-[#19211b] dark:text-[#a7b2a9]">
+              <p className="mt-6 rounded-xl border border-[#e5eae2] bg-white px-4 py-3 text-sm text-[#748078] dark:border-fleet-border dark:bg-fleet-raised dark:text-[#a7b2a9]">
                 Esta conta permite consultar os dados, mas não alterá-los.
               </p>
             )}
@@ -170,26 +167,26 @@ export function DriversPage() {
               <p role="alert" className="mt-10 text-sm text-red-600 dark:text-red-400">{error}</p>
             ) : (
               <>
-                <div className="mt-8 grid gap-4 grid-cols-1 sm:grid-cols-3">
-                  <article className="rounded-2xl border border-[#e5eae2] bg-white p-5 dark:border-[#303b33] dark:bg-[#19211b]">
+                <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-4">
+                  <Card className="p-5 sm:col-span-2">
                     <p className="text-sm text-[#748078] dark:text-[#a7b2a9]">Total de motoristas</p>
                     <p className="mt-3 text-3xl font-semibold tracking-tight">{statusCounts.active + statusCounts.inactive}</p>
                     <p className="mt-3 text-xs text-[#929c93] dark:text-[#879389]">Cadastros da empresa</p>
-                  </article>
-                  <article className="rounded-2xl border border-[#e5eae2] bg-white p-5 dark:border-[#303b33] dark:bg-[#19211b]">
+                  </Card>
+                  <Card className="p-5">
                     <p className="text-sm text-[#748078] dark:text-[#a7b2a9]">Ativos</p>
                     <p className="mt-3 text-3xl font-semibold tracking-tight">{statusCounts.active}</p>
                     <p className="mt-3 text-xs text-[#929c93] dark:text-[#879389]">Disponíveis para operação</p>
-                  </article>
-                  <article className="rounded-2xl border border-[#e5eae2] bg-white p-5 dark:border-[#303b33] dark:bg-[#19211b]">
+                  </Card>
+                  <Card className="p-5">
                     <p className="text-sm text-[#748078] dark:text-[#a7b2a9]">Inativos</p>
                     <p className="mt-3 text-3xl font-semibold tracking-tight">{statusCounts.inactive}</p>
                     <p className="mt-3 text-xs text-[#929c93] dark:text-[#879389]">Fora de operação</p>
-                  </article>
+                  </Card>
                 </div>
 
-                <div aria-busy={isLoading} className="mt-8 overflow-hidden rounded-2xl border border-[#e5eae2] bg-white dark:border-[#303b33] dark:bg-[#19211b]">
-                  <div className="flex flex-col gap-4 border-b border-[#edf0eb] p-5 dark:border-[#303b33] sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                <div aria-busy={isLoading} className="mt-8 overflow-hidden bento-panel">
+                  <div className="flex flex-col gap-4 border-b border-[#edf0eb] p-5 dark:border-fleet-border sm:flex-row sm:items-center sm:justify-between sm:px-6">
                     <div>
                       <h2 className="text-lg font-semibold">Motoristas cadastrados</h2>
                       <p className="mt-1 text-xs text-[#849087]">
@@ -200,19 +197,19 @@ export function DriversPage() {
                       <label className="relative">
                         <span className="sr-only">Buscar motorista</span>
                         <Icon name="search" className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#8b968d]" />
-                        <input
+                        <Input
                           value={query}
                           onChange={(event) => {
                             setQuery(event.target.value);
                             setPage(1);
                           }}
                           placeholder="Nome, CPF, CNH ou telefone"
-                          className="w-full rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] py-2.5 pl-9 pr-3 text-sm outline-none focus:border-[#8eb94b] focus:ring-4 focus:ring-[#c4f36b]/20 dark:border-[#3b473d] dark:bg-[#131a15] sm:w-56"
+                          className="w-full rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] py-2.5 pl-9 pr-3 text-sm outline-none focus:border-[#8eb94b] focus:ring-4 focus:ring-[#c4f36b]/20 dark:border-fleet-input-border dark:bg-fleet-input sm:w-56"
                         />
                       </label>
                       <label>
                         <span className="sr-only">Filtrar por status</span>
-                        <select
+                        <NativeSelect
                           value={statusFilter}
                           onChange={(event) => {
                             const value = event.target.value;
@@ -221,19 +218,19 @@ export function DriversPage() {
                               setPage(1);
                             }
                           }}
-                          className="w-full rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-3 py-2.5 text-sm outline-none focus:border-[#8eb94b] dark:border-[#3b473d] dark:bg-[#131a15] sm:w-44"
+                          className="w-full rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-3 py-2.5 text-sm outline-none focus:border-[#8eb94b] dark:border-fleet-input-border dark:bg-fleet-input sm:w-44"
                         >
                           <option value="all">Todos os status</option>
                           <option value="active">Ativo</option>
                           <option value="inactive">Inativo</option>
-                        </select>
+                        </NativeSelect>
                       </label>
                     </div>
                   </div>
 
                   {drivers.length === 0 ? (
                     <div className="px-6 py-14 text-center">
-                      <span className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-[#edf4e6] text-[#6d9144] dark:bg-[#293627] dark:text-[#c4f36b]">
+                      <span className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-[#eeeeee] text-[#6d9144] dark:bg-fleet-highlight dark:text-[#c4f36b]">
                         <Icon name="driver" className="size-6" />
                       </span>
                       <h3 className="mt-4 font-semibold">
@@ -245,16 +242,16 @@ export function DriversPage() {
                           : "Tente ajustar a busca ou selecionar outro status."}
                       </p>
                       {totalItems === 0 && query.trim() === "" && statusFilter === "all" && !user?.readOnly && (
-                        <button type="button" onClick={openCreateDriver} className="mt-5 text-sm font-semibold text-[#66883f] hover:underline dark:text-[#c4f36b]">
+                        <Button variant="unstyled" size="auto" type="button" onClick={openCreateDriver} className="mt-5 text-sm font-semibold text-[#66883f] hover:underline dark:text-[#c4f36b]">
                           Cadastrar primeiro motorista
-                        </button>
+                        </Button>
                       )}
                     </div>
                   ) : (
                     <>
                       <div className="hidden overflow-x-auto md:block">
                         <table className="w-full text-left text-sm">
-                          <thead className="bg-[#f8faf7] text-xs font-medium text-[#77837a] dark:bg-[#151c17] dark:text-[#a7b2a9]">
+                          <thead className="bg-[#f8faf7] text-xs font-medium text-[#77837a] dark:bg-fleet-surface dark:text-[#a7b2a9]">
                             <tr>
                               <th className="px-6 py-3.5">Motorista</th>
                               <th className="px-6 py-3.5">CPF</th>
@@ -264,9 +261,9 @@ export function DriversPage() {
                               {!user?.readOnly && <th className="px-6 py-3.5 text-right">Ações</th>}
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-[#edf0eb] dark:divide-[#303b33]">
+                          <tbody className="divide-y divide-[#edf0eb] dark:divide-fleet-border">
                             {drivers.map((driver) => (
-                              <tr key={driver.id} className="transition hover:bg-[#fbfcfa] dark:hover:bg-[#202a21]">
+                              <tr key={driver.id} className="transition hover:bg-[#fbfcfa] dark:hover:bg-fleet-highlight">
                                 <td className="px-6 py-4">
                                   <div className="flex items-center gap-3">
                                     <DriverIdentityIcon />
@@ -286,7 +283,7 @@ export function DriversPage() {
                           </tbody>
                         </table>
                       </div>
-                      <div className="divide-y divide-[#edf0eb] md:hidden dark:divide-[#303b33]">
+                      <div className="divide-y divide-[#edf0eb] md:hidden dark:divide-fleet-border">
                         {drivers.map((driver) => (
                           <article key={driver.id} className="p-4">
                             <div className="flex items-start justify-between gap-3">
@@ -312,11 +309,11 @@ export function DriversPage() {
                     </>
                   )}
                   {totalItems > 0 && totalPages > 1 && (
-                    <nav aria-label="Paginação de motoristas" className="flex items-center justify-between gap-4 border-t border-[#edf0eb] px-5 py-4 dark:border-[#303b33] sm:px-6">
+                    <nav aria-label="Paginação de motoristas" className="flex items-center justify-between gap-4 border-t border-[#edf0eb] px-5 py-4 dark:border-fleet-border sm:px-6">
                       <p className="text-xs text-[#748078] dark:text-[#a7b2a9]">Página {page} de {totalPages}</p>
                       <div className="flex gap-2">
-                        <button type="button" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={page === 1 || isLoading} className="rounded-lg border border-[#dfe5dd] px-3 py-2 text-sm font-medium text-[#526056] transition hover:bg-[#f3f6ef] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#3b473d] dark:text-[#d9e1da] dark:hover:bg-[#263226]">Anterior</button>
-                        <button type="button" onClick={() => setPage((current) => Math.min(totalPages, current + 1))} disabled={page === totalPages || isLoading} className="rounded-lg border border-[#dfe5dd] px-3 py-2 text-sm font-medium text-[#526056] transition hover:bg-[#f3f6ef] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#3b473d] dark:text-[#d9e1da] dark:hover:bg-[#263226]">Próxima</button>
+                        <Button variant="unstyled" size="auto" type="button" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={page === 1 || isLoading} className="rounded-lg border border-[#dfe5dd] px-3 py-2 text-sm font-medium text-[#526056] transition hover:bg-[#f3f3f3] disabled:cursor-not-allowed disabled:opacity-50 dark:border-fleet-input-border dark:text-[#d9e1da] dark:hover:bg-fleet-highlight">Anterior</Button>
+                        <Button variant="unstyled" size="auto" type="button" onClick={() => setPage((current) => Math.min(totalPages, current + 1))} disabled={page === totalPages || isLoading} className="rounded-lg border border-[#dfe5dd] px-3 py-2 text-sm font-medium text-[#526056] transition hover:bg-[#f3f3f3] disabled:cursor-not-allowed disabled:opacity-50 dark:border-fleet-input-border dark:text-[#d9e1da] dark:hover:bg-fleet-highlight">Próxima</Button>
                       </div>
                     </nav>
                   )}
@@ -332,59 +329,59 @@ export function DriversPage() {
             if (event.target === event.currentTarget && !isSaving) setIsFormOpen(false);
           }}
         >
-          <section role="dialog" aria-modal="true" aria-labelledby="driver-form-title" className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-t-3xl bg-white p-6 shadow-2xl dark:bg-[#19211b] sm:rounded-3xl sm:p-8">
+          <section role="dialog" aria-modal="true" aria-labelledby="driver-form-title" className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-t-3xl bg-white p-6 shadow-2xl dark:bg-fleet-raised sm:rounded-3xl sm:p-8">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-semibold tracking-[0.16em] text-[#779b4d] dark:text-[#c4f36b]">GESTÃO DE PESSOAS</p>
                 <h2 id="driver-form-title" className="mt-2 text-2xl font-semibold tracking-tight">{editingDriver ? "Editar motorista" : "Cadastrar motorista"}</h2>
                 <p className="mt-1 text-sm text-[#748078] dark:text-[#a7b2a9]">Informe os dados pessoais e da habilitação.</p>
               </div>
-              <button type="button" onClick={() => setIsFormOpen(false)} disabled={isSaving} aria-label="Fechar formulário" className="rounded-lg px-3 py-2 text-sm text-[#748078] hover:bg-[#f3f6ef] dark:hover:bg-[#263226]">Fechar</button>
+              <Button variant="unstyled" size="auto" type="button" onClick={() => setIsFormOpen(false)} disabled={isSaving} aria-label="Fechar formulário" className="rounded-lg px-3 py-2 text-sm text-[#748078] hover:bg-[#f3f3f3] dark:hover:bg-fleet-highlight">Fechar</Button>
             </div>
             {error && <p role="alert" className="mt-5 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{error}</p>}
             <form onSubmit={saveDriver} className="mt-6 space-y-4">
               <label className="block">
                 <span className="mb-1.5 block text-sm font-medium">Nome completo</span>
-                <input required minLength={2} maxLength={150} value={draft.fullName} onChange={(event) => setDraft({ ...draft, fullName: event.target.value })} autoFocus className="w-full rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-3 py-2.5 text-sm outline-none focus:border-[#8eb94b] dark:border-[#3b473d] dark:bg-[#131a15]" />
+                <Input required minLength={2} maxLength={150} value={draft.fullName} onChange={(event) => setDraft({ ...draft, fullName: event.target.value })} autoFocus className="w-full rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-3 py-2.5 text-sm outline-none focus:border-[#8eb94b] dark:border-fleet-input-border dark:bg-fleet-input" />
               </label>
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="block">
                   <span className="mb-1.5 block text-sm font-medium">CPF</span>
-                  <input required inputMode="numeric" maxLength={14} placeholder="000.000.000-00" value={draft.cpf} onChange={(event) => setDraft({ ...draft, cpf: event.target.value })} className="w-full rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-3 py-2.5 text-sm outline-none focus:border-[#8eb94b] dark:border-[#3b473d] dark:bg-[#131a15]" />
+                  <Input required inputMode="numeric" maxLength={14} placeholder="000.000.000-00" value={draft.cpf} onChange={(event) => setDraft({ ...draft, cpf: event.target.value })} className="w-full rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-3 py-2.5 text-sm outline-none focus:border-[#8eb94b] dark:border-fleet-input-border dark:bg-fleet-input" />
                 </label>
                 <label className="block">
                   <span className="mb-1.5 block text-sm font-medium">Telefone <span className="font-normal text-[#849087]">(opcional)</span></span>
-                  <input type="tel" maxLength={30} value={draft.phone ?? ""} onChange={(event) => setDraft({ ...draft, phone: event.target.value })} className="w-full rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-3 py-2.5 text-sm outline-none focus:border-[#8eb94b] dark:border-[#3b473d] dark:bg-[#131a15]" />
+                  <Input type="tel" maxLength={30} value={draft.phone ?? ""} onChange={(event) => setDraft({ ...draft, phone: event.target.value })} className="w-full rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-3 py-2.5 text-sm outline-none focus:border-[#8eb94b] dark:border-fleet-input-border dark:bg-fleet-input" />
                 </label>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="block">
                   <span className="mb-1.5 block text-sm font-medium">Número da CNH</span>
-                  <input required inputMode="numeric" maxLength={11} value={draft.licenseNumber} onChange={(event) => setDraft({ ...draft, licenseNumber: event.target.value })} className="w-full rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-3 py-2.5 text-sm outline-none focus:border-[#8eb94b] dark:border-[#3b473d] dark:bg-[#131a15]" />
+                  <Input required inputMode="numeric" maxLength={11} value={draft.licenseNumber} onChange={(event) => setDraft({ ...draft, licenseNumber: event.target.value })} className="w-full rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-3 py-2.5 text-sm outline-none focus:border-[#8eb94b] dark:border-fleet-input-border dark:bg-fleet-input" />
                 </label>
                 <label className="block">
                   <span className="mb-1.5 block text-sm font-medium">Categoria</span>
-                  <select value={draft.licenseCategory} onChange={(event) => setDraft({ ...draft, licenseCategory: event.target.value as DriverDraft["licenseCategory"] })} className="w-full rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-3 py-2.5 text-sm outline-none focus:border-[#8eb94b] dark:border-[#3b473d] dark:bg-[#131a15]">
+                  <NativeSelect value={draft.licenseCategory} onChange={(event) => setDraft({ ...draft, licenseCategory: event.target.value as DriverDraft["licenseCategory"] })} className="w-full rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-3 py-2.5 text-sm outline-none focus:border-[#8eb94b] dark:border-fleet-input-border dark:bg-fleet-input">
                     {driverLicenseCategories.map((category) => <option key={category} value={category}>{category}</option>)}
-                  </select>
+                  </NativeSelect>
                 </label>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="block">
                   <span className="mb-1.5 block text-sm font-medium">Validade da CNH</span>
-                  <input required type="date" value={draft.licenseExpiresAt} onChange={(event) => setDraft({ ...draft, licenseExpiresAt: event.target.value })} className="w-full rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-3 py-2.5 text-sm outline-none focus:border-[#8eb94b] dark:border-[#3b473d] dark:bg-[#131a15]" />
+                  <Input required type="date" value={draft.licenseExpiresAt} onChange={(event) => setDraft({ ...draft, licenseExpiresAt: event.target.value })} className="w-full rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-3 py-2.5 text-sm outline-none focus:border-[#8eb94b] dark:border-fleet-input-border dark:bg-fleet-input" />
                 </label>
                 <label className="block">
                   <span className="mb-1.5 block text-sm font-medium">Status</span>
-                  <select value={draft.status} onChange={(event) => setDraft({ ...draft, status: event.target.value as DriverStatus })} className="w-full rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-3 py-2.5 text-sm outline-none focus:border-[#8eb94b] dark:border-[#3b473d] dark:bg-[#131a15]">
+                  <NativeSelect value={draft.status} onChange={(event) => setDraft({ ...draft, status: event.target.value as DriverStatus })} className="w-full rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-3 py-2.5 text-sm outline-none focus:border-[#8eb94b] dark:border-fleet-input-border dark:bg-fleet-input">
                     <option value="active">Ativo</option>
                     <option value="inactive">Inativo</option>
-                  </select>
+                  </NativeSelect>
                 </label>
               </div>
-              <div className="flex flex-col-reverse gap-3 border-t border-[#edf0eb] pt-5 dark:border-[#303b33] sm:flex-row sm:justify-end">
-                <button type="button" onClick={() => setIsFormOpen(false)} disabled={isSaving} className="rounded-xl border border-[#dfe5dd] px-4 py-2.5 text-sm font-medium text-[#526056] transition hover:bg-[#f3f6ef] disabled:opacity-60 dark:border-[#3b473d] dark:text-[#d9e1da] dark:hover:bg-[#263226]">Cancelar</button>
-                <button type="submit" disabled={isSaving} className="rounded-xl bg-[#17221c] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#2b3b30] disabled:cursor-wait disabled:opacity-60 dark:bg-[#c4f36b] dark:text-[#17221c] dark:hover:bg-[#d2fb8d]">{isSaving ? "Salvando..." : editingDriver ? "Salvar alterações" : "Cadastrar motorista"}</button>
+              <div className="flex flex-col-reverse gap-3 border-t border-[#edf0eb] pt-5 dark:border-fleet-border sm:flex-row sm:justify-end">
+                <Button variant="unstyled" size="auto" type="button" onClick={() => setIsFormOpen(false)} disabled={isSaving} className="rounded-xl border border-[#dfe5dd] px-4 py-2.5 text-sm font-medium text-[#526056] transition hover:bg-[#f3f3f3] disabled:opacity-60 dark:border-fleet-input-border dark:text-[#d9e1da] dark:hover:bg-fleet-highlight">Cancelar</Button>
+                <Button variant="unstyled" size="auto" type="submit" disabled={isSaving} className="rounded-xl bg-[#17221c] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#2b3b30] disabled:cursor-wait disabled:opacity-60 dark:bg-[#c4f36b] dark:text-[#17221c] dark:hover:bg-[#d2fb8d]">{isSaving ? "Salvando..." : editingDriver ? "Salvar alterações" : "Cadastrar motorista"}</Button>
               </div>
             </form>
           </section>

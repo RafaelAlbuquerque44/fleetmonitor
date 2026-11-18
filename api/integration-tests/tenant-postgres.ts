@@ -55,6 +55,7 @@ try {
       .values({
         companyId: companyA.id,
         plate: "TST1A01",
+        chassisNumber: "TESTVIN1234567890",
         make: "Test",
         model: "Tenant A",
         year: 2026,
@@ -67,6 +68,7 @@ try {
       .values({
         companyId: companyB.id,
         plate: "TST1A02",
+        chassisNumber: "TESTVIN1234567890",
         make: "Test",
         model: "Tenant B",
         year: 2026,
@@ -74,6 +76,19 @@ try {
       .returning({ id: schema.vehicles.id }),
   );
   assert.ok(vehicleA && vehicleB);
+  await assert.rejects(
+    withTenantTransaction(companyA.id, (transaction) =>
+      transaction.insert(schema.vehicles).values({
+        companyId: companyA.id,
+        plate: "TST1A03",
+        chassisNumber: "TESTVIN1234567890",
+        make: "Test",
+        model: "Duplicate chassis",
+        year: 2026,
+      }),
+    ),
+    (error: unknown) => hasDatabaseErrorCode(error, "23505"),
+  );
 
   const [driverA] = await withTenantTransaction(companyA.id, (transaction) =>
     transaction
@@ -277,119 +292,335 @@ try {
     false,
   );
 
-  const maintenanceListResponse = await app.fetch(
-    authenticatedRequest("/maintenance", writerTokenA),
-  );
-  assert.equal(maintenanceListResponse.status, 200);
-  assert.deepEqual(
-    ((await maintenanceListResponse.json()) as { items: { id: number }[] }).items.map(
-      ({ id }) => id,
-    ),
-    [maintenanceA.id],
-  );
-
-  const filteredCostsResponse = await app.fetch(
-    authenticatedRequest("/costs?category=fuel", writerTokenA),
-  );
-  assert.equal(filteredCostsResponse.status, 200);
-  assert.deepEqual(
-    ((await filteredCostsResponse.json()) as { items: { id: number }[] }).items.map(
-      ({ id }) => id,
-    ),
-    [costA.id],
-  );
-
-  const createdMaintenanceResponse = await app.fetch(
-    authenticatedRequest("/maintenance", writerTokenA, "POST", {
-      vehicleId: vehicleA.id,
-      description: "API-created inspection",
-      status: "scheduled",
-      scheduledAt: "2026-11-09",
-      completedAt: null,
-      costCents: 0,
+  const fuelPayload = {
+    vehicleId: vehicleA.id,
+    driverId: driverA.id,
+    litersMilliliters: 50_000,
+    amountCents: 10_000,
+    occurredAt: "2026-11-08",
+    odometerKm: 1_000,
+    station: "Posto de integração",
+    route: "Rota de teste",
+  };
+  for (const odometerKm of [1_000, 1_500, 2_000]) {
+    const response = await app.fetch(
+      authenticatedRequest("/fuel-records", writerTokenA, "POST", {
+        ...fuelPayload,
+        odometerKm,
+      }),
+    );
+    assert.equal(response.status, 201);
+  }
+  const fuelRecords = await (
+    await app.fetch(authenticatedRequest("/fuel-records", writerTokenA))
+  ).json() as { odometerKm: number; consumptionKmpl: number | null; historicalAverageKmpl: number | null }[];
+  assert.equal(fuelRecords[0]?.odometerKm, 2_000);
+  assert.equal(fuelRecords[0]?.consumptionKmpl, 10);
+  assert.equal(fuelRecords[0]?.historicalAverageKmpl, 10);
+  const deviationResponse = await app.fetch(
+    authenticatedRequest("/fuel-records", writerTokenA, "POST", {
+      ...fuelPayload, station: null, odometerKm: 2_250,
     }),
   );
-  assert.equal(createdMaintenanceResponse.status, 201);
-  const createdMaintenance = (await createdMaintenanceResponse.json()) as { id: number };
+  assert.equal(deviationResponse.status, 201);
+  const deviationRecords = await (
+    await app.fetch(authenticatedRequest("/fuel-records", writerTokenA))
+  ).json() as { consumptionKmpl: number | null; historicalAverageKmpl: number | null; station: string | null }[];
+  assert.equal(deviationRecords[0]?.station, null);
+  assert.equal(deviationRecords[0]?.consumptionKmpl, 5);
+  assert.equal(deviationRecords[0]?.historicalAverageKmpl, 10);
+  const planResponse = await app.fetch(
+    authenticatedRequest("/maintenance-preventive/plans", writerTokenA, "POST", {
+      vehicleId: vehicleA.id,
+      serviceType: "oil_change",
+      intervalKm: 10_000,
+      lastServiceOdometerKm: 2_000,
+    }),
+  );
+  assert.equal(planResponse.status, 200);
 
-  const updatedMaintenanceResponse = await app.fetch(
+  const firstReadingResponse = await app.fetch(
+    authenticatedRequest("/maintenance-preventive/readings", writerTokenA, "POST", {
+      vehicleId: vehicleA.id,
+      driverId: driverA.id,
+      occurredAt: "2026-11-09",
+      odometerKm: 2_300,
+    }),
+  );
+  assert.equal(firstReadingResponse.status, 201);
+  assert.equal((await firstReadingResponse.json() as { distanceKm: number }).distanceKm, 50);
+
+  const secondReadingResponse = await app.fetch(
+    authenticatedRequest("/maintenance-preventive/readings", writerTokenA, "POST", {
+      vehicleId: vehicleA.id,
+      driverId: driverA.id,
+      occurredAt: "2026-11-10",
+      odometerKm: 2_400,
+    }),
+  );
+  assert.equal(secondReadingResponse.status, 201);
+  assert.equal((await secondReadingResponse.json() as { distanceKm: number }).distanceKm, 100);
+
+  const washPayload = {
+    vehicleId: vehicleA.id,
+    driverId: driverA.id,
+    serviceType: "washing",
+    description: "Lavagem de integração",
+    occurredAt: "2026-11-10",
+    odometerKm: 2_400,
+  };
+  assert.equal(
+    (await app.fetch(
+      authenticatedRequest("/maintenance-preventive/services", writerTokenA, "POST", washPayload),
+    )).status,
+    201,
+  );
+  assert.equal(
+    (await app.fetch(
+      authenticatedRequest("/maintenance-preventive/services", readOnlyTokenA, "POST", washPayload),
+    )).status,
+    403,
+  );
+  const preventivePanel = await (
+    await app.fetch(authenticatedRequest("/maintenance-preventive", writerTokenA))
+  ).json() as {
+    vehicles: { id: number; currentOdometerKm: number }[];
+    plans: { vehicleId: number; intervalKm: number; lastServiceOdometerKm: number }[];
+    readings: { distanceKm: number | null }[];
+    services: { serviceType: string; description: string | null }[];
+  };
+  assert.equal(preventivePanel.vehicles[0]?.currentOdometerKm, 2_400);
+  assert.equal(preventivePanel.plans[0]?.intervalKm, 10_000);
+  assert.equal(preventivePanel.plans[0]?.lastServiceOdometerKm, 2_000);
+  assert.deepEqual(
+    preventivePanel.readings.map(({ distanceKm }) => distanceKm),
+    [100, 50],
+  );
+  assert.equal(preventivePanel.services[0]?.serviceType, "washing");
+  assert.equal(preventivePanel.services[0]?.description, "Lavagem de integração");
+  const preventivePanelB = await (
+    await app.fetch(authenticatedRequest("/maintenance-preventive", writerTokenB))
+  ).json() as {
+    vehicles: { id: number }[];
+    plans: unknown[];
+    services: unknown[];
+    readings: unknown[];
+  };
+  assert.deepEqual(preventivePanelB.vehicles.map(({ id }) => id), [vehicleB.id]);
+  assert.deepEqual(preventivePanelB.plans, []);
+  assert.deepEqual(preventivePanelB.services, []);
+  assert.deepEqual(preventivePanelB.readings, []);
+  assert.deepEqual(
+    await db.select({ id: schema.odometerReadings.id }).from(schema.odometerReadings),
+    [],
+    "odometer reading RLS must fail closed without tenant context",
+  );
+  assert.deepEqual(
+    await db.select({ id: schema.preventiveMaintenancePlans.id }).from(schema.preventiveMaintenancePlans),
+    [],
+    "preventive plan RLS must fail closed without tenant context",
+  );
+  assert.deepEqual(
+    await db.select({ id: schema.vehicleServices.id }).from(schema.vehicleServices),
+    [],
+    "vehicle service RLS must fail closed without tenant context",
+  );
+  assert.equal((await app.fetch(authenticatedRequest(`/drivers/${driverA.id}`, writerTokenA, "DELETE"))).status, 409);
+  assert.equal(
+    (await app.fetch(authenticatedRequest("/fuel-records", writerTokenA, "POST", {
+      ...fuelPayload, odometerKm: 2_500, occurredAt: "2026-11-07",
+    }))).status,
+    409,
+  );
+  assert.equal(
+    (await app.fetch(authenticatedRequest("/fuel-records", writerTokenA, "POST", {
+      ...fuelPayload, odometerKm: 2_000,
+    }))).status,
+    409,
+  );
+  assert.deepEqual(
+    await (await app.fetch(authenticatedRequest("/fuel-records", writerTokenB))).json(),
+    [],
+  );
+  assert.equal(
+    (await app.fetch(
+      authenticatedRequest("/fuel-records", readOnlyTokenA, "POST", fuelPayload),
+    )).status,
+    403,
+  );
+
+  const maintenancePayload = {
+    vehicleId: vehicleA.id,
+    problem: "Inspeção de integração",
+    responsible: "Equipe de teste",
+    dueAt: null,
+    partsUsed: "Filtro",
+    status: "waiting_part",
+    occurredAt: "2026-11-08",
+    completedAt: null,
+  };
+  const maintenanceResponse = await app.fetch(
+    authenticatedRequest("/maintenance-records", writerTokenA, "POST", maintenancePayload),
+  );
+  assert.equal(maintenanceResponse.status, 201);
+  const maintenanceResult = await maintenanceResponse.json() as { id: number };
+  assert.equal(
+    (await app.fetch(authenticatedRequest("/maintenance-records", readOnlyTokenA, "POST", maintenancePayload))).status,
+    403,
+  );
+  assert.equal(
+    (await app.fetch(authenticatedRequest(`/maintenance-records/${maintenanceResult.id}`, writerTokenB, "PUT", {
+      ...maintenancePayload, vehicleId: vehicleB.id,
+    }))).status,
+    404,
+  );
+  assert.deepEqual(await db.select({ id: schema.fuelRecords.id }).from(schema.fuelRecords), []);
+  assert.deepEqual(await db.select({ id: schema.maintenanceRecords.id }).from(schema.maintenanceRecords), []);
+  const secondMaintenanceResponse = await app.fetch(
+    authenticatedRequest("/maintenance-records", writerTokenA, "POST", {
+      ...maintenancePayload,
+      problem: "Outro serviço de integração",
+      status: "waiting_service",
+    }),
+  );
+  assert.equal(secondMaintenanceResponse.status, 201);
+  const secondMaintenanceResult = await secondMaintenanceResponse.json() as { id: number };
+  const waitingVehicle = await withTenantTransaction(companyA.id, (transaction) =>
+    transaction.select({ status: schema.vehicles.status })
+      .from(schema.vehicles)
+      .where(eq(schema.vehicles.id, vehicleA.id)),
+  );
+  assert.equal(waitingVehicle[0]?.status, "waiting_service");
+  assert.deepEqual(
+    await (await app.fetch(authenticatedRequest("/maintenance-records", writerTokenB))).json(),
+    [],
+  );
+  const completedMaintenanceResponse = await app.fetch(
     authenticatedRequest(
-      `/maintenance/${createdMaintenance.id}`,
+      `/maintenance-records/${maintenanceResult.id}`,
       writerTokenA,
       "PUT",
-      {
-        vehicleId: vehicleA.id,
-        description: "API-updated inspection",
-        status: "completed",
-        scheduledAt: "2026-11-09",
-        completedAt: "2026-11-10",
-        costCents: 7500,
-      },
+      { ...maintenancePayload, status: "completed", completedAt: "2026-11-09" },
     ),
   );
-  assert.equal(updatedMaintenanceResponse.status, 200);
+  assert.equal(completedMaintenanceResponse.status, 200);
+  const activeVehicle = await withTenantTransaction(companyA.id, (transaction) =>
+    transaction.select({ status: schema.vehicles.status })
+      .from(schema.vehicles)
+      .where(eq(schema.vehicles.id, vehicleA.id)),
+  );
+  assert.equal(activeVehicle[0]?.status, "waiting_service");
+  const completedSecondMaintenanceResponse = await app.fetch(
+    authenticatedRequest(
+      `/maintenance-records/${secondMaintenanceResult.id}`,
+      writerTokenA,
+      "PUT",
+      { ...maintenancePayload, status: "completed", completedAt: "2026-11-09" },
+    ),
+  );
+  assert.equal(completedSecondMaintenanceResponse.status, 200);
+  const completedVehicle = await withTenantTransaction(companyA.id, (transaction) =>
+    transaction.select({ status: schema.vehicles.status })
+      .from(schema.vehicles)
+      .where(eq(schema.vehicles.id, vehicleA.id)),
+  );
+  assert.equal(completedVehicle[0]?.status, "maintenance_completed");
+  const summaryResponse = await app.fetch(authenticatedRequest("/vehicles/summary", writerTokenA));
+  assert.equal(summaryResponse.status, 200);
+  const summary = await summaryResponse.json() as { averageDowntimeHours: number };
+  assert.ok(Number.isFinite(summary.averageDowntimeHours));
+  assert.ok(summary.averageDowntimeHours >= 0);
 
-  const createdCostResponse = await app.fetch(
-    authenticatedRequest("/costs", writerTokenA, "POST", {
+  const tireResponse = await app.fetch(
+    authenticatedRequest("/tires", writerTokenA, "POST", {
       vehicleId: vehicleA.id,
-      category: "toll",
-      description: "API-created toll",
-      amountCents: 250,
-      occurredAt: "2026-11-09",
+      position: "Traseiro esquerdo",
+      brand: "Marca de teste",
+      installedAt: "2026-11-08",
+      installedOdometerKm: 2_250,
     }),
   );
-  assert.equal(createdCostResponse.status, 201);
-  const createdCost = (await createdCostResponse.json()) as { id: number };
-
-  for (const request of [
-    authenticatedRequest("/maintenance", readOnlyTokenA, "POST", {
-      vehicleId: vehicleA.id,
-      description: "Read-only write attempt",
+  assert.equal(tireResponse.status, 201);
+  const tireResult = await tireResponse.json() as { id: number };
+  const tireEventResponse = await app.fetch(
+    authenticatedRequest(`/tires/${tireResult.id}/events`, writerTokenA, "POST", {
+      type: "inspection",
+      description: "Inspeção de integração",
+      occurredAt: "2026-11-08",
+      odometerKm: 2_250,
     }),
-    authenticatedRequest(`/maintenance/${createdMaintenance.id}`, readOnlyTokenA, "PUT", {
-      vehicleId: vehicleA.id,
-      description: "Read-only update attempt",
-    }),
-    authenticatedRequest("/costs", readOnlyTokenA, "POST", {
-      vehicleId: vehicleA.id,
-      category: "fuel",
-      description: "Read-only write attempt",
-      amountCents: 100,
-      occurredAt: "2026-11-09",
-    }),
-  ]) {
-    assert.equal((await app.fetch(request)).status, 403);
-  }
+  );
+  assert.equal(tireEventResponse.status, 201);
+  const tireRecords = await (
+    await app.fetch(authenticatedRequest("/tires", writerTokenA))
+  ).json() as { usageKm: number; events: { type: string }[] }[];
+  assert.equal(tireRecords[0]?.usageKm, 0);
+  assert.deepEqual(tireRecords[0]?.events.map((event) => event.type), ["installation", "inspection"]);
+  assert.deepEqual(
+    await (await app.fetch(authenticatedRequest("/tires", writerTokenB))).json(),
+    [],
+  );
+  await withTenantTransaction(companyA.id, (transaction) =>
+    transaction.update(schema.vehicles).set({ status: "operational" }).where(eq(schema.vehicles.id, vehicleA.id)),
+  );
 
-  for (const path of ["/maintenance", "/costs"]) {
-    assert.equal(
-      (await app.fetch(
-        authenticatedRequest(
-          path,
-          writerTokenA,
-          "POST",
-          path === "/maintenance"
-            ? {
-                vehicleId: vehicleB.id,
-                description: "Cross-company API attempt",
-              }
-            : {
-                vehicleId: vehicleB.id,
-                category: "fuel",
-                description: "Cross-company API attempt",
-                amountCents: 100,
-                occurredAt: "2026-11-09",
-              },
-        ),
-      )).status,
-      400,
-    );
-  }
-
-  for (const path of ["/maintenance", "/costs"]) {
-    const response = await app.fetch(authenticatedRequest(path, writerTokenB));
+  for (const type of ["vehicles", "drivers"]) {
+    const response = await app.fetch(authenticatedRequest(`/exports/${type}`, writerTokenA));
     assert.equal(response.status, 200);
-    assert.deepEqual((await response.json() as { items: unknown[] }).items, []);
+    assert.equal(response.headers.get("Cache-Control"), "no-store");
+    const exported = await response.json() as { columns: string[]; rows: unknown[][] };
+    assert.ok(exported.columns.length > 0);
+    assert.ok(exported.rows.every((row) => row.length === exported.columns.length));
+    const other = await app.fetch(authenticatedRequest(`/exports/${type}`, writerTokenB));
+    assert.equal(other.status, 200);
+    const otherData = await other.json() as { rows: unknown[][] };
+    assert.equal(otherData.rows.length, type === "vehicles" ? 1 : 0);
+    assert.equal((await app.fetch(authenticatedRequest(`/exports/${type}`, readOnlyTokenA))).status, 200);
+  }
+  assert.equal((await app.fetch(authenticatedRequest("/exports/invalid", writerTokenA))).status, 400);
+  for (const type of ["maintenance", "preventive", "costs"]) {
+    assert.equal((await app.fetch(authenticatedRequest(`/exports/${type}`, writerTokenA))).status, 400);
+  }
+  const exportedDriver = await (await app.fetch(authenticatedRequest("/exports/drivers", writerTokenA))).json() as { rows: unknown[][] };
+  assert.equal(exportedDriver.rows[0]?.[0], driverA.id);
+  assert.equal(exportedDriver.rows[0]?.[3], "12345678901");
+  const manyVehicles = Array.from({ length: 101 }, (_, index) => ({
+    companyId: companyA.id, plate: `E${String(index).padStart(6, "0")}`,
+    make: "Export", model: "Pagination", year: 2026,
+  }));
+  await withTenantTransaction(companyA.id, (transaction) => transaction.insert(schema.vehicles).values(manyVehicles));
+  const fullExport = await (await app.fetch(authenticatedRequest("/exports/vehicles", writerTokenA))).json() as { rows: unknown[][] };
+  assert.equal(fullExport.rows.length, 102, "export must include records beyond a single page");
+  await withTenantTransaction(companyA.id, (transaction) => transaction.delete(schema.vehicles).where(eq(schema.vehicles.make, "Export")));
+
+  const [dates] = await adminClient`
+    SELECT to_char((now() at time zone 'America/Sao_Paulo')::date + 30, 'YYYY-MM-DD') AS in_range,
+           to_char((now() at time zone 'America/Sao_Paulo')::date + 31, 'YYYY-MM-DD') AS out_of_range
+  `;
+  assert.ok(dates);
+  await withTenantTransaction(companyA.id, (transaction) =>
+    transaction.update(schema.drivers).set({ licenseExpiresAt: dates.in_range }).where(eq(schema.drivers.id, driverA.id)),
+  );
+  const licenseAlerts = await (await app.fetch(authenticatedRequest("/drivers/alerts", writerTokenA))).json() as { id: number }[];
+  assert.ok(licenseAlerts.some((alert) => alert.id === driverA.id));
+  assert.deepEqual(await (await app.fetch(authenticatedRequest("/drivers/alerts", writerTokenB))).json(), []);
+  for (const [dueAt, expected] of [[dates.in_range, true], [dates.out_of_range, false]] as const) {
+    await withTenantTransaction(companyA.id, (transaction) =>
+      transaction.update(schema.drivers).set({ licenseExpiresAt: dueAt }).where(eq(schema.drivers.id, driverA.id)),
+    );
+    const alerts = await (await app.fetch(authenticatedRequest("/drivers/alerts", writerTokenA))).json() as { id: number }[];
+    assert.equal(alerts.some((alert) => alert.id === driverA.id), expected);
+  }
+  await withTenantTransaction(companyA.id, (transaction) =>
+    transaction.update(schema.drivers).set({ status: "inactive" }).where(eq(schema.drivers.id, driverA.id)),
+  );
+  const inactiveAlerts = await (await app.fetch(authenticatedRequest("/drivers/alerts", writerTokenA))).json() as { id: number }[];
+  assert.ok(!inactiveAlerts.some((alert) => alert.id === driverA.id));
+  await withTenantTransaction(companyA.id, (transaction) =>
+    transaction.update(schema.drivers).set({ licenseExpiresAt: "2030-01-01", status: "active" }).where(eq(schema.drivers.id, driverA.id)),
+  );
+  for (const path of ["/maintenance", "/costs", "/preventive/plans", "/preventive/alerts"]) {
+    assert.equal((await app.fetch(authenticatedRequest(path, writerTokenA))).status, 404);
   }
 
   const vehicleDeleteWithHistory = await app.fetch(
@@ -406,8 +637,21 @@ try {
     transaction.delete(schema.maintenanceOrders).where(eq(schema.maintenanceOrders.companyId, companyA.id)),
   );
   await withTenantTransaction(companyA.id, (transaction) =>
+    transaction.delete(schema.maintenancePlans).where(eq(schema.maintenancePlans.companyId, companyA.id)),
+  );
+  await withTenantTransaction(companyA.id, (transaction) =>
     transaction.delete(schema.fleetCosts).where(eq(schema.fleetCosts.companyId, companyA.id)),
   );
+  await withTenantTransaction(companyA.id, async (transaction) => {
+    await transaction.delete(schema.tireEvents).where(eq(schema.tireEvents.companyId, companyA.id));
+    await transaction.delete(schema.tires).where(eq(schema.tires.companyId, companyA.id));
+    await transaction.delete(schema.vehicleServices).where(eq(schema.vehicleServices.companyId, companyA.id));
+    await transaction.delete(schema.preventiveMaintenancePlans)
+      .where(eq(schema.preventiveMaintenancePlans.companyId, companyA.id));
+    await transaction.delete(schema.odometerReadings).where(eq(schema.odometerReadings.companyId, companyA.id));
+    await transaction.delete(schema.maintenanceRecords).where(eq(schema.maintenanceRecords.companyId, companyA.id));
+    await transaction.delete(schema.fuelRecords).where(eq(schema.fuelRecords.companyId, companyA.id));
+  });
   await withTenantTransaction(companyA.id, (transaction) =>
     transaction.delete(schema.vehicles).where(eq(schema.vehicles.id, vehicleA.id)),
   );

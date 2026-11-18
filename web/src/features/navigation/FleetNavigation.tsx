@@ -2,19 +2,26 @@ import { Icon } from "../../components/Icon";
 import { Link } from "react-router-dom";
 import type { VehicleStatusCounts } from "../vehicles/types";
 
-export type FleetNavigationSection = "overview" | "vehicles" | "drivers" | "maintenance" | "costs";
+export type FleetNavigationSection =
+  | "overview"
+  | "vehicles"
+  | "maintenance"
+  | "drivers"
+  | "exports"
+  | "assistant";
 
 const sections: {
   id: FleetNavigationSection;
   label: string;
   href: string;
-  icon: "chart" | "fleet" | "driver" | "maintenance" | "fuel";
+  icon: "chart" | "fleet" | "maintenance" | "driver" | "download" | "chat";
 }[] = [
   { id: "overview", label: "Indicadores", href: "/app/overview", icon: "chart" },
   { id: "vehicles", label: "Veículos", href: "/app", icon: "fleet" },
-  { id: "drivers", label: "Motoristas", href: "/app/drivers", icon: "driver" },
   { id: "maintenance", label: "Manutenção", href: "/app/maintenance", icon: "maintenance" },
-  { id: "costs", label: "Custos", href: "/app/costs", icon: "fuel" },
+  { id: "drivers", label: "Motoristas", href: "/app/drivers", icon: "driver" },
+  { id: "exports", label: "Exportação", href: "/app/exports", icon: "download" },
+  { id: "assistant", label: "Assistente IA", href: "/app/assistant", icon: "chat" },
 ];
 
 export function FleetNavigation({
@@ -44,8 +51,8 @@ export function FleetNavigation({
               aria-current={isActive ? "page" : undefined}
               className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition ${
                 isActive
-                  ? "bg-[#edf4e6] font-semibold text-[#526f37] dark:bg-[#293627] dark:text-[#c4f36b]"
-                  : "font-medium text-[#66736a] hover:bg-[#f3f6ef] dark:text-[#a7b2a9] dark:hover:bg-fleet-raised"
+                  ? "bg-[#eeeeee] font-semibold text-[#526f37] dark:bg-fleet-highlight dark:text-[#c4f36b]"
+                  : "font-medium text-[#66736a] hover:bg-[#f3f3f3] dark:text-[#a7b2a9] dark:hover:bg-fleet-raised"
               }`}
             >
               <Icon name={section.icon} className="size-[18px] shrink-0" />

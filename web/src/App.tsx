@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ReactNode } from "react";
-import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { CurrentUserProvider, useCurrentUser } from "./features/auth/useCurrentUser";
 
 const DashboardPage = lazy(() =>
@@ -19,10 +19,14 @@ const LandingPage = lazy(() =>
 const LoginPage = lazy(() =>
   import("./pages/LoginPage").then((module) => ({ default: module.LoginPage })),
 );
-const OperationsPage = lazy(() =>
-  import("./pages/OperationsPage").then((module) => ({
-    default: module.OperationsPage,
-  })),
+const ExportsPage = lazy(() =>
+  import("./pages/ExportsPage").then((module) => ({ default: module.ExportsPage })),
+);
+const AssistantPage = lazy(() =>
+  import("./pages/AssistantPage").then((module) => ({ default: module.AssistantPage })),
+);
+const MaintenancePage = lazy(() =>
+  import("./pages/MaintenancePage").then((module) => ({ default: module.MaintenancePage })),
 );
 
 function AuthenticatedRoute({ children }: { children: ReactNode }) {
@@ -67,11 +71,6 @@ function protect(page: ReactNode) {
 }
 
 function AppRoutes() {
-  const location = useLocation();
-  const legacyMaintenanceRoute =
-    location.pathname === "/app" &&
-    new URLSearchParams(location.search).get("status") === "maintenance";
-
   return (
     <Suspense
       fallback={
@@ -86,23 +85,14 @@ function AppRoutes() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route
-          path="/app"
-          element={protect(
-            legacyMaintenanceRoute ? (
-              <OperationsPage mode="maintenance" />
-            ) : (
-              <DashboardPage />
-            ),
-          )}
-        />
+        <Route path="/app" element={protect(<DashboardPage />)} />
         <Route path="/app/drivers" element={protect(<DriversPage />)} />
         <Route path="/app/overview" element={protect(<FleetOverviewPage />)} />
-        <Route
-          path="/app/maintenance"
-          element={protect(<OperationsPage mode="maintenance" />)}
-        />
-        <Route path="/app/costs" element={protect(<OperationsPage mode="costs" />)} />
+        <Route path="/app/maintenance" element={protect(<MaintenancePage />)} />
+        <Route path="/app/costs" element={<Navigate to="/app" replace />} />
+        <Route path="/app/preventive" element={<Navigate to="/app/maintenance" replace />} />
+        <Route path="/app/exports" element={protect(<ExportsPage />)} />
+        <Route path="/app/assistant" element={protect(<AssistantPage />)} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>

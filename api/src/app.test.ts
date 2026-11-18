@@ -63,10 +63,19 @@ describe("API", () => {
       new Request("http://localhost/vehicles", { method: "POST" }),
       new Request("http://localhost/vehicles/1", { method: "PUT" }),
       new Request("http://localhost/vehicles/1", { method: "DELETE" }),
-      new Request("http://localhost/maintenance"),
-      new Request("http://localhost/maintenance", { method: "POST" }),
-      new Request("http://localhost/costs"),
-      new Request("http://localhost/costs", { method: "POST" }),
+      new Request("http://localhost/exports/vehicles"),
+      new Request("http://localhost/fuel-records"),
+      new Request("http://localhost/maintenance-records"),
+      new Request("http://localhost/maintenance-preventive"),
+      new Request("http://localhost/maintenance-preventive/plans", { method: "POST" }),
+      new Request("http://localhost/maintenance-preventive/readings", { method: "POST" }),
+      new Request("http://localhost/maintenance-preventive/services", { method: "POST" }),
+      new Request("http://localhost/tires"),
+      new Request("http://localhost/ai/sessions"),
+      new Request("http://localhost/ai/sessions", { method: "POST" }),
+      new Request("http://localhost/ai/sessions/1"),
+      new Request("http://localhost/ai/sessions/1", { method: "DELETE" }),
+      new Request("http://localhost/ai/sessions/1/messages", { method: "POST" }),
     ];
 
     for (const request of requests) {
@@ -77,9 +86,25 @@ describe("API", () => {
     }
   });
 
+  test("does not expose removed operations endpoints", async () => {
+    for (const path of ["/maintenance", "/costs", "/preventive/plans", "/preventive/alerts"]) {
+      const response = await app.fetch(new Request(`http://localhost${path}`));
+      expect(response.status).toBe(404);
+    }
+  });
+
   test("requires authentication before accessing driver routes", async () => {
     const requests = [
       new Request("http://localhost/drivers"),
+      new Request("http://localhost/drivers/alerts"),
+      new Request("http://localhost/fuel-records"),
+      new Request("http://localhost/fuel-records", { method: "POST" }),
+      new Request("http://localhost/maintenance-records", { method: "POST" }),
+      new Request("http://localhost/maintenance-records/1", { method: "PUT" }),
+      new Request("http://localhost/tires"),
+      new Request("http://localhost/tires", { method: "POST" }),
+      new Request("http://localhost/tires/1/events", { method: "POST" }),
+      new Request("http://localhost/ai/sessions"),
       new Request("http://localhost/drivers/1"),
       new Request("http://localhost/drivers", { method: "POST" }),
       new Request("http://localhost/drivers/1", { method: "PUT" }),

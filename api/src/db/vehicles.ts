@@ -1,5 +1,5 @@
 import { and, count, eq, ilike, or, sql } from "drizzle-orm";
-import { drivers, vehicles } from "./schema";
+import { drivers, maintenanceRecords, vehicles } from "./schema";
 import { withTenantTransaction } from "./tenant";
 import type { VehicleInput, VehicleListQuery } from "../routes/vehicles.validation";
 
@@ -12,6 +12,7 @@ export async function listCompanyVehicles(companyId: number, query: VehicleListQ
         ? undefined
         : or(
             ilike(vehicles.plate, `%${query.query}%`),
+            ilike(vehicles.chassisNumber, `%${query.query}%`),
             ilike(vehicles.make, `%${query.query}%`),
             ilike(vehicles.model, `%${query.query}%`),
             sql`${vehicles.year}::text ILIKE ${`%${query.query}%`}`,
@@ -23,6 +24,7 @@ export async function listCompanyVehicles(companyId: number, query: VehicleListQ
         .select({
           id: vehicles.id,
           plate: vehicles.plate,
+          chassisNumber: vehicles.chassisNumber,
           make: vehicles.make,
           model: vehicles.model,
           year: vehicles.year,
@@ -44,7 +46,16 @@ export async function listCompanyVehicles(companyId: number, query: VehicleListQ
         .groupBy(vehicles.status),
     ]);
 
-    const statusCounts = { operational: 0, maintenance: 0, inactive: 0 };
+    const statusCounts = {
+      operational: 0,
+      in_operation: 0,
+      stopped: 0,
+      maintenance: 0,
+      waiting_part: 0,
+      waiting_service: 0,
+      maintenance_completed: 0,
+      inactive: 0,
+    };
     for (const row of statusRows) {
       statusCounts[row.status] = row.total;
     }
@@ -63,6 +74,7 @@ export async function getCompanyVehicle(companyId: number, vehicleId: number) {
       .select({
         id: vehicles.id,
         plate: vehicles.plate,
+        chassisNumber: vehicles.chassisNumber,
         make: vehicles.make,
         model: vehicles.model,
         year: vehicles.year,
@@ -83,6 +95,7 @@ export async function createCompanyVehicle(companyId: number, input: VehicleInpu
       .returning({
         id: vehicles.id,
         plate: vehicles.plate,
+        chassisNumber: vehicles.chassisNumber,
         make: vehicles.make,
         model: vehicles.model,
         year: vehicles.year,
@@ -108,6 +121,7 @@ export async function updateCompanyVehicle(
       .returning({
         id: vehicles.id,
         plate: vehicles.plate,
+        chassisNumber: vehicles.chassisNumber,
         make: vehicles.make,
         model: vehicles.model,
         year: vehicles.year,
@@ -129,7 +143,7 @@ export async function deleteCompanyVehicle(companyId: number, vehicleId: number)
 
 export async function getCompanyFleetStatusRows(companyId: number) {
   return withTenantTransaction(companyId, async (transaction) => {
-    const [vehicleStatusRows, driverStatusRows] = await Promise.all([
+    const [vehicleStatusRows, driverStatusRows, downtime] = await Promise.all([
       transaction
         .select({ status: vehicles.status, total: count() })
         .from(vehicles)
@@ -140,7 +154,17 @@ export async function getCompanyFleetStatusRows(companyId: number) {
         .from(drivers)
         .where(eq(drivers.companyId, companyId))
         .groupBy(drivers.status),
+      transaction
+        .select({
+          averageHours: sql<number>`coalesce(avg(greatest(0, extract(epoch from (coalesce(${maintenanceRecords.completedAt}, now()) - (${maintenanceRecords.occurredAt}::timestamp at time zone 'UTC'))) / 3600)), 0)::double precision`,
+        })
+        .from(maintenanceRecords)
+        .where(eq(maintenanceRecords.companyId, companyId)),
     ]);
-    return { vehicleStatusRows, driverStatusRows };
+    return {
+      vehicleStatusRows,
+      driverStatusRows,
+      averageDowntimeHours: downtime[0]?.averageHours ?? 0,
+    };
   });
 }

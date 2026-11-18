@@ -2,6 +2,7 @@ import { vehicleStatusEnum } from "../db/schema";
 
 export type VehicleInput = {
   plate: string;
+  chassisNumber: string | null;
   make: string;
   model: string;
   year: number;
@@ -29,6 +30,11 @@ export function parseVehicleInput(payload: unknown): VehicleInputResult {
 
   const values = payload as Record<string, unknown>;
   const plate = typeof values.plate === "string" ? values.plate.trim().toUpperCase() : "";
+  const chassisNumber = values.chassisNumber === undefined || values.chassisNumber === null
+    ? null
+    : typeof values.chassisNumber === "string"
+      ? values.chassisNumber.trim().toUpperCase() || null
+      : undefined;
   const make = typeof values.make === "string" ? values.make.trim() : "";
   const model = typeof values.model === "string" ? values.model.trim() : "";
   const year = values.year;
@@ -39,6 +45,9 @@ export function parseVehicleInput(payload: unknown): VehicleInputResult {
 
   if (!/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(plate)) {
     return { error: "Informe uma placa válida com 7 caracteres." };
+  }
+  if (chassisNumber === undefined || (chassisNumber !== null && chassisNumber.length > 50)) {
+    return { error: "Informe um número de chassi válido (até 50 caracteres)." };
   }
   if (make.length === 0 || make.length > 100 || model.length === 0 || model.length > 100) {
     return { error: "Informe a marca e o modelo do veículo (até 100 caracteres)." };
@@ -55,7 +64,7 @@ export function parseVehicleInput(payload: unknown): VehicleInputResult {
     return { error: "Selecione um status válido para o veículo." };
   }
 
-  return { value: { plate, make, model, year, status } };
+  return { value: { plate, chassisNumber, make, model, year, status } };
 }
 
 export function parseVehicleListQuery(

@@ -1,15 +1,28 @@
-export type VehicleStatus = "operational" | "maintenance" | "inactive";
+export const vehicleStatuses = [
+  "operational",
+  "in_operation",
+  "stopped",
+  "maintenance",
+  "waiting_part",
+  "waiting_service",
+  "maintenance_completed",
+  "inactive",
+] as const;
+export type VehicleStatus = (typeof vehicleStatuses)[number];
 
 export type Vehicle = {
   id: number;
   plate: string;
+  chassisNumber: string | null;
   make: string;
   model: string;
   year: number;
   status: VehicleStatus;
 };
 
-export type VehicleDraft = Omit<Vehicle, "id">;
+export type VehicleDraft = Omit<Vehicle, "id" | "chassisNumber"> & {
+  chassisNumber: string;
+};
 
 export type VehicleStatusCounts = Record<VehicleStatus, number>;
 export type DriverStatusCounts = Record<"active" | "inactive", number>;
@@ -18,6 +31,7 @@ export type FleetSummary = {
   totalVehicles: number;
   statusCounts: VehicleStatusCounts;
   operationalRate: number;
+  averageDowntimeHours: number;
   totalDrivers: number;
   driverStatusCounts: DriverStatusCounts;
   refreshedAt: string;
@@ -35,13 +49,34 @@ export type VehicleListResponse = {
 export const vehiclePageSize = 25;
 
 export const vehicleStatusLabels: Record<VehicleStatus, string> = {
-  operational: "Operacional",
+  operational: "Disponível",
+  in_operation: "Em operação",
+  stopped: "Parado",
   maintenance: "Em manutenção",
+  waiting_part: "Aguardando peça",
+  waiting_service: "Aguardando serviço",
+  maintenance_completed: "Manutenção finalizada",
   inactive: "Inativo",
 };
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isVehicleStatusCounts(value: unknown): value is VehicleStatusCounts {
+  return (
+    isRecord(value) &&
+    vehicleStatuses.every((status) =>
+      status in value &&
+      typeof value[status] === "number" &&
+      Number.isInteger(value[status]) &&
+      value[status] >= 0
+    )
+  );
+}
+
 export function isVehicleStatus(value: string): value is VehicleStatus {
-  return value === "operational" || value === "maintenance" || value === "inactive";
+  return vehicleStatuses.some((status) => status === value);
 }
 
 export function isVehicle(value: unknown): value is Vehicle {
@@ -52,6 +87,8 @@ export function isVehicle(value: unknown): value is Vehicle {
     typeof value.id === "number" &&
     "plate" in value &&
     typeof value.plate === "string" &&
+    "chassisNumber" in value &&
+    (typeof value.chassisNumber === "string" || value.chassisNumber === null) &&
     "make" in value &&
     typeof value.make === "string" &&
     "model" in value &&
@@ -91,20 +128,7 @@ export function isVehicleListResponse(value: unknown): value is VehicleListRespo
     typeof value.totalPages === "number" &&
     Number.isInteger(value.totalPages) &&
     value.totalPages > 0 &&
-    typeof statusCounts === "object" &&
-    statusCounts !== null &&
-    "operational" in statusCounts &&
-    typeof statusCounts.operational === "number" &&
-    Number.isInteger(statusCounts.operational) &&
-    statusCounts.operational >= 0 &&
-    "maintenance" in statusCounts &&
-    typeof statusCounts.maintenance === "number" &&
-    Number.isInteger(statusCounts.maintenance) &&
-    statusCounts.maintenance >= 0 &&
-    "inactive" in statusCounts &&
-    typeof statusCounts.inactive === "number" &&
-    Number.isInteger(statusCounts.inactive) &&
-    statusCounts.inactive >= 0
+    isVehicleStatusCounts(statusCounts)
   );
 }
 
@@ -119,25 +143,16 @@ export function isFleetSummary(value: unknown): value is FleetSummary {
     typeof value.totalVehicles === "number" &&
     Number.isInteger(value.totalVehicles) &&
     value.totalVehicles >= 0 &&
-    typeof statusCounts === "object" &&
-    statusCounts !== null &&
-    "operational" in statusCounts &&
-    typeof statusCounts.operational === "number" &&
-    Number.isInteger(statusCounts.operational) &&
-    statusCounts.operational >= 0 &&
-    "maintenance" in statusCounts &&
-    typeof statusCounts.maintenance === "number" &&
-    Number.isInteger(statusCounts.maintenance) &&
-    statusCounts.maintenance >= 0 &&
-    "inactive" in statusCounts &&
-    typeof statusCounts.inactive === "number" &&
-    Number.isInteger(statusCounts.inactive) &&
-    statusCounts.inactive >= 0 &&
+    isVehicleStatusCounts(statusCounts) &&
     "operationalRate" in value &&
     typeof value.operationalRate === "number" &&
     Number.isFinite(value.operationalRate) &&
     value.operationalRate >= 0 &&
     value.operationalRate <= 100 &&
+    "averageDowntimeHours" in value &&
+    typeof value.averageDowntimeHours === "number" &&
+    Number.isFinite(value.averageDowntimeHours) &&
+    value.averageDowntimeHours >= 0 &&
     "totalDrivers" in value &&
     typeof value.totalDrivers === "number" &&
     Number.isInteger(value.totalDrivers) &&

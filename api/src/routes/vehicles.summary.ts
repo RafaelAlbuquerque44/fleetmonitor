@@ -8,10 +8,16 @@ type DriverStatusCount = { status: DriverStatus; total: number };
 export function makeFleetSummary(
   statusRows: VehicleStatusCount[],
   refreshedAt = new Date(),
+  averageDowntimeHours = 0,
 ) {
   const statusCounts: Record<VehicleStatus, number> = {
     operational: 0,
+    in_operation: 0,
+    stopped: 0,
     maintenance: 0,
+    waiting_part: 0,
+    waiting_service: 0,
+    maintenance_completed: 0,
     inactive: 0,
   };
   for (const row of statusRows) {
@@ -22,6 +28,10 @@ export function makeFleetSummary(
     (total, statusCount) => total + statusCount,
     0,
   );
+  const availableVehicles =
+    statusCounts.operational +
+    statusCounts.in_operation +
+    statusCounts.maintenance_completed;
 
   return {
     totalVehicles,
@@ -29,7 +39,8 @@ export function makeFleetSummary(
     operationalRate:
       totalVehicles === 0
         ? 0
-        : Math.round((statusCounts.operational / totalVehicles) * 100),
+        : Math.round((availableVehicles / totalVehicles) * 100),
+    averageDowntimeHours: Number(averageDowntimeHours.toFixed(1)),
     refreshedAt: refreshedAt.toISOString(),
   };
 }

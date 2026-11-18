@@ -12,10 +12,10 @@ let deletedCount = 0;
 try {
   while (true) {
     const deleted = await client`
-      DELETE FROM auth_sessions
+      DELETE FROM sessoes_autenticacao
       WHERE id IN (
         SELECT id
-        FROM auth_sessions
+        FROM sessoes_autenticacao
         WHERE expires_at <= now()
         ORDER BY expires_at
         LIMIT ${batchSize}

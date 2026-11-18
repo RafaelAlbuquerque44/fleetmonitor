@@ -85,12 +85,21 @@ export function isDriverListResponse(value: unknown): value is DriverListRespons
     value.items.every(isDriver) &&
     "page" in value &&
     typeof value.page === "number" &&
+    Number.isInteger(value.page) &&
+    value.page > 0 &&
     "pageSize" in value &&
-    value.pageSize === driverPageSize &&
+    typeof value.pageSize === "number" &&
+    Number.isInteger(value.pageSize) &&
+    value.pageSize >= 1 &&
+    value.pageSize <= 100 &&
     "totalItems" in value &&
     typeof value.totalItems === "number" &&
+    Number.isInteger(value.totalItems) &&
+    value.totalItems >= 0 &&
     "totalPages" in value &&
     typeof value.totalPages === "number" &&
+    Number.isInteger(value.totalPages) &&
+    value.totalPages > 0 &&
     typeof counts === "object" &&
     counts !== null &&
     "active" in counts &&

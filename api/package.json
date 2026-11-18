@@ -15,6 +15,8 @@
     "db:provision-app-role": "bun run src/db/provision-app-role.ts",
     "db:seed": "bun run src/db/seed.ts",
     "db:seed:drivers": "bun run src/db/seed-drivers.ts",
+    "db:seed:records-demo": "bun run src/db/seed-demo-records.ts",
+    "db:seed:admin-demo": "bun run src/db/seed-admin-demo.ts",
     "db:seed:public-demo": "bun run src/db/seed-public-demo.ts",
     "db:sessions:purge": "bun run src/db/purge-expired-sessions.ts",
     "db:studio": "drizzle-kit studio"

@@ -7,6 +7,32 @@ import {
 } from "./types";
 import { readApiError, redirectOnUnauthorized } from "../../lib/api";
 
+export type LicenseAlert = {
+  id: number;
+  name: string;
+  dueAt: string;
+};
+
+function isLicenseAlert(value: unknown): value is LicenseAlert {
+  return typeof value === "object" && value !== null &&
+    "id" in value && typeof value.id === "number" &&
+    "name" in value && typeof value.name === "string" &&
+    "dueAt" in value && typeof value.dueAt === "string";
+}
+
+export async function listLicenseAlerts(): Promise<LicenseAlert[]> {
+  const response = await fetch("/api/drivers/alerts", { cache: "no-store" });
+  if (!response.ok) {
+    redirectOnUnauthorized(response);
+    throw new Error(await readApiError(response, "Não foi possível carregar os alertas de CNH."));
+  }
+  const payload: unknown = await response.json();
+  if (!Array.isArray(payload) || !payload.every(isLicenseAlert)) {
+    throw new Error("A resposta dos alertas de CNH está em um formato inválido.");
+  }
+  return payload;
+}
+
 export async function listDrivers(
   page: number,
   pageSize: number,

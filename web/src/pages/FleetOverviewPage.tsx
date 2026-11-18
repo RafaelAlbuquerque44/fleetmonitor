@@ -1,9 +1,10 @@
-import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
 import { Icon } from "../components/Icon";
 import { useCurrentUser } from "../features/auth/useCurrentUser";
 import { FleetAppShell } from "../features/navigation/FleetAppShell";
 import { FleetOverviewMetrics } from "../features/vehicles/FleetOverviewMetrics";
 import { useFleetSummary } from "../features/vehicles/useFleetSummary";
+import { DriverLicenseAlerts } from "../features/drivers/DriverLicenseAlerts";
 
 export function FleetOverviewPage() {
   const { user, isLoading: isUserLoading, error: userError } = useCurrentUser();
@@ -14,13 +15,6 @@ export function FleetOverviewPage() {
     refresh,
   } = useFleetSummary(user !== null);
 
-  useEffect(() => {
-    document.title = "Indicadores da frota — FleetMonitor";
-    return () => {
-      document.title = "FleetMonitor — Gestão inteligente de frotas";
-    };
-  }, []);
-
   return (
     <FleetAppShell
       active="overview"
@@ -28,16 +22,16 @@ export function FleetOverviewPage() {
       statusCounts={summary?.statusCounts}
       sidebarFooter={
         <div className="mt-auto space-y-3">
-            <div className="rounded-2xl bg-[#f3f6ef] p-4 dark:bg-[#202a21]">
+            <div className="rounded-2xl bg-[#f3f3f3] p-4 dark:bg-fleet-surface">
               <p className="text-xs font-semibold">Atualização automática</p>
               <p className="mt-1 text-xs leading-5 text-[#748078] dark:text-[#a7b2a9]">
                 Os indicadores são atualizados a cada 30 segundos.
               </p>
             </div>
-            <div className="rounded-2xl border border-[#e6ebe4] p-4 dark:border-[#303b33]">
+            <div className="rounded-2xl border border-[#e6ebe4] p-4 dark:border-fleet-border">
               <p className="text-xs font-semibold">Frota em foco</p>
               <p className="mt-1 text-xs leading-5 text-[#748078] dark:text-[#a7b2a9]">
-                Acesse veículos e manutenção sem sair do painel.
+                Acesse veículos e motoristas sem sair do painel.
               </p>
             </div>
         </div>
@@ -62,16 +56,16 @@ export function FleetOverviewPage() {
                     ? `Atualizado ${new Date(summary.refreshedAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`
                     : "Aguardando dados"}
                 </p>
-                <button
+                <Button variant="unstyled" size="auto"
                   type="button"
                   onClick={() => void refresh()}
                   disabled={isRefreshing || !user}
                   aria-label="Atualizar indicadores agora"
-                  className="inline-flex items-center gap-2 rounded-xl border border-[#e1e7df] bg-white px-3 py-2.5 text-sm font-medium transition hover:bg-[#f5f7f3] disabled:cursor-wait disabled:opacity-60 dark:border-[#303b33] dark:bg-[#19211b] dark:hover:bg-[#202a21]"
+                  className="inline-flex items-center gap-2 rounded-xl border border-[#e1e7df] bg-white px-3 py-2.5 text-sm font-medium transition hover:bg-[#f5f5f5] disabled:cursor-wait disabled:opacity-60 dark:border-fleet-border dark:bg-fleet-raised dark:hover:bg-fleet-highlight"
                 >
                   <Icon name="refresh" className={`size-4 ${isRefreshing ? "animate-spin" : ""}`} />
                   <span className="hidden sm:inline">Atualizar</span>
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -86,17 +80,17 @@ export function FleetOverviewPage() {
                 Carregando indicadores da frota...
               </p>
             ) : !summary ? (
-              <div className="mt-8 rounded-2xl border border-[#e5eae2] bg-white p-8 text-center dark:border-[#303b33] dark:bg-[#19211b]">
+              <div className="mt-8 rounded-2xl border border-[#e5eae2] bg-white p-8 text-center dark:border-fleet-border dark:bg-fleet-raised">
                 <p className="text-sm text-[#748078] dark:text-[#a7b2a9]">
                   Os indicadores estarão disponíveis quando a API responder.
                 </p>
-                <button
+                <Button variant="unstyled" size="auto"
                   type="button"
                   onClick={() => void refresh()}
                   className="mt-4 text-sm font-semibold text-[#66883f] hover:underline dark:text-[#c4f36b]"
                 >
                   Tentar novamente
-                </button>
+                </Button>
               </div>
             ) : (
               <>
@@ -106,6 +100,7 @@ export function FleetOverviewPage() {
                 </p>
               </>
             )}
+            {user && <DriverLicenseAlerts />}
           </section>
     </FleetAppShell>
   );

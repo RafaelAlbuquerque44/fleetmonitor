@@ -27,11 +27,11 @@ vehicleRoutes.use("*", requireAuthentication);
 
 vehicleRoutes.get("/summary", async (c) => {
   const user = c.get("authenticatedUser");
-  const { vehicleStatusRows, driverStatusRows } =
+  const { vehicleStatusRows, driverStatusRows, averageDowntimeHours } =
     await getCompanyFleetStatusRows(user.companyId);
 
   return c.json({
-    ...makeFleetSummary(vehicleStatusRows),
+    ...makeFleetSummary(vehicleStatusRows, new Date(), averageDowntimeHours),
     ...makeDriverSummary(driverStatusRows),
   });
 });
@@ -94,7 +94,7 @@ vehicleRoutes.post("/", async (c) => {
     return c.json(vehicle, 201);
   } catch (error) {
     if (isUniqueViolation(error)) {
-      return c.json({ error: "Já existe um veículo cadastrado com essa placa." }, 409);
+      return c.json({ error: "Já existe um veículo cadastrado com essa placa ou chassi." }, 409);
     }
     throw error;
   }
@@ -133,7 +133,7 @@ vehicleRoutes.put("/:id", async (c) => {
     return c.json(vehicle);
   } catch (error) {
     if (isUniqueViolation(error)) {
-      return c.json({ error: "Já existe um veículo cadastrado com essa placa." }, 409);
+      return c.json({ error: "Já existe um veículo cadastrado com essa placa ou chassi." }, 409);
     }
     throw error;
   }
@@ -155,7 +155,7 @@ vehicleRoutes.delete("/:id", async (c) => {
   } catch (error) {
     if (isForeignKeyViolation(error)) {
       return c.json(
-        { error: "Não é possível remover um veículo com manutenção ou custos vinculados." },
+        { error: "Não é possível remover um veículo com dados vinculados." },
         409,
       );
     }

@@ -1,15 +1,26 @@
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import { useEffect, useState, type FormEvent } from "react";
 import { Icon } from "../components/Icon";
 import { useCurrentUser } from "../features/auth/useCurrentUser";
 import { FleetAppShell } from "../features/navigation/FleetAppShell";
-import type { FleetNavigationSection } from "../features/navigation/FleetNavigation";
 import { DashboardStat, VehicleActions, VehicleStatusBadge } from "../features/vehicles/components";
 import { useVehicles } from "../features/vehicles/useVehicles";
-import { isVehicleStatus, vehiclePageSize, type Vehicle, type VehicleDraft, type VehicleStatus } from "../features/vehicles/types";
+import {
+  isVehicleStatus,
+  vehiclePageSize,
+  vehicleStatusLabels,
+  vehicleStatuses,
+  type Vehicle,
+  type VehicleDraft,
+  type VehicleStatus,
+} from "../features/vehicles/types";
 
 function emptyVehicleDraft(): VehicleDraft {
   return {
     plate: "",
+    chassisNumber: "",
     make: "",
     model: "",
     year: new Date().getFullYear(),
@@ -23,11 +34,11 @@ export function DashboardPage() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
-  const [updatingVehicleId, setUpdatingVehicleId] = useState<number | null>(null);
+  const [maintenancePendingId, setMaintenancePendingId] = useState<number | null>(null);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | VehicleStatus>(() => {
     const status = new URLSearchParams(window.location.search).get("status");
-    return status === "maintenance" ? "maintenance" : "all";
+    return status && isVehicleStatus(status) ? status : "all";
   });
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [isVehicleFormOpen, setIsVehicleFormOpen] = useState(false);
@@ -47,9 +58,6 @@ export function DashboardPage() {
     isLoading: isVehiclesLoading,
   } = vehicleData;
   const error = actionError ?? vehicleData.error ?? userError;
-  const isMaintenanceView = statusFilter === "maintenance";
-  const activeNavigation: FleetNavigationSection =
-    isMaintenanceView ? "maintenance" : "vehicles";
   const setError = (message: string | null) => {
     setActionError(message);
     vehicleData.setError(null);
@@ -66,6 +74,7 @@ export function DashboardPage() {
     setEditingVehicle(vehicle);
     setDraft({
       plate: vehicle.plate,
+      chassisNumber: vehicle.chassisNumber ?? "",
       make: vehicle.make,
       model: vehicle.model,
       year: vehicle.year,
@@ -119,14 +128,26 @@ export function DashboardPage() {
     }
   }
 
-  async function sendToMaintenance(vehicle: Vehicle) {
-    setUpdatingVehicleId(vehicle.id);
+  async function sendVehicleToMaintenance(vehicle: Vehicle) {
+    if (!window.confirm(`Enviar o veículo ${vehicle.plate} para manutenção?`)) {
+      return;
+    }
+
+    setMaintenancePendingId(vehicle.id);
     setError(null);
     setNotice(null);
-
     try {
-      await vehicleData.save({ ...vehicle, status: "maintenance" }, vehicle.id);
-      setNotice(`Veículo ${vehicle.plate} enviado para manutenção.`);
+      await vehicleData.save({
+        plate: vehicle.plate,
+        chassisNumber: vehicle.chassisNumber ?? "",
+        make: vehicle.make,
+        model: vehicle.model,
+        year: vehicle.year,
+        status: "maintenance",
+      }, vehicle.id);
+      setNotice(
+        `Veículo ${vehicle.plate} enviado para manutenção. Registre os detalhes na tela de manutenção preventiva.`,
+      );
     } catch (error) {
       setError(
         error instanceof TypeError
@@ -136,12 +157,12 @@ export function DashboardPage() {
             : "Não foi possível enviar o veículo para manutenção.",
       );
     } finally {
-      setUpdatingVehicleId(null);
+      setMaintenancePendingId(null);
     }
   }
 
   return (
-    <FleetAppShell active={activeNavigation} title="Veículos" statusCounts={statusCounts}>
+    <FleetAppShell active="vehicles" title="Veículos" statusCounts={statusCounts}>
           <section id="veiculos" className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10 lg:px-10">
             {error && !isVehicleFormOpen && (
               <p role="alert" className="mb-5 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
@@ -149,7 +170,7 @@ export function DashboardPage() {
               </p>
             )}
             {notice && (
-              <p role="status" className="mb-5 rounded-xl bg-[#edf4e6] px-4 py-3 text-sm text-[#526f37] dark:bg-[#293627] dark:text-[#c4f36b]">
+              <p role="status" className="mb-5 rounded-xl bg-[#eeeeee] px-4 py-3 text-sm text-[#526f37] dark:bg-fleet-highlight dark:text-[#c4f36b]">
                 {notice}
               </p>
             )}
@@ -166,14 +187,14 @@ export function DashboardPage() {
                   Acompanhe os veículos e a situação atual da sua frota.
                 </p>
               </div>
-              {!isMaintenanceView && !user?.readOnly && <button
+              {!user?.readOnly && <Button variant="unstyled" size="auto"
                 type="button"
                 onClick={openCreateVehicle}
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#17221c] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#2b3b30] dark:bg-[#c4f36b] dark:text-[#17221c] dark:hover:bg-[#d2fb8d]"
               >
                 <Icon name="plus" className="size-[18px]" />
                 Cadastrar veículo
-              </button>}
+              </Button>}
             </div>
 
             {isLoading ||
@@ -187,49 +208,30 @@ export function DashboardPage() {
               </p>
             ) : (
               <>
-                <div
-                  className={`mt-8 grid gap-4 sm:grid-cols-2 ${
-                    isMaintenanceView ? "xl:grid-cols-2" : "xl:grid-cols-4"
-                  }`}
-                >
+                <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                   <DashboardStat
                     label="Total de veículos"
                     value={Object.values(statusCounts).reduce((sum, count) => sum + count, 0)}
                     icon="fleet"
                     detail="Veículos cadastrados"
                   />
-                  {!isMaintenanceView && (
+                  {vehicleStatuses.map((status) => (
                     <DashboardStat
-                      label="Operacionais"
-                      value={statusCounts.operational}
-                      icon="check"
-                      detail="Disponíveis para operação"
-                      tone="green"
+                      key={status}
+                      label={vehicleStatusLabels[status]}
+                      value={statusCounts[status]}
+                      icon={status === "maintenance" || status === "waiting_part" || status === "waiting_service" ? "maintenance" : status === "operational" || status === "maintenance_completed" ? "check" : "fleet"}
+                      detail="Veículos neste status"
+                      tone={status === "operational" || status === "in_operation" ? "green" : status === "maintenance" || status === "waiting_part" || status === "waiting_service" ? "amber" : "slate"}
                     />
-                  )}
-                  <DashboardStat
-                    label="Em manutenção"
-                    value={statusCounts.maintenance}
-                    icon="maintenance"
-                    detail="Precisam de acompanhamento"
-                    tone="amber"
-                  />
-                  {!isMaintenanceView && (
-                    <DashboardStat
-                      label="Inativos"
-                      value={statusCounts.inactive}
-                      icon="fuel"
-                      detail="Fora de operação"
-                      tone="slate"
-                    />
-                  )}
+                  ))}
                 </div>
 
                 <div
                   aria-busy={isVehiclesLoading}
-                  className="mt-8 overflow-hidden rounded-2xl border border-[#e5eae2] bg-white dark:border-[#303b33] dark:bg-fleet-raised"
+                  className="mt-8 overflow-hidden bento-panel"
                 >
-                  <div className="flex flex-col gap-4 border-b border-[#edf0eb] p-5 dark:border-[#303b33] sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                  <div className="flex flex-col gap-4 border-b border-[#edf0eb] p-5 dark:border-fleet-border sm:flex-row sm:items-center sm:justify-between sm:px-6">
                     <div>
                       <h2 className="text-lg font-semibold">Veículos da frota</h2>
                       <p className="mt-1 text-xs text-[#849087]">
@@ -242,48 +244,41 @@ export function DashboardPage() {
                       <label className="relative">
                         <span className="sr-only">Buscar veículo</span>
                         <Icon name="search" className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#8b968d]" />
-                        <input
+                        <Input
                           value={query}
                           onChange={(event) => {
                             setQuery(event.target.value);
                             setPage(1);
                           }}
-                          placeholder="Placa, marca, modelo ou ano"
-                          className="w-full rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] py-2.5 pl-9 pr-3 text-sm outline-none focus:border-[#8eb94b] focus:ring-4 focus:ring-[#c4f36b]/20 dark:border-[#3b473d] dark:bg-[#131a15] sm:w-56"
+                          placeholder="Placa, chassi, marca, modelo ou ano"
+                          className="w-full rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] py-2.5 pl-9 pr-3 text-sm outline-none focus:border-[#8eb94b] focus:ring-4 focus:ring-[#c4f36b]/20 dark:border-fleet-input-border dark:bg-fleet-input sm:w-56"
                         />
                       </label>
-                      {!isMaintenanceView && (
-                        <label>
+                      <label>
                           <span className="sr-only">Filtrar por status</span>
-                          <select
+                          <NativeSelect
                             value={statusFilter}
                             onChange={(event) => {
                               const value = event.target.value;
-                              if (
-                                value === "all" ||
-                                value === "operational" ||
-                                value === "maintenance" ||
-                                value === "inactive"
-                              ) {
+                              if (value === "all" || isVehicleStatus(value)) {
                                 setStatusFilter(value);
                                 setPage(1);
                               }
                             }}
-                            className="w-full rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-3 py-2.5 text-sm outline-none focus:border-[#8eb94b] dark:border-[#3b473d] dark:bg-[#131a15] sm:w-44"
+                            className="w-full rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-3 py-2.5 text-sm outline-none focus:border-[#8eb94b] dark:border-fleet-input-border dark:bg-fleet-input sm:w-44"
                           >
                             <option value="all">Todos os status</option>
-                            <option value="operational">Operacional</option>
-                            <option value="maintenance">Em manutenção</option>
-                            <option value="inactive">Inativo</option>
-                          </select>
+                            {vehicleStatuses.map((status) => (
+                              <option key={status} value={status}>{vehicleStatusLabels[status]}</option>
+                            ))}
+                          </NativeSelect>
                         </label>
-                      )}
                     </div>
                   </div>
 
                   {vehicles.length === 0 ? (
                     <div className="px-6 py-14 text-center">
-                      <span className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-[#edf4e6] text-[#6d9144] dark:bg-[#293627] dark:text-[#c4f36b]">
+                      <span className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-[#eeeeee] text-[#6d9144] dark:bg-fleet-highlight dark:text-[#c4f36b]">
                         <Icon name="fleet" className="size-6" />
                       </span>
                       <h3 className="mt-4 font-semibold">
@@ -294,25 +289,23 @@ export function DashboardPage() {
                       <p className="mx-auto mt-1 max-w-sm text-sm text-[#748078] dark:text-[#a7b2a9]">
                         {totalItems === 0 && query.trim().length === 0 && statusFilter === "all"
                           ? "Cadastre o primeiro veículo para começar a acompanhar sua operação."
-                          :                           isMaintenanceView
-                            ? "Ajuste a busca ou confira se há veículos em manutenção."
-                            : "Tente ajustar a busca ou selecionar outro status."}
+                          : "Tente ajustar a busca ou selecionar outro status."}
                       </p>
                       {totalItems === 0 && query.trim().length === 0 && statusFilter === "all" && !user?.readOnly && (
-                        <button
+                        <Button variant="unstyled" size="auto"
                           type="button"
                           onClick={openCreateVehicle}
                           className="mt-5 text-sm font-semibold text-[#66883f] hover:underline dark:text-[#c4f36b]"
                         >
                           Cadastrar primeiro veículo
-                        </button>
+                        </Button>
                       )}
                     </div>
                   ) : (
                     <>
                       <div className="hidden overflow-x-auto md:block">
                         <table className="w-full text-left text-sm">
-                          <thead className="bg-[#f8faf7] text-xs font-medium text-[#77837a] dark:bg-[#151c17] dark:text-[#a7b2a9]">
+                          <thead className="bg-[#f8faf7] text-xs font-medium text-[#77837a] dark:bg-fleet-surface dark:text-[#a7b2a9]">
                             <tr>
                               <th className="px-6 py-3.5">Veículo</th>
                               <th className="px-6 py-3.5">Placa</th>
@@ -321,17 +314,19 @@ export function DashboardPage() {
                               {!user?.readOnly && <th className="px-6 py-3.5 text-right">Ações</th>}
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-[#edf0eb] dark:divide-[#303b33]">
+                          <tbody className="divide-y divide-[#edf0eb] dark:divide-fleet-border">
                             {vehicles.map((vehicle) => (
-                              <tr key={vehicle.id} className="transition hover:bg-[#fbfcfa] dark:hover:bg-[#202a21]">
+                              <tr key={vehicle.id} className="transition hover:bg-[#fbfcfa] dark:hover:bg-fleet-highlight">
                                 <td className="px-6 py-4">
                                   <div className="flex items-center gap-3">
-                                    <span className="flex size-10 items-center justify-center rounded-xl bg-[#edf4e6] text-[#6d9144] dark:bg-[#293627] dark:text-[#c4f36b]">
+                                    <span className="flex size-10 items-center justify-center rounded-xl bg-[#eeeeee] text-[#6d9144] dark:bg-fleet-highlight dark:text-[#c4f36b]">
                                       <Icon name="fleet" className="size-5" />
                                     </span>
                                     <span>
                                       <span className="block font-semibold">{vehicle.make} {vehicle.model}</span>
-                                      <span className="mt-0.5 block text-xs text-[#849087]">Veículo #{vehicle.id}</span>
+                                      <span className="mt-0.5 block text-xs text-[#849087]">
+                                        Veículo #{vehicle.id}{vehicle.chassisNumber ? ` · Chassi ${vehicle.chassisNumber}` : ""}
+                                      </span>
                                     </span>
                                   </div>
                                 </td>
@@ -343,8 +338,8 @@ export function DashboardPage() {
                                     vehicle={vehicle}
                                     onEdit={openEditVehicle}
                                     onDelete={deleteVehicle}
-                                    onSendToMaintenance={sendToMaintenance}
-                                    isSendingToMaintenance={updatingVehicleId === vehicle.id}
+                                    onSendToMaintenance={sendVehicleToMaintenance}
+                                    maintenancePending={maintenancePendingId === vehicle.id}
                                   />
                                 </td>}
                               </tr>
@@ -352,17 +347,20 @@ export function DashboardPage() {
                           </tbody>
                         </table>
                       </div>
-                      <div className="divide-y divide-[#edf0eb] md:hidden dark:divide-[#303b33]">
+                      <div className="divide-y divide-[#edf0eb] md:hidden dark:divide-fleet-border">
                         {vehicles.map((vehicle) => (
                           <article key={vehicle.id} className="p-4">
                             <div className="flex items-start justify-between gap-3">
                               <div className="flex min-w-0 items-center gap-3">
-                                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#edf4e6] text-[#6d9144] dark:bg-[#293627] dark:text-[#c4f36b]">
+                                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#eeeeee] text-[#6d9144] dark:bg-fleet-highlight dark:text-[#c4f36b]">
                                   <Icon name="fleet" className="size-5" />
                                 </span>
                                 <div className="min-w-0">
                                   <p className="truncate font-semibold">{vehicle.make} {vehicle.model}</p>
                                   <p className="mt-1 text-xs text-[#849087]">{vehicle.plate} · {vehicle.year}</p>
+                                  {vehicle.chassisNumber && (
+                                    <p className="mt-1 truncate text-xs text-[#849087]">Chassi {vehicle.chassisNumber}</p>
+                                  )}
                                 </div>
                               </div>
                               <VehicleStatusBadge status={vehicle.status} />
@@ -372,8 +370,8 @@ export function DashboardPage() {
                                 vehicle={vehicle}
                                 onEdit={openEditVehicle}
                                 onDelete={deleteVehicle}
-                                onSendToMaintenance={sendToMaintenance}
-                                isSendingToMaintenance={updatingVehicleId === vehicle.id}
+                                onSendToMaintenance={sendVehicleToMaintenance}
+                                maintenancePending={maintenancePendingId === vehicle.id}
                               />
                             </div>}
                           </article>
@@ -384,28 +382,28 @@ export function DashboardPage() {
                   {totalItems > 0 && totalPages > 1 && (
                     <nav
                       aria-label="Paginação de veículos"
-                      className="flex items-center justify-between gap-4 border-t border-[#edf0eb] px-5 py-4 dark:border-[#303b33] sm:px-6"
+                      className="flex items-center justify-between gap-4 border-t border-[#edf0eb] px-5 py-4 dark:border-fleet-border sm:px-6"
                     >
                       <p className="text-xs text-[#748078] dark:text-[#a7b2a9]">
                         Página {page} de {totalPages}
                       </p>
                       <div className="flex gap-2">
-                        <button
+                        <Button variant="unstyled" size="auto"
                           type="button"
                           onClick={() => setPage((current) => Math.max(1, current - 1))}
                           disabled={page === 1 || isVehiclesLoading}
-                          className="rounded-lg border border-[#dfe5dd] px-3 py-2 text-sm font-medium text-[#526056] transition hover:bg-[#f3f6ef] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#3b473d] dark:text-[#d9e1da] dark:hover:bg-[#263226]"
+                          className="rounded-lg border border-[#dfe5dd] px-3 py-2 text-sm font-medium text-[#526056] transition hover:bg-[#f3f3f3] disabled:cursor-not-allowed disabled:opacity-50 dark:border-fleet-input-border dark:text-[#d9e1da] dark:hover:bg-fleet-highlight"
                         >
                           Anterior
-                        </button>
-                        <button
+                        </Button>
+                        <Button variant="unstyled" size="auto"
                           type="button"
                           onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
                           disabled={page === totalPages || isVehiclesLoading}
-                          className="rounded-lg border border-[#dfe5dd] px-3 py-2 text-sm font-medium text-[#526056] transition hover:bg-[#f3f6ef] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#3b473d] dark:text-[#d9e1da] dark:hover:bg-[#263226]"
+                          className="rounded-lg border border-[#dfe5dd] px-3 py-2 text-sm font-medium text-[#526056] transition hover:bg-[#f3f3f3] disabled:cursor-not-allowed disabled:opacity-50 dark:border-fleet-input-border dark:text-[#d9e1da] dark:hover:bg-fleet-highlight"
                         >
                           Próxima
-                        </button>
+                        </Button>
                       </div>
                     </nav>
                   )}
@@ -427,7 +425,7 @@ export function DashboardPage() {
               role="dialog"
               aria-modal="true"
               aria-labelledby="vehicle-form-title"
-              className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-t-3xl bg-white p-6 shadow-2xl dark:bg-[#19211b] sm:rounded-3xl sm:p-8"
+              className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-t-3xl bg-white p-6 shadow-2xl dark:bg-fleet-raised sm:rounded-3xl sm:p-8"
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -441,15 +439,15 @@ export function DashboardPage() {
                     Preencha os dados para manter o cadastro da frota atualizado.
                   </p>
                 </div>
-                <button
+                <Button variant="unstyled" size="auto"
                   type="button"
                   onClick={() => setIsVehicleFormOpen(false)}
                   disabled={isSaving}
                   aria-label="Fechar formulário"
-                  className="rounded-lg px-3 py-2 text-sm text-[#748078] hover:bg-[#f3f6ef] dark:hover:bg-[#263226]"
+                  className="rounded-lg px-3 py-2 text-sm text-[#748078] hover:bg-[#f3f3f3] dark:hover:bg-fleet-highlight"
                 >
                   Fechar
-                </button>
+                </Button>
               </div>
 
               {error && (
@@ -461,7 +459,7 @@ export function DashboardPage() {
               <form onSubmit={saveVehicle} className="mt-6 grid gap-4 sm:grid-cols-2">
                 <label className="flex flex-col gap-2">
                   <span className="text-sm font-medium">Placa</span>
-                  <input
+                  <Input
                     required
                     maxLength={7}
                     pattern="[A-Za-z]{3}[0-9][A-Za-z0-9][0-9]{2}"
@@ -469,46 +467,56 @@ export function DashboardPage() {
                     value={draft.plate}
                     onChange={(event) => setDraft((current) => ({ ...current, plate: event.target.value }))}
                     placeholder="ABC1D23"
-                    className="rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-4 py-3 text-sm uppercase outline-none focus:border-[#8eb94b] focus:ring-4 focus:ring-[#c4f36b]/20 dark:border-[#3b473d] dark:bg-[#131a15]"
+                    className="rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-4 py-3 text-sm uppercase outline-none focus:border-[#8eb94b] focus:ring-4 focus:ring-[#c4f36b]/20 dark:border-fleet-input-border dark:bg-fleet-input"
+                  />
+                </label>
+                <label className="flex flex-col gap-2 sm:col-span-2">
+                  <span className="text-sm font-medium">Número do chassi</span>
+                  <Input
+                    maxLength={50}
+                    value={draft.chassisNumber}
+                    onChange={(event) => setDraft((current) => ({ ...current, chassisNumber: event.target.value }))}
+                    placeholder="Opcional"
+                    className="rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-4 py-3 text-sm uppercase outline-none focus:border-[#8eb94b] focus:ring-4 focus:ring-[#c4f36b]/20 dark:border-fleet-input-border dark:bg-fleet-input"
                   />
                 </label>
                 <label className="flex flex-col gap-2">
                   <span className="text-sm font-medium">Ano</span>
-                  <input
+                  <Input
                     required
                     type="number"
                     min={1900}
                     max={new Date().getFullYear() + 1}
                     value={draft.year}
                     onChange={(event) => setDraft((current) => ({ ...current, year: Number(event.target.value) }))}
-                    className="rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-4 py-3 text-sm outline-none focus:border-[#8eb94b] focus:ring-4 focus:ring-[#c4f36b]/20 dark:border-[#3b473d] dark:bg-[#131a15]"
+                    className="rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-4 py-3 text-sm outline-none focus:border-[#8eb94b] focus:ring-4 focus:ring-[#c4f36b]/20 dark:border-fleet-input-border dark:bg-fleet-input"
                   />
                 </label>
                 <label className="flex flex-col gap-2">
                   <span className="text-sm font-medium">Marca</span>
-                  <input
+                  <Input
                     required
                     maxLength={100}
                     value={draft.make}
                     onChange={(event) => setDraft((current) => ({ ...current, make: event.target.value }))}
                     placeholder="Ex.: Fiat"
-                    className="rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-4 py-3 text-sm outline-none focus:border-[#8eb94b] focus:ring-4 focus:ring-[#c4f36b]/20 dark:border-[#3b473d] dark:bg-[#131a15]"
+                    className="rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-4 py-3 text-sm outline-none focus:border-[#8eb94b] focus:ring-4 focus:ring-[#c4f36b]/20 dark:border-fleet-input-border dark:bg-fleet-input"
                   />
                 </label>
                 <label className="flex flex-col gap-2">
                   <span className="text-sm font-medium">Modelo</span>
-                  <input
+                  <Input
                     required
                     maxLength={100}
                     value={draft.model}
                     onChange={(event) => setDraft((current) => ({ ...current, model: event.target.value }))}
                     placeholder="Ex.: Ducato"
-                    className="rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-4 py-3 text-sm outline-none focus:border-[#8eb94b] focus:ring-4 focus:ring-[#c4f36b]/20 dark:border-[#3b473d] dark:bg-[#131a15]"
+                    className="rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-4 py-3 text-sm outline-none focus:border-[#8eb94b] focus:ring-4 focus:ring-[#c4f36b]/20 dark:border-fleet-input-border dark:bg-fleet-input"
                   />
                 </label>
                 <label className="flex flex-col gap-2 sm:col-span-2">
                   <span className="text-sm font-medium">Status</span>
-                  <select
+                  <NativeSelect
                     value={draft.status}
                     onChange={(event) => {
                       const status = event.target.value;
@@ -516,29 +524,29 @@ export function DashboardPage() {
                         setDraft((current) => ({ ...current, status }));
                       }
                     }}
-                    className="rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-4 py-3 text-sm outline-none focus:border-[#8eb94b] dark:border-[#3b473d] dark:bg-[#131a15]"
+                    className="rounded-xl border border-[#dfe5dd] bg-[#fcfdfb] px-4 py-3 text-sm outline-none focus:border-[#8eb94b] dark:border-fleet-input-border dark:bg-fleet-input"
                   >
-                    <option value="operational">Operacional</option>
-                    <option value="maintenance">Em manutenção</option>
-                    <option value="inactive">Inativo</option>
-                  </select>
+                    {vehicleStatuses.map((status) => (
+                      <option key={status} value={status}>{vehicleStatusLabels[status]}</option>
+                    ))}
+                  </NativeSelect>
                 </label>
                 <div className="mt-2 flex flex-col-reverse gap-3 sm:col-span-2 sm:flex-row sm:justify-end">
-                  <button
+                  <Button variant="unstyled" size="auto"
                     type="button"
                     onClick={() => setIsVehicleFormOpen(false)}
                     disabled={isSaving}
-                    className="rounded-xl border border-[#dfe5dd] px-5 py-3 text-sm font-semibold transition hover:bg-[#f6f8f4] disabled:opacity-60 dark:border-[#3b473d] dark:hover:bg-[#263226]"
+                    className="rounded-xl border border-[#dfe5dd] px-5 py-3 text-sm font-semibold transition hover:bg-[#f6f6f6] disabled:opacity-60 dark:border-fleet-input-border dark:hover:bg-fleet-highlight"
                   >
                     Cancelar
-                  </button>
-                  <button
+                  </Button>
+                  <Button variant="unstyled" size="auto"
                     type="submit"
                     disabled={isSaving}
                     className="rounded-xl bg-[#17221c] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#2b3b30] disabled:cursor-wait disabled:opacity-60 dark:bg-[#c4f36b] dark:text-[#17221c] dark:hover:bg-[#d2fb8d]"
                   >
                     {isSaving ? "Salvando..." : editingVehicle ? "Salvar alterações" : "Cadastrar veículo"}
-                  </button>
+                  </Button>
                 </div>
               </form>
             </section>

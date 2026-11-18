@@ -1,0 +1,1 @@
+ALTER TABLE "fuel_records" ALTER COLUMN "station" DROP NOT NULL;
